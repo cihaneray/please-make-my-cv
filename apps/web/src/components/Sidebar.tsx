@@ -3,18 +3,21 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React from 'react';
+import { useI18n } from '@/lib/i18n';
 import { Icons } from './Icons';
-
-const NAV_ITEMS = [
-  { label: 'Home', href: '/', icon: Icons.Home },
-  { label: 'Resumes', href: '/resumes', icon: Icons.Document },
-  { label: 'Jobs', href: '/jobs', icon: Icons.Jobs },
-  { label: 'Library', href: '/library', icon: Icons.Library },
-  { label: 'Templates', href: '/templates', icon: Icons.Templates },
-];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { language, setLanguage, t } = useI18n();
+
+  const navItems = [
+    { label: t('home'), href: '/', icon: Icons.Home },
+    { label: t('resumes'), href: '/resumes', icon: Icons.Document },
+    { label: t('jobs'), href: '/jobs', icon: Icons.Jobs },
+    { label: t('library'), href: '/library', icon: Icons.Library },
+    { label: t('templates'), href: '/templates', icon: Icons.Templates },
+    { label: t('settings'), href: '/settings', icon: Icons.Settings },
+  ];
 
   return (
     <aside className="fixed left-0 top-0 h-full w-[220px] bg-surface-container-lowest border-r border-surface-container-highest z-50 flex flex-col justify-between select-none no-print">
@@ -31,7 +34,7 @@ export function Sidebar() {
 
         {/* Main navigation */}
         <nav className="flex flex-col gap-space-xs p-space-sm">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const isActive =
               item.href === '/'
                 ? pathname === '/'
@@ -58,12 +61,42 @@ export function Sidebar() {
 
       {/* Footer controls */}
       <div className="flex flex-col p-space-sm border-t border-surface-container-high gap-space-xs">
+        {/* Language quick switcher */}
+        <div className="flex items-center justify-between px-space-md py-1 bg-surface-container-low rounded-lg border border-surface-container-high text-[11px] font-semibold text-secondary">
+          <span>Language:</span>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setLanguage('en')}
+              className={`px-1.5 py-0.5 rounded transition-all ${
+                language === 'en'
+                  ? 'bg-primary text-on-primary shadow-xs font-bold'
+                  : 'text-secondary hover:text-on-surface'
+              }`}
+            >
+              EN
+            </button>
+            <span>/</span>
+            <button
+              type="button"
+              onClick={() => setLanguage('tr')}
+              className={`px-1.5 py-0.5 rounded transition-all ${
+                language === 'tr'
+                  ? 'bg-primary text-on-primary shadow-xs font-bold'
+                  : 'text-secondary hover:text-on-surface'
+              }`}
+            >
+              TR
+            </button>
+          </div>
+        </div>
+
         <Link
           href="/import"
           className="flex items-center gap-space-md px-space-md py-space-xs rounded text-on-surface-variant font-label-md text-label-md hover:bg-surface-container hover:text-on-surface transition-colors"
         >
           <Icons.Upload size={18} />
-          <span>Import CV</span>
+          <span>{t('importCv')}</span>
         </Link>
 
         <div className="pt-space-xs mt-space-xs border-t border-surface-container-high">
@@ -74,7 +107,7 @@ export function Sidebar() {
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="font-label-md text-label-md text-on-surface truncate">
-                  Personal Team
+                  {t('personalTeam')}
                 </span>
                 <span className="font-body-sm text-body-sm text-secondary truncate">
                   workspace.cv

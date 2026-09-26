@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { Icons } from '@/components/Icons';
 import { api } from '@/lib/api';
+import { useI18n } from '@/lib/i18n';
 import { JobApplication, ResumeSummary } from '@/lib/types';
 
 export default function HomePage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [resumes, setResumes] = useState<ResumeSummary[]>([]);
   const [jobs, setJobs] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -72,13 +74,13 @@ export default function HomePage() {
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-lg border-b border-surface-container-high">
           <div className="flex flex-col gap-space-xs">
             <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary">
-              Dashboard
+              {t('dashboard')}
             </span>
             <h1 className="font-headline-xl text-headline-xl text-on-surface">
-              CV Workspace
+              {t('dashboardTitle')}
             </h1>
             <p className="font-body-md text-body-md text-on-surface-variant">
-              Simple, focused career and resume management
+              {t('dashboardSubtitle')}
             </p>
           </div>
 
@@ -88,7 +90,7 @@ export default function HomePage() {
               className="h-8 px-space-md flex items-center gap-space-xs rounded bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors shadow-sm"
             >
               <Icons.Upload size={16} className="text-secondary" />
-              <span>Import Resume</span>
+              <span>{t('importCv')}</span>
             </Link>
             <button
               type="button"
@@ -96,7 +98,7 @@ export default function HomePage() {
               className="h-8 px-space-md flex items-center gap-space-xs rounded bg-primary text-on-primary font-label-md text-label-md hover:bg-inverse-surface transition-colors shadow-sm"
             >
               <Icons.Add size={16} />
-              <span>New Resume</span>
+              <span>{t('newResume')}</span>
             </button>
           </div>
         </header>
@@ -106,7 +108,7 @@ export default function HomePage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-space-xs">
               <h2 className="font-headline-md text-headline-md text-on-surface">
-                Recent Resumes
+                {t('recentResumes')}
               </h2>
               <span className="px-space-xs py-0.5 rounded bg-surface-container text-secondary font-label-sm text-label-sm">
                 {resumes.length}
@@ -116,7 +118,7 @@ export default function HomePage() {
               href="/resumes"
               className="font-label-sm text-label-sm text-secondary hover:text-on-surface transition-colors flex items-center gap-space-xs"
             >
-              <span>View all documents</span>
+              <span>{t('viewAll')}</span>
               <Icons.ArrowRight size={14} />
             </Link>
           </div>
