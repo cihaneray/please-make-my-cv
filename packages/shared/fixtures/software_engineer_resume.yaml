@@ -1,0 +1,59 @@
+schemaVersion: 1
+metadata:
+  title: Senior Cloud Engineer Resume
+  targetRole: Senior Cloud Infrastructure Engineer
+  templateId: technical
+
+profile:
+  firstName: Dev
+  lastName: Miller
+  headline: Senior Cloud Infrastructure Engineer
+  email: dev.miller@cloudops.dev
+  phone: +1 (555) 345-6789
+  location: Austin, TX
+  github: github.com/devmiller
+  linkedin: linkedin.com/in/devmiller
+
+summary: >-
+  Infrastructure engineer with 7+ years architecting multi-tenant Kubernetes clusters,
+  distributed event pipelines, and zero-trust IAM topologies across AWS and GCP.
+
+experience:
+  - company: CloudScale Networks
+    position: Lead Infrastructure Architect
+    location: Austin, TX
+    startDate: 2022
+    endDate: Present
+    current: true
+    bullets:
+      - Architected multi-region Terraform modules managing 120 Kubernetes nodes across 3 cloud regions.
+      - Reduced infrastructure cloud spend by $45,000 monthly through Karpenter autoscaling and spot pricing.
+      - Enforced zero-trust microservice policies via Cilium eBPF network meshes.
+    technologies:
+      - Kubernetes
+      - Terraform
+      - AWS
+      - eBPF
+      - Python
+
+education:
+  - institution: University of Texas at Austin
+    degree: Bachelor of Science
+    fieldOfStudy: Computer Science
+    startDate: 2014
+    endDate: 2018
+
+skills:
+  - category: Cloud & Platforms
+    skills:
+      - AWS
+      - GCP
+      - Kubernetes
+      - Docker
+      - Terraform
+  - category: Languages & Frameworks
+    skills:
+      - Python
+      - Go
+      - Bash
+      - FastAPI
