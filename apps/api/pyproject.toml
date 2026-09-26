@@ -1,0 +1,39 @@
+[project]
+name = "cv-workspace-api"
+version = "0.1.0"
+description = "FastAPI backend for CV Workspace"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.8.0",
+    "pydantic-settings>=2.4.0",
+    "sqlalchemy>=2.0.30",
+    "alembic>=1.13.0",
+    "pyyaml>=6.0.1",
+    "python-multipart>=0.0.9",
+    "jinja2>=3.1.4",
+    "httpx>=0.27.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.6.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501", "N815", "UP042"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"
+pythonpath = ["."]
