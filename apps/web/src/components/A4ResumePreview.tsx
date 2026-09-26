@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useI18n } from '@/lib/i18n';
 import { ResumeDocument } from '@/lib/types';
 import { Icons } from './Icons';
 
@@ -9,6 +10,7 @@ interface A4ResumePreviewProps {
 }
 
 export function A4ResumePreview({ document }: A4ResumePreviewProps) {
+  const { t } = useI18n();
   const [zoom, setZoom] = useState<number>(100);
 
   const { profile, summary, experience, education, projects, skills, design, visibility } = document;
@@ -19,10 +21,10 @@ export function A4ResumePreview({ document }: A4ResumePreviewProps) {
   const zoomScale = zoom / 100;
 
   return (
-    <div className="flex-1 bg-surface-container relative overflow-auto flex flex-col items-center justify-start p-space-lg select-text min-h-full">
+    <div className="flex-1 bg-surface-container relative overflow-auto flex flex-col items-center justify-start p-space-lg pb-24 select-text min-h-full">
       {/* A4 Sheet Presentation Wrapper */}
       <div
-        className="w-[595px] min-h-[842px] bg-surface-container-lowest rounded-sm shadow-2xl p-10 flex flex-col justify-between my-auto transition-transform duration-150 origin-top a4-sheet border border-neutral-200/50"
+        className="w-[595px] min-h-[842px] bg-surface-container-lowest rounded-sm shadow-2xl p-10 flex flex-col justify-between my-8 shrink-0 transition-transform duration-150 origin-top a4-sheet border border-neutral-200/50"
         style={{
           transform: `scale(${zoomScale})`,
           fontFamily: `${fontFamily}, sans-serif`,
@@ -259,7 +261,7 @@ export function A4ResumePreview({ document }: A4ResumePreviewProps) {
 
         {/* Footer line */}
         <div className="flex items-center justify-between text-secondary text-[10px] pt-6 border-t border-surface-container-high mt-4">
-          <span>{fullName} — Curriculum Vitae</span>
+          <span>{fullName} — {t('pageOf')}</span>
           <span>1 / 1</span>
         </div>
       </div>
@@ -270,7 +272,7 @@ export function A4ResumePreview({ document }: A4ResumePreviewProps) {
           type="button"
           onClick={() => setZoom((z) => Math.max(50, z - 10))}
           className="w-6 h-6 flex items-center justify-center rounded-full text-secondary hover:text-on-surface hover:bg-surface-container transition-colors"
-          title="Zoom Out"
+          title={t('zoomOut')}
         >
           <Icons.Minus size={14} />
         </button>
@@ -283,7 +285,7 @@ export function A4ResumePreview({ document }: A4ResumePreviewProps) {
           type="button"
           onClick={() => setZoom((z) => Math.min(150, z + 10))}
           className="w-6 h-6 flex items-center justify-center rounded-full text-secondary hover:text-on-surface hover:bg-surface-container transition-colors"
-          title="Zoom In"
+          title={t('zoomIn')}
         >
           <Icons.Add size={14} />
         </button>
@@ -295,7 +297,7 @@ export function A4ResumePreview({ document }: A4ResumePreviewProps) {
           onClick={() => setZoom(100)}
           className="px-2 py-0.5 rounded text-[11px] text-secondary hover:text-on-surface hover:bg-surface-container transition-colors"
         >
-          Reset
+          {t('reset')}
         </button>
 
         <button
@@ -304,7 +306,7 @@ export function A4ResumePreview({ document }: A4ResumePreviewProps) {
           className="px-2 py-0.5 rounded text-[11px] font-medium text-primary hover:bg-surface-container transition-colors flex items-center gap-1"
         >
           <Icons.Print size={14} />
-          <span>Print</span>
+          <span>{t('print')}</span>
         </button>
       </div>
     </div>

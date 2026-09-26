@@ -1,10 +1,12 @@
 'use client';
 
-import React, { use, useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 import { A4ResumePreview } from '@/components/A4ResumePreview';
 import { Icons } from '@/components/Icons';
 import { SourceEditor } from '@/components/SourceEditor';
 import { api } from '@/lib/api';
+import { useI18n } from '@/lib/i18n';
 import {
   AnalysisIssue,
   ExperienceItem,
@@ -13,8 +15,10 @@ import {
   SkillGroup,
 } from '@/lib/types';
 
-export default function ResumeStudioPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id: resumeId } = use(params);
+export default function ResumeStudioPage() {
+  const routeParams = useParams();
+  const resumeId = (routeParams?.id as string) || '';
+  const { t } = useI18n();
 
   const [doc, setDoc] = useState<ResumeDocument | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -29,10 +33,13 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
   useEffect(() => {
     async function load() {
       try {
+        console.log('START LOADING RESUME:', resumeId);
         setLoading(true);
         const data = await api.getResume(resumeId);
+        console.log('RESUME LOADED SUCCESSFULLY:', data?.metadata?.id);
         setDoc(data);
       } catch (err: any) {
+        console.error('RESUME LOAD ERROR:', err);
         alert(`Failed to load resume: ${err.message}`);
       } finally {
         setLoading(false);
@@ -207,7 +214,7 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
                   : 'text-secondary hover:text-on-surface'
               }`}
             >
-              Content
+              {t('contentTab')}
             </button>
             <button
               type="button"
@@ -219,7 +226,7 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
               }`}
             >
               <Icons.Code size={15} />
-              <span>Source</span>
+              <span>{t('sourceTab')}</span>
             </button>
             <button
               type="button"
@@ -230,7 +237,7 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
                   : 'text-secondary hover:text-on-surface'
               }`}
             >
-              Design
+              {t('designTab')}
             </button>
             <button
               type="button"
@@ -241,7 +248,7 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
                   : 'text-secondary hover:text-on-surface'
               }`}
             >
-              <span>Review</span>
+              <span>{t('reviewTab')}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-on-tertiary-container" />
             </button>
           </div>
@@ -275,7 +282,7 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
             className="h-8 px-space-md flex items-center gap-1.5 rounded-lg bg-surface-container text-on-surface font-label-sm hover:bg-surface-container-high transition-all"
           >
             <Icons.Save size={15} />
-            <span>{saving ? 'Saving...' : 'Save Draft'}</span>
+            <span>{saving ? t('saving') : t('saveDraft')}</span>
           </button>
 
           <a
@@ -285,7 +292,7 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
             className="h-8 px-space-md flex items-center gap-1.5 rounded-lg bg-primary text-on-primary font-label-sm shadow hover:bg-primary-container transition-all"
           >
             <Icons.Download size={15} />
-            <span>Export PDF</span>
+            <span>{t('exportPdf')}</span>
           </a>
         </div>
       </div>
@@ -299,15 +306,15 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
             <aside className="w-[200px] bg-surface-container-lowest flex flex-col justify-between p-space-sm shrink-0 select-none overflow-y-auto border-r border-surface-container-high no-print">
               <div className="flex flex-col gap-0.5">
                 <div className="px-space-md py-space-xs text-secondary font-label-sm text-label-sm uppercase tracking-wider">
-                  Sections
+                  {t('sections')}
                 </div>
                 {[
-                  { id: 'profile', label: 'Profile', icon: Icons.User },
-                  { id: 'summary', label: 'Summary', icon: Icons.Document },
-                  { id: 'experience', label: 'Experience', icon: Icons.Jobs, count: doc.experience.length },
-                  { id: 'education', label: 'Education', icon: Icons.Graduation, count: doc.education.length },
-                  { id: 'projects', label: 'Projects', icon: Icons.Terminal, count: doc.projects.length },
-                  { id: 'skills', label: 'Skills', icon: Icons.Zap, count: doc.skills.length },
+                  { id: 'profile', label: t('personalProfile'), icon: Icons.User },
+                  { id: 'summary', label: t('summary'), icon: Icons.Document },
+                  { id: 'experience', label: t('experience'), icon: Icons.Jobs, count: doc.experience.length },
+                  { id: 'education', label: t('education'), icon: Icons.Graduation, count: doc.education.length },
+                  { id: 'projects', label: t('projects'), icon: Icons.Terminal, count: doc.projects.length },
+                  { id: 'skills', label: t('skills'), icon: Icons.Zap, count: doc.skills.length },
                 ].map((s) => {
                   const IconComp = s.icon;
                   return (
