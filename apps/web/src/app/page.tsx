@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
+import { Icons } from '@/components/Icons';
 import { api } from '@/lib/api';
 import { JobApplication, ResumeSummary } from '@/lib/types';
 
@@ -86,9 +87,7 @@ export default function HomePage() {
               href="/import"
               className="h-8 px-space-md flex items-center gap-space-xs rounded bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors shadow-sm"
             >
-              <span className="material-symbols-outlined text-[16px] text-secondary">
-                upload_file
-              </span>
+              <Icons.Upload size={16} className="text-secondary" />
               <span>Import Resume</span>
             </Link>
             <button
@@ -96,7 +95,7 @@ export default function HomePage() {
               onClick={handleCreateNew}
               className="h-8 px-space-md flex items-center gap-space-xs rounded bg-primary text-on-primary font-label-md text-label-md hover:bg-inverse-surface transition-colors shadow-sm"
             >
-              <span className="material-symbols-outlined text-[16px]">add</span>
+              <Icons.Add size={16} />
               <span>New Resume</span>
             </button>
           </div>
@@ -118,9 +117,7 @@ export default function HomePage() {
               className="font-label-sm text-label-sm text-secondary hover:text-on-surface transition-colors flex items-center gap-space-xs"
             >
               <span>View all documents</span>
-              <span className="material-symbols-outlined text-[14px]">
-                arrow_forward
-              </span>
+              <Icons.ArrowRight size={14} />
             </Link>
           </div>
 
@@ -140,9 +137,7 @@ export default function HomePage() {
               </div>
             ) : resumes.length === 0 ? (
               <div className="p-space-xl text-center flex flex-col items-center gap-space-sm">
-                <span className="material-symbols-outlined text-secondary text-[32px]">
-                  article
-                </span>
+                <Icons.Document size={32} className="text-secondary" />
                 <p className="font-body-md text-secondary">No resumes created yet.</p>
                 <button
                   type="button"
@@ -160,9 +155,7 @@ export default function HomePage() {
                     className="group grid grid-cols-12 items-center px-space-md py-space-md hover:bg-surface-container-low transition-colors relative"
                   >
                     <div className="col-span-4 flex items-center gap-space-sm min-w-0 pr-space-md">
-                      <span className="material-symbols-outlined text-[18px] text-secondary group-hover:text-on-surface transition-colors flex-shrink-0">
-                        description
-                      </span>
+                      <Icons.Document size={18} className="text-secondary group-hover:text-on-surface transition-colors flex-shrink-0" />
                       <Link
                         href={`/resumes/${r.id}`}
                         className="font-label-lg text-label-lg text-on-surface truncate hover:underline underline-offset-2"
@@ -194,9 +187,7 @@ export default function HomePage() {
                         }}
                         className="w-7 h-7 flex items-center justify-center rounded text-secondary hover:text-on-surface hover:bg-surface-container transition-colors"
                       >
-                        <span className="material-symbols-outlined text-[16px]">
-                          more_horiz
-                        </span>
+                        <Icons.More size={16} />
                       </button>
 
                       {/* Dropdown Menu */}
@@ -264,9 +255,7 @@ export default function HomePage() {
               className="font-label-sm text-label-sm text-secondary hover:text-on-surface transition-colors flex items-center gap-space-xs"
             >
               <span>Manage tracker</span>
-              <span className="material-symbols-outlined text-[14px]">
-                arrow_forward
-              </span>
+              <Icons.ArrowRight size={14} />
             </Link>
           </div>
 
@@ -305,9 +294,7 @@ export default function HomePage() {
                   </div>
 
                   <div className="col-span-2 flex items-center gap-space-xs min-w-0 pr-space-sm">
-                    <span className="material-symbols-outlined text-[14px] text-secondary flex-shrink-0">
-                      link
-                    </span>
+                    <Icons.Link size={14} className="text-secondary flex-shrink-0" />
                     <span className="font-body-sm text-body-sm text-secondary truncate">
                       {j.linkedResumeId ? 'Linked' : 'None'}
                     </span>

@@ -2,6 +2,7 @@
 
 import React, { use, useEffect, useState } from 'react';
 import { A4ResumePreview } from '@/components/A4ResumePreview';
+import { Icons } from '@/components/Icons';
 import { SourceEditor } from '@/components/SourceEditor';
 import { api } from '@/lib/api';
 import {
@@ -217,7 +218,7 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
                   : 'text-secondary hover:text-on-surface'
               }`}
             >
-              <span className="material-symbols-outlined text-[15px]">code</span>
+              <Icons.Code size={15} />
               <span>Source</span>
             </button>
             <button
@@ -273,7 +274,7 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
             disabled={saving}
             className="h-8 px-space-md flex items-center gap-1.5 rounded-lg bg-surface-container text-on-surface font-label-sm hover:bg-surface-container-high transition-all"
           >
-            <span className="material-symbols-outlined text-[15px]">save</span>
+            <Icons.Save size={15} />
             <span>{saving ? 'Saving...' : 'Save Draft'}</span>
           </button>
 
@@ -283,7 +284,7 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
             rel="noreferrer"
             className="h-8 px-space-md flex items-center gap-1.5 rounded-lg bg-primary text-on-primary font-label-sm shadow hover:bg-primary-container transition-all"
           >
-            <span className="material-symbols-outlined text-[15px]">download</span>
+            <Icons.Download size={15} />
             <span>Export PDF</span>
           </a>
         </div>
@@ -301,34 +302,37 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
                   Sections
                 </div>
                 {[
-                  { id: 'profile', label: 'Profile', icon: 'account_circle' },
-                  { id: 'summary', label: 'Summary', icon: 'short_text' },
-                  { id: 'experience', label: 'Experience', icon: 'work_outline', count: doc.experience.length },
-                  { id: 'education', label: 'Education', icon: 'school', count: doc.education.length },
-                  { id: 'projects', label: 'Projects', icon: 'terminal', count: doc.projects.length },
-                  { id: 'skills', label: 'Skills', icon: 'bolt', count: doc.skills.length },
-                ].map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => setActiveSection(s.id)}
-                    className={`flex items-center justify-between px-space-md py-1.5 rounded-lg font-label-md text-label-md transition-colors text-left ${
-                      activeSection === s.id
-                        ? 'bg-surface-container text-on-surface font-semibold'
-                        : 'text-secondary hover:bg-surface-container hover:text-on-surface'
-                    }`}
-                  >
-                    <div className="flex items-center gap-space-sm min-w-0">
-                      <span className="material-symbols-outlined text-[16px]">{s.icon}</span>
-                      <span className="truncate">{s.label}</span>
-                    </div>
-                    {s.count !== undefined && (
-                      <span className="font-label-sm px-1.5 py-0.2 rounded bg-surface-container-high text-secondary">
-                        {s.count}
-                      </span>
-                    )}
-                  </button>
-                ))}
+                  { id: 'profile', label: 'Profile', icon: Icons.User },
+                  { id: 'summary', label: 'Summary', icon: Icons.Document },
+                  { id: 'experience', label: 'Experience', icon: Icons.Jobs, count: doc.experience.length },
+                  { id: 'education', label: 'Education', icon: Icons.Graduation, count: doc.education.length },
+                  { id: 'projects', label: 'Projects', icon: Icons.Terminal, count: doc.projects.length },
+                  { id: 'skills', label: 'Skills', icon: Icons.Zap, count: doc.skills.length },
+                ].map((s) => {
+                  const IconComp = s.icon;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setActiveSection(s.id)}
+                      className={`flex items-center justify-between px-space-md py-1.5 rounded-lg font-label-md text-label-md transition-colors text-left ${
+                        activeSection === s.id
+                          ? 'bg-surface-container text-on-surface font-semibold'
+                          : 'text-secondary hover:bg-surface-container hover:text-on-surface'
+                      }`}
+                    >
+                      <div className="flex items-center gap-space-sm min-w-0">
+                        <IconComp size={16} />
+                        <span className="truncate">{s.label}</span>
+                      </div>
+                      {s.count !== undefined && (
+                        <span className="font-label-sm px-1.5 py-0.2 rounded bg-surface-container-high text-secondary">
+                          {s.count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </aside>
 
@@ -441,7 +445,7 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
                       disabled={aiLoading}
                       className="flex items-center gap-1 text-primary font-label-sm px-2 py-1 rounded bg-secondary-container hover:bg-surface-container-high transition-colors"
                     >
-                      <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+                      <Icons.Sparkles size={14} />
                       <span>Improve</span>
                     </button>
                   </div>
@@ -467,7 +471,7 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
                       onClick={addExperience}
                       className="flex items-center gap-1 font-label-sm text-primary hover:underline"
                     >
-                      <span className="material-symbols-outlined text-[15px]">add</span>
+                      <Icons.Add size={15} />
                       <span>Add Role</span>
                     </button>
                   </div>
@@ -493,7 +497,7 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
                             onClick={() => removeExperienceItem(expIdx)}
                             className="text-secondary hover:text-error"
                           >
-                            <span className="material-symbols-outlined text-[16px]">delete</span>
+                            <Icons.Delete size={16} />
                           </button>
                         </div>
 
@@ -536,14 +540,14 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
                                   title="AI Polish Bullet"
                                   className="w-6 h-6 flex items-center justify-center rounded hover:bg-surface-container text-primary"
                                 >
-                                  <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+                                  <Icons.Sparkles size={14} />
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => removeBullet(expIdx, bIdx)}
                                   className="w-6 h-6 flex items-center justify-center rounded hover:bg-error-container text-error opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
-                                  <span className="material-symbols-outlined text-[14px]">close</span>
+                                  <Icons.Close size={14} />
                                 </button>
                               </div>
                             </div>
@@ -554,7 +558,7 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
                             onClick={() => addBulletToExperience(expIdx)}
                             className="self-start text-[11px] font-medium text-secondary hover:text-on-surface flex items-center gap-1 pt-1"
                           >
-                            <span className="material-symbols-outlined text-[14px]">add</span>
+                            <Icons.Add size={14} />
                             <span>Add Bullet</span>
                           </button>
                         </div>
@@ -583,7 +587,7 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
                       }}
                       className="flex items-center gap-1 font-label-sm text-primary hover:underline"
                     >
-                      <span className="material-symbols-outlined text-[15px]">add</span>
+                      <Icons.Add size={15} />
                       <span>Add Category</span>
                     </button>
                   </div>
@@ -746,7 +750,7 @@ export default function ResumeStudioPage({ params }: { params: Promise<{ id: str
                       <span className="font-label-sm text-secondary uppercase tracking-wider">Strengths</span>
                       {analysisReport.strengths.map((str, idx) => (
                         <div key={idx} className="flex items-center gap-2 text-[12px] text-on-surface">
-                          <span className="material-symbols-outlined text-[15px] text-on-tertiary-container">check_circle</span>
+                          <Icons.CheckCircle size={15} className="text-on-tertiary-container" />
                           <span>{str}</span>
                         </div>
                       ))}

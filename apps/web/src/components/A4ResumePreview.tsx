@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { ResumeDocument } from '@/lib/types';
+import { Icons } from './Icons';
 
 interface A4ResumePreviewProps {
   document: ResumeDocument;
@@ -271,7 +272,7 @@ export function A4ResumePreview({ document }: A4ResumePreviewProps) {
           className="w-6 h-6 flex items-center justify-center rounded-full text-secondary hover:text-on-surface hover:bg-surface-container transition-colors"
           title="Zoom Out"
         >
-          <span className="material-symbols-outlined text-[16px]">remove</span>
+          <Icons.Minus size={14} />
         </button>
 
         <span className="text-[11px] font-medium px-2 text-on-surface w-12 text-center">
@@ -284,7 +285,7 @@ export function A4ResumePreview({ document }: A4ResumePreviewProps) {
           className="w-6 h-6 flex items-center justify-center rounded-full text-secondary hover:text-on-surface hover:bg-surface-container transition-colors"
           title="Zoom In"
         >
-          <span className="material-symbols-outlined text-[16px]">add</span>
+          <Icons.Add size={14} />
         </button>
 
         <div className="w-px h-3.5 bg-surface-container-high mx-1" />
@@ -302,7 +303,7 @@ export function A4ResumePreview({ document }: A4ResumePreviewProps) {
           onClick={() => window.print()}
           className="px-2 py-0.5 rounded text-[11px] font-medium text-primary hover:bg-surface-container transition-colors flex items-center gap-1"
         >
-          <span className="material-symbols-outlined text-[14px]">print</span>
+          <Icons.Print size={14} />
           <span>Print</span>
         </button>
       </div>

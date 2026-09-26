@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { Icons } from '@/components/Icons';
 import { api } from '@/lib/api';
 import { BulletVariant, LibraryItemType, LibrarySnippet } from '@/lib/types';
 
@@ -137,9 +138,7 @@ export default function LibraryPage() {
           <div className="flex flex-col gap-space-md bg-surface-container-lowest p-space-md rounded shadow-sm border border-surface-container-highest">
             <div className="flex items-center gap-space-sm">
               <div className="flex-1 flex items-center gap-space-sm px-space-md py-1.5 rounded bg-surface-container-low text-on-surface-variant border border-surface-container-highest">
-                <span className="material-symbols-outlined text-[16px] text-secondary">
-                  search
-                </span>
+                <Icons.Search size={16} className="text-secondary" />
                 <input
                   type="text"
                   placeholder="Search reusable bullets, metrics, or technologies..."
@@ -154,7 +153,7 @@ export default function LibraryPage() {
                 onClick={() => setShowAddBox(!showAddBox)}
                 className="h-8 px-space-md flex items-center gap-space-xs rounded bg-primary text-on-primary font-label-sm text-label-sm hover:bg-inverse-surface transition-colors flex-shrink-0 shadow-sm"
               >
-                <span className="material-symbols-outlined text-[14px]">add</span>
+                <Icons.Add size={14} />
                 <span>Add Snippet</span>
               </button>
             </div>
@@ -193,7 +192,7 @@ export default function LibraryPage() {
                   onClick={() => setShowAddBox(false)}
                   className="text-secondary hover:text-on-surface"
                 >
-                  <span className="material-symbols-outlined text-[16px]">close</span>
+                  <Icons.Close size={16} />
                 </button>
               </div>
 
@@ -249,9 +248,7 @@ export default function LibraryPage() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-space-sm">
-                      <span className="material-symbols-outlined text-secondary text-[16px]">
-                        format_quote
-                      </span>
+                      <Icons.Quote size={16} className="text-secondary" />
                       <span className="font-headline-md text-on-surface font-semibold">
                         {snip.title || 'Career Bullet'}
                       </span>
@@ -265,7 +262,7 @@ export default function LibraryPage() {
                       onClick={() => handleDeleteSnippet(snip.id)}
                       className="text-secondary hover:text-error"
                     >
-                      <span className="material-symbols-outlined text-[16px]">delete</span>
+                      <Icons.Delete size={16} />
                     </button>
                   </div>
 

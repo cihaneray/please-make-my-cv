@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { A4ResumePreview } from '@/components/A4ResumePreview';
+import { Icons } from '@/components/Icons';
 import { api } from '@/lib/api';
 import { ResumeDocument } from '@/lib/types';
 
@@ -66,7 +67,7 @@ export default function ImportPage() {
       {/* Top Header */}
       <div className="h-12 w-full bg-surface-container-lowest flex items-center justify-between px-space-lg shrink-0 border-b border-surface-container-high no-print">
         <div className="flex items-center gap-space-sm">
-          <span className="material-symbols-outlined text-[18px]">upload_file</span>
+          <Icons.Upload size={18} />
           <span className="font-headline-md text-headline-md font-semibold">
             Import & Normalize Resume
           </span>
@@ -84,7 +85,7 @@ export default function ImportPage() {
             disabled={applying}
             className="h-8 px-space-lg flex items-center gap-1.5 rounded-lg bg-primary text-on-primary font-label-md shadow hover:bg-primary-container transition-all"
           >
-            <span className="material-symbols-outlined text-[15px]">check</span>
+            <Icons.Check size={15} />
             <span>{applying ? 'Importing...' : 'Confirm & Save to Workspace'}</span>
           </button>
         )}

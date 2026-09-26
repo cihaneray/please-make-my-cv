@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { Icons } from '@/components/Icons';
 import { api } from '@/lib/api';
 import { JobApplication, JobMatchAnalysis, JobStatus, ResumeSummary } from '@/lib/types';
 
@@ -125,7 +126,7 @@ export default function JobsPage() {
             onClick={() => setShowAddModal(true)}
             className="h-8 px-space-md flex items-center gap-space-xs rounded bg-primary text-on-primary font-label-md hover:bg-inverse-surface transition-colors shadow-sm"
           >
-            <span className="material-symbols-outlined text-[16px]">add</span>
+            <Icons.Add size={16} />
             <span>Add Target Job</span>
           </button>
         </div>
@@ -317,7 +318,7 @@ export default function JobsPage() {
                 onClick={() => setShowAddModal(false)}
                 className="text-secondary hover:text-on-surface"
               >
-                <span className="material-symbols-outlined text-[18px]">close</span>
+                <Icons.Close size={18} />
               </button>
             </div>
 

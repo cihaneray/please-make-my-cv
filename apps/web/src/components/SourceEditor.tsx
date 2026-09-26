@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { ResumeDocument } from '@/lib/types';
+import { Icons } from './Icons';
 
 interface SourceEditorProps {
   resumeId: string;
@@ -110,9 +111,7 @@ export function SourceEditor({ resumeId, revision, onDocumentUpdated }: SourceEd
             disabled={validating}
             className="h-7 px-space-sm flex items-center gap-1 rounded hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors"
           >
-            <span className="material-symbols-outlined text-[15px] text-secondary">
-              check_circle
-            </span>
+            <Icons.CheckCircle size={14} className="text-secondary" />
             <span>{validating ? 'Validating...' : 'Validate'}</span>
           </button>
         </div>
@@ -121,12 +120,12 @@ export function SourceEditor({ resumeId, revision, onDocumentUpdated }: SourceEd
         <div className="flex items-center gap-space-md">
           {isValid ? (
             <span className="inline-flex items-center gap-1 text-on-tertiary-container text-label-sm font-medium">
-              <span className="material-symbols-outlined text-[15px]">verified</span>
+              <Icons.CheckCircle size={14} />
               <span>Valid {format.toUpperCase()}</span>
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 text-error text-label-sm font-medium">
-              <span className="material-symbols-outlined text-[15px]">error</span>
+              <Icons.AlertCircle size={14} />
               <span>Syntax Issues</span>
             </span>
           )}
@@ -137,7 +136,7 @@ export function SourceEditor({ resumeId, revision, onDocumentUpdated }: SourceEd
             disabled={applying || loading}
             className="h-7 px-space-md flex items-center gap-1 rounded bg-primary text-on-primary font-label-sm text-label-sm hover:bg-inverse-surface shadow-xs transition-colors font-medium disabled:opacity-50"
           >
-            <span className="material-symbols-outlined text-[14px]">play_arrow</span>
+            <Icons.Play size={13} />
             <span>{applying ? 'Applying...' : 'Apply Changes'}</span>
           </button>
         </div>
@@ -147,7 +146,7 @@ export function SourceEditor({ resumeId, revision, onDocumentUpdated }: SourceEd
       {errors.length > 0 && (
         <div className="p-space-sm bg-error-container text-on-error-container text-[12px] flex flex-col gap-1 border-b border-error/20">
           <div className="font-semibold flex items-center gap-1">
-            <span className="material-symbols-outlined text-[15px]">warning</span>
+            <Icons.AlertTriangle size={15} />
             <span>Validation Errors:</span>
           </div>
           {errors.map((e, idx) => (

@@ -3,13 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React from 'react';
+import { Icons } from './Icons';
 
 const NAV_ITEMS = [
-  { label: 'Home', href: '/', icon: 'home' },
-  { label: 'Resumes', href: '/resumes', icon: 'description' },
-  { label: 'Jobs', href: '/jobs', icon: 'work_outline' },
-  { label: 'Library', href: '/library', icon: 'folder_open' },
-  { label: 'Templates', href: '/templates', icon: 'grid_view' },
+  { label: 'Home', href: '/', icon: Icons.Home },
+  { label: 'Resumes', href: '/resumes', icon: Icons.Document },
+  { label: 'Jobs', href: '/jobs', icon: Icons.Jobs },
+  { label: 'Library', href: '/library', icon: Icons.Library },
+  { label: 'Templates', href: '/templates', icon: Icons.Templates },
 ];
 
 export function Sidebar() {
@@ -21,7 +22,7 @@ export function Sidebar() {
         {/* Brand header */}
         <div className="h-14 px-space-lg flex items-center gap-space-sm border-b border-surface-container-high">
           <div className="w-6 h-6 rounded bg-primary text-on-primary flex items-center justify-center">
-            <span className="material-symbols-outlined text-[16px]">article</span>
+            <Icons.Document size={14} className="text-white" />
           </div>
           <span className="font-headline-md text-headline-md tracking-tight text-on-surface">
             CV Workspace
@@ -35,6 +36,7 @@ export function Sidebar() {
               item.href === '/'
                 ? pathname === '/'
                 : pathname.startsWith(item.href);
+            const Icon = item.icon;
 
             return (
               <Link
@@ -46,9 +48,7 @@ export function Sidebar() {
                     : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
                 }`}
               >
-                <span className="material-symbols-outlined text-[18px]">
-                  {item.icon}
-                </span>
+                <Icon size={18} />
                 <span>{item.label}</span>
               </Link>
             );
@@ -62,7 +62,7 @@ export function Sidebar() {
           href="/import"
           className="flex items-center gap-space-md px-space-md py-space-xs rounded text-on-surface-variant font-label-md text-label-md hover:bg-surface-container hover:text-on-surface transition-colors"
         >
-          <span className="material-symbols-outlined text-[18px]">upload_file</span>
+          <Icons.Upload size={18} />
           <span>Import CV</span>
         </Link>
 
@@ -70,9 +70,7 @@ export function Sidebar() {
           <div className="flex items-center justify-between px-space-md py-space-xs rounded hover:bg-surface-container transition-colors cursor-pointer">
             <div className="flex items-center gap-space-sm min-w-0">
               <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                <span className="material-symbols-outlined text-on-primary text-[16px]">
-                  person
-                </span>
+                <Icons.User size={15} className="text-white" />
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="font-label-md text-label-md text-on-surface truncate">
@@ -83,9 +81,7 @@ export function Sidebar() {
                 </span>
               </div>
             </div>
-            <span className="material-symbols-outlined text-[16px] text-secondary flex-shrink-0">
-              unfold_more
-            </span>
+            <Icons.Unfold size={15} className="text-secondary flex-shrink-0" />
           </div>
         </div>
       </div>

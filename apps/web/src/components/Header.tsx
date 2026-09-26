@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { api } from '@/lib/api';
+import { Icons } from './Icons';
 
 export function Header() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export function Header() {
   return (
     <header className="fixed top-0 left-[220px] right-0 h-14 bg-surface-container-lowest/80 backdrop-blur-xl border-b border-surface-container-highest z-40 flex items-center justify-between px-space-lg no-print">
       <div className="flex items-center gap-space-sm text-on-surface-variant w-80 max-w-md">
-        <span className="material-symbols-outlined text-[18px]">search</span>
+        <Icons.Search size={16} className="text-secondary" />
         <input
           type="text"
           placeholder="Quick search or jump to section..."
@@ -40,9 +41,7 @@ export function Header() {
           href="/import"
           className="h-8 px-space-md flex items-center gap-space-xs rounded border border-surface-container-highest bg-surface-container-lowest text-on-surface font-label-sm text-label-sm hover:bg-surface-container transition-colors"
         >
-          <span className="material-symbols-outlined text-[15px] text-secondary">
-            upload_file
-          </span>
+          <Icons.Upload size={14} className="text-secondary" />
           <span>Import</span>
         </Link>
 
@@ -52,7 +51,7 @@ export function Header() {
           disabled={creating}
           className="h-8 px-space-md flex items-center gap-space-xs rounded bg-primary text-on-primary font-label-sm text-label-sm hover:bg-inverse-surface transition-colors shadow-sm disabled:opacity-50"
         >
-          <span className="material-symbols-outlined text-[15px]">add</span>
+          <Icons.Add size={15} />
           <span>{creating ? 'Creating...' : 'New Document'}</span>
         </button>
 

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
+import { Icons } from '@/components/Icons';
 import { api } from '@/lib/api';
 import { ResumeSummary } from '@/lib/types';
 
@@ -63,8 +64,8 @@ export default function ResumesPage() {
 
           <div className="flex items-center gap-space-sm">
             <div className="relative">
-              <span className="material-symbols-outlined absolute left-2.5 top-2 text-[16px] text-secondary">
-                search
+              <span className="absolute left-2.5 top-2 text-secondary">
+                <Icons.Search size={15} />
               </span>
               <input
                 type="text"
@@ -80,7 +81,7 @@ export default function ResumesPage() {
               onClick={handleCreateNew}
               className="h-8 px-space-md flex items-center gap-space-xs rounded bg-primary text-on-primary font-label-md text-label-md hover:bg-inverse-surface transition-colors shadow-sm"
             >
-              <span className="material-symbols-outlined text-[16px]">add</span>
+              <Icons.Add size={16} />
               <span>Create Resume</span>
             </button>
           </div>
