@@ -26,6 +26,7 @@ import {
   Save,
   Search,
   Settings,
+  Shield,
   Sparkles,
   Terminal,
   Trash2,
@@ -74,4 +75,5 @@ export const Icons = {
   Redo: ({ className, size = 16 }: { className?: string; size?: number }) => <Redo size={size} className={className} />,
   Globe: ({ className, size = 16 }: { className?: string; size?: number }) => <Globe size={size} className={className} />,
   Language: ({ className, size = 16 }: { className?: string; size?: number }) => <Globe size={size} className={className} />,
+  Shield: ({ className, size = 16 }: { className?: string; size?: number }) => <Shield size={size} className={className} />,
 };
