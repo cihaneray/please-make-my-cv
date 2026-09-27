@@ -102,9 +102,17 @@ export default function ResumesPage() {
               >
                 <div className="flex flex-col gap-space-xs">
                   <div className="flex items-start justify-between">
-                    <span className="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container text-secondary uppercase font-semibold">
-                      {r.templateId}
-                    </span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container text-secondary uppercase font-semibold">
+                        {r.templateId}
+                      </span>
+                      <span className="font-label-sm text-[11px] px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface uppercase font-medium">
+                        {(r.language || 'en').toUpperCase()}
+                      </span>
+                      <span className="font-label-sm text-[11px] px-1.5 py-0.5 rounded bg-surface-container-highest text-primary font-semibold">
+                        {r.targetMarket || 'TR'}
+                      </span>
+                    </div>
                     <span className="font-body-sm text-body-sm text-secondary">
                       rev {r.revision}
                     </span>

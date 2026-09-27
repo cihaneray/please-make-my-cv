@@ -110,6 +110,8 @@ export interface VisibilitySettings {
   showLanguages: boolean;
 }
 
+export type TargetMarket = 'TR' | 'US' | 'UK' | 'EU' | 'GLOBAL' | 'OTHER';
+
 export interface ResumeMetadata {
   id: string;
   schemaVersion: number;
@@ -117,6 +119,7 @@ export interface ResumeMetadata {
   targetRole: string;
   templateId: string;
   language: string;
+  targetMarket?: TargetMarket;
   tags: string[];
   revision: number;
   createdAt: string;
@@ -145,6 +148,8 @@ export interface ResumeSummary {
   title: string;
   targetRole: string;
   templateId: string;
+  language?: string;
+  targetMarket?: TargetMarket;
   revision: number;
   updatedAt: string;
   createdAt: string;
@@ -218,6 +223,15 @@ export interface ResumeAnalysisReport {
   wordCount: number;
   bulletCount: number;
   strengths: string[];
+  atsBreakdown?: {
+    structure: number;
+    readability: number;
+    contact: number;
+    consistency: number;
+    job_relevance: number;
+    parseability: number;
+  };
+  heuristicNotice?: string;
   calculatedAt: string;
 }
 

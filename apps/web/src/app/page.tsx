@@ -170,9 +170,15 @@ export default function HomePage() {
                       {r.targetRole || 'General Profile'}
                     </div>
 
-                    <div className="col-span-2">
+                    <div className="col-span-2 flex items-center gap-1.5 flex-wrap">
                       <span className="font-label-sm text-label-sm text-on-secondary-container bg-surface-container px-space-xs py-0.5 rounded capitalize">
                         {r.templateId}
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface font-medium uppercase">
+                        {(r.language || 'en').toUpperCase()}
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-container-highest text-primary font-semibold">
+                        {r.targetMarket || 'TR'}
                       </span>
                     </div>
 

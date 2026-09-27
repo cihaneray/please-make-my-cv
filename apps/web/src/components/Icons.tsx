@@ -11,6 +11,7 @@ import {
   Eye,
   FileText,
   Folder,
+  Globe,
   GraduationCap,
   Home,
   LayoutGrid,
@@ -71,4 +72,6 @@ export const Icons = {
   Play: ({ className, size = 14 }: { className?: string; size?: number }) => <Play size={size} className={className} />,
   Undo: ({ className, size = 16 }: { className?: string; size?: number }) => <Undo size={size} className={className} />,
   Redo: ({ className, size = 16 }: { className?: string; size?: number }) => <Redo size={size} className={className} />,
+  Globe: ({ className, size = 16 }: { className?: string; size?: number }) => <Globe size={size} className={className} />,
+  Language: ({ className, size = 16 }: { className?: string; size?: number }) => <Globe size={size} className={className} />,
 };

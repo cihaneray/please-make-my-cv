@@ -652,27 +652,96 @@ export default function ResumeStudioPage() {
           <div className="flex flex-1 w-full overflow-hidden">
             <div className="w-[420px] bg-surface-container-lowest p-space-xl flex flex-col gap-space-lg overflow-y-auto border-r border-surface-container-high no-print">
               <span className="font-headline-md text-headline-md text-on-surface font-semibold">
-                Design & Typography
+                {t('designAndTypography')}
               </span>
+
+              {/* Localization & Target Market (Decoupled Variables) */}
+              <div className="flex flex-col gap-3 p-3.5 rounded-lg bg-surface-container-low border border-surface-container-highest">
+                <span className="font-headline-sm font-semibold text-on-surface flex items-center gap-1.5">
+                  <Icons.Language size={16} />
+                  <span>{t('localizationTitle')}</span>
+                </span>
+
+                <p className="text-[11px] text-on-surface-variant leading-relaxed bg-surface-container p-2 rounded border border-surface-container-high">
+                  {t('marketNotice')}
+                </p>
+
+                {/* CV Content Language */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-label-sm text-secondary">{t('cvLanguageLabel')}</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { code: 'en', label: 'English' },
+                      { code: 'tr', label: 'Türkçe' },
+                    ].map((lang) => (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        onClick={() => {
+                          setDoc({
+                            ...doc,
+                            metadata: {
+                              ...doc.metadata,
+                              language: lang.code,
+                            },
+                          });
+                        }}
+                        className={`p-2 rounded border text-label-md transition-all ${
+                          (doc.metadata.language || 'en') === lang.code
+                            ? 'border-primary bg-primary text-on-primary font-semibold'
+                            : 'border-surface-container-highest bg-surface-container text-on-surface hover:bg-surface-container-high'
+                        }`}
+                      >
+                        {lang.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Target Market */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-label-sm text-secondary">{t('targetMarketLabel')}</label>
+                  <select
+                    value={doc.metadata.targetMarket || 'TR'}
+                    onChange={(e) => {
+                      setDoc({
+                        ...doc,
+                        metadata: {
+                          ...doc.metadata,
+                          targetMarket: e.target.value as any,
+                        },
+                      });
+                    }}
+                    className="h-9 px-3 rounded-lg bg-surface-container-lowest text-body-md border border-surface-container-highest outline-none focus:border-primary"
+                  >
+                    <option value="TR">{t('marketTR')}</option>
+                    <option value="US">{t('marketUS')}</option>
+                    <option value="UK">{t('marketUK')}</option>
+                    <option value="EU">{t('marketEU')}</option>
+                    <option value="GLOBAL">{t('marketGlobal')}</option>
+                    <option value="OTHER">{t('marketOther')}</option>
+                  </select>
+                </div>
+              </div>
 
               {/* Template */}
               <div className="flex flex-col gap-2">
-                <label className="font-label-sm text-secondary">Visual Template</label>
+                <label className="font-label-sm text-secondary">{t('visualTemplate')}</label>
                 <div className="grid grid-cols-3 gap-2">
-                  {(['minimal', 'technical', 'professional'] as const).map((t) => (
+                  {(['minimal', 'technical', 'professional'] as const).map((tCode) => (
                     <button
-                      key={t}
+                      key={tCode}
                       type="button"
                       onClick={() => {
-                        updateField('design', { ...doc.design, template: t });
+                        updateField('design', { ...doc.design, template: tCode });
                       }}
                       className={`p-2.5 rounded-lg border text-label-md capitalize transition-all ${
-                        doc.design.template === t
+                        doc.design.template === tCode
                           ? 'border-primary bg-primary text-on-primary font-semibold'
                           : 'border-surface-container-highest bg-surface-container-low text-on-surface hover:bg-surface-container'
                       }`}
                     >
-                      {t}
+                      {tCode}
                     </button>
                   ))}
                 </div>
@@ -680,7 +749,7 @@ export default function ResumeStudioPage() {
 
               {/* Accent Color */}
               <div className="flex flex-col gap-2">
-                <label className="font-label-sm text-secondary">Accent Color</label>
+                <label className="font-label-sm text-secondary">{t('accentColor')}</label>
                 <div className="flex items-center gap-3">
                   {['#0F172A', '#16A34A', '#2563EB', '#7C3AED', '#DC2626', '#B45309'].map((col) => (
                     <button
@@ -698,7 +767,7 @@ export default function ResumeStudioPage() {
 
               {/* Font Family */}
               <div className="flex flex-col gap-2">
-                <label className="font-label-sm text-secondary">Font Family</label>
+                <label className="font-label-sm text-secondary">{t('fontFamily')}</label>
                 <select
                   value={doc.design.fontFamily}
                   onChange={(e) => updateField('design', { ...doc.design, fontFamily: e.target.value })}
@@ -716,7 +785,7 @@ export default function ResumeStudioPage() {
                 onClick={() => handleSave()}
                 className="mt-4 h-9 rounded bg-primary text-on-primary font-label-md hover:bg-inverse-surface transition-colors"
               >
-                Save Design Changes
+                {t('saveDesign')}
               </button>
             </div>
             <A4ResumePreview document={doc} />
@@ -728,28 +797,68 @@ export default function ResumeStudioPage() {
           <div className="flex flex-1 w-full overflow-hidden">
             <div className="w-[450px] bg-surface-container-lowest p-space-xl flex flex-col gap-space-lg overflow-y-auto border-r border-surface-container-high no-print">
               <span className="font-headline-md text-headline-md text-on-surface font-semibold">
-                ATS Compatibility & Quality Review
+                {t('atsReview')}
               </span>
 
               {analyzing ? (
-                <div className="text-secondary text-sm">Evaluating ATS heuristic rules...</div>
+                <div className="text-secondary text-sm">{t('evaluatingRules')}</div>
               ) : analysisReport ? (
                 <div className="flex flex-col gap-space-lg">
                   {/* Score Pill Row */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3 rounded-lg bg-surface-container-low flex flex-col">
-                      <span className="text-[11px] text-secondary uppercase font-semibold">ATS Compatibility</span>
+                      <span className="text-[11px] text-secondary uppercase font-semibold">{t('atsCompatibility')}</span>
                       <span className="text-[22px] font-bold text-on-tertiary-container">
                         {analysisReport.atsCompatibilityScore}%
                       </span>
                     </div>
                     <div className="p-3 rounded-lg bg-surface-container-low flex flex-col">
-                      <span className="text-[11px] text-secondary uppercase font-semibold">Content Quality</span>
+                      <span className="text-[11px] text-secondary uppercase font-semibold">{t('contentQuality')}</span>
                       <span className="text-[22px] font-bold text-primary">
                         {analysisReport.contentQualityScore}%
                       </span>
                     </div>
                   </div>
+
+                  {/* Transparent ATS Heuristic Score Breakdown */}
+                  {analysisReport.atsBreakdown && (
+                    <div className="flex flex-col gap-2 p-3 rounded-lg bg-surface-container-low border border-surface-container-highest">
+                      <span className="font-label-sm text-secondary uppercase tracking-wider font-semibold">
+                        {t('scoreBreakdownTitle')}
+                      </span>
+                      <div className="grid grid-cols-2 gap-2 text-[12px]">
+                        <div className="flex justify-between p-1.5 rounded bg-surface-container-lowest">
+                          <span className="text-secondary">{t('breakdownStructure')}</span>
+                          <span className="font-semibold text-on-surface">{analysisReport.atsBreakdown.structure} / 20</span>
+                        </div>
+                        <div className="flex justify-between p-1.5 rounded bg-surface-container-lowest">
+                          <span className="text-secondary">{t('breakdownReadability')}</span>
+                          <span className="font-semibold text-on-surface">{analysisReport.atsBreakdown.readability} / 20</span>
+                        </div>
+                        <div className="flex justify-between p-1.5 rounded bg-surface-container-lowest">
+                          <span className="text-secondary">{t('breakdownContact')}</span>
+                          <span className="font-semibold text-on-surface">{analysisReport.atsBreakdown.contact} / 15</span>
+                        </div>
+                        <div className="flex justify-between p-1.5 rounded bg-surface-container-lowest">
+                          <span className="text-secondary">{t('breakdownConsistency')}</span>
+                          <span className="font-semibold text-on-surface">{analysisReport.atsBreakdown.consistency} / 15</span>
+                        </div>
+                        <div className="flex justify-between p-1.5 rounded bg-surface-container-lowest">
+                          <span className="text-secondary">{t('breakdownJobRelevance')}</span>
+                          <span className="font-semibold text-on-surface">{analysisReport.atsBreakdown.job_relevance} / 20</span>
+                        </div>
+                        <div className="flex justify-between p-1.5 rounded bg-surface-container-lowest">
+                          <span className="text-secondary">{t('breakdownParseability')}</span>
+                          <span className="font-semibold text-on-surface">{analysisReport.atsBreakdown.parseability} / 10</span>
+                        </div>
+                      </div>
+                      {analysisReport.heuristicNotice && (
+                        <p className="text-[11px] text-secondary italic pt-1">
+                          {analysisReport.heuristicNotice}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {/* Strengths */}
                   {analysisReport.strengths.length > 0 && (

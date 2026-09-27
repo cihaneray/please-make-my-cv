@@ -98,6 +98,16 @@ export const translations = {
     accentColor: 'Accent Color',
     fontFamily: 'Font Family',
     saveDesign: 'Save Design Changes',
+    localizationTitle: 'Localization & Target Market',
+    cvLanguageLabel: 'CV Content Language',
+    targetMarketLabel: 'Target Market',
+    marketNotice: 'CV language and target market are fully independent. An English CV for Türkiye (Language: EN, Market: TR) follows Turkish market norms without US resume restrictions.',
+    marketTR: 'Türkiye (TR) — Local norms, optional photo',
+    marketUS: 'United States (US) — Strict anti-bias, no photo',
+    marketUK: 'United Kingdom (UK) — UK conventions',
+    marketEU: 'European Union (EU) — Europass / EU norms',
+    marketGlobal: 'Global / Remote — International conventions',
+    marketOther: 'Other Market',
 
     // Review tab
     atsReview: 'ATS Compatibility & Quality Review',
@@ -106,6 +116,13 @@ export const translations = {
     contentQuality: 'Content Quality',
     strengths: 'Strengths',
     suggestionsAndIssues: 'Suggestions & Issues',
+    scoreBreakdownTitle: 'Transparent ATS Heuristic Breakdown',
+    breakdownStructure: 'Structure',
+    breakdownReadability: 'Readability',
+    breakdownContact: 'Contact',
+    breakdownConsistency: 'Consistency',
+    breakdownJobRelevance: 'Job Relevance',
+    breakdownParseability: 'Parseability',
 
     // Preview Controls
     zoomOut: 'Zoom Out',
@@ -249,6 +266,16 @@ export const translations = {
     accentColor: 'Vurgu Rengi',
     fontFamily: 'Yazı Tipi',
     saveDesign: 'Tasarım Değişikliklerini Kaydet',
+    localizationTitle: 'Lokalizasyon ve Hedef Pazar',
+    cvLanguageLabel: 'CV İçerik Dili',
+    targetMarketLabel: 'Hedef Pazar',
+    marketNotice: 'CV dili ve hedef pazar birbirinden tamamen bağımsızdır. Türkiye için yazılan İngilizce bir CV (Dil: EN, Pazar: TR), ABD kurallarını dayatmadan Türkiye pazar standartlarını gözetir.',
+    marketTR: 'Türkiye (TR) — Yerel standartlar, opsiyonel fotoğraf',
+    marketUS: 'Amerika Birleşik Devletleri (US) — Katı önyargısızlık, fotoğrafsız',
+    marketUK: 'Birleşik Krallık (UK) — UK standartları',
+    marketEU: 'Avrupa Birliği (EU) — Europass / AB normları',
+    marketGlobal: 'Global / Uzaktan — Uluslararası standartlar',
+    marketOther: 'Diğer Pazar',
 
     // Review tab
     atsReview: 'ATS Uyumluluğu ve Kalite İncelemesi',
@@ -257,6 +284,13 @@ export const translations = {
     contentQuality: 'İçerik Kalitesi',
     strengths: 'Güçlü Yönler',
     suggestionsAndIssues: 'Öneriler ve Düzeltmeler',
+    scoreBreakdownTitle: 'Şeffaf ATS Sezgisel Puan Dağılımı',
+    breakdownStructure: 'Yapı',
+    breakdownReadability: 'Okunabilirlik',
+    breakdownContact: 'İletişim',
+    breakdownConsistency: 'Tutarlılık',
+    breakdownJobRelevance: 'İş Uyumu',
+    breakdownParseability: 'Ayrıştırılabilirlik',
 
     // Preview Controls
     zoomOut: 'Uzaklaştır',
