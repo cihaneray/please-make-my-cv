@@ -195,3 +195,7 @@ coverage/
 .gemini/
 AGENTS.md
 CLAUDE.md
+
+# Documentation & Reference artifacts
+Docs/
+

@@ -1,1 +1,0 @@
-Use stitch_minimalist_resume_workspace folder for user interface.
