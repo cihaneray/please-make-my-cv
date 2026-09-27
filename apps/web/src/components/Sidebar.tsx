@@ -63,7 +63,7 @@ export function Sidebar() {
       <div className="flex flex-col p-space-sm border-t border-surface-container-high gap-space-xs">
         {/* Language quick switcher */}
         <div className="flex items-center justify-between px-space-md py-1 bg-surface-container-low rounded-lg border border-surface-container-high text-[11px] font-semibold text-secondary">
-          <span>Language:</span>
+          <span>{t('languageLabel')}</span>
           <div className="flex items-center gap-1">
             <button
               type="button"

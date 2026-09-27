@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import { useI18n } from '@/lib/i18n';
 import { ResumeDocument } from '@/lib/types';
 import { Icons } from './Icons';
 
@@ -12,6 +13,7 @@ interface SourceEditorProps {
 }
 
 export function SourceEditor({ resumeId, revision, onDocumentUpdated }: SourceEditorProps) {
+  const { t } = useI18n();
   const [format, setFormat] = useState<'yaml' | 'json' | 'markdown'>('yaml');
   const [code, setCode] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
@@ -112,7 +114,7 @@ export function SourceEditor({ resumeId, revision, onDocumentUpdated }: SourceEd
             className="h-7 px-space-sm flex items-center gap-1 rounded hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors"
           >
             <Icons.CheckCircle size={14} className="text-secondary" />
-            <span>{validating ? 'Validating...' : 'Validate'}</span>
+            <span>{validating ? t('validating') : t('validate')}</span>
           </button>
         </div>
 
@@ -121,12 +123,12 @@ export function SourceEditor({ resumeId, revision, onDocumentUpdated }: SourceEd
           {isValid ? (
             <span className="inline-flex items-center gap-1 text-on-tertiary-container text-label-sm font-medium">
               <Icons.CheckCircle size={14} />
-              <span>Valid {format.toUpperCase()}</span>
+              <span>{t('validSource')} ({format.toUpperCase()})</span>
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 text-error text-label-sm font-medium">
               <Icons.AlertCircle size={14} />
-              <span>Syntax Issues</span>
+              <span>{t('syntaxIssues')}</span>
             </span>
           )}
 
@@ -137,7 +139,7 @@ export function SourceEditor({ resumeId, revision, onDocumentUpdated }: SourceEd
             className="h-7 px-space-md flex items-center gap-1 rounded bg-primary text-on-primary font-label-sm text-label-sm hover:bg-inverse-surface shadow-xs transition-colors font-medium disabled:opacity-50"
           >
             <Icons.Play size={13} />
-            <span>{applying ? 'Applying...' : 'Apply Changes'}</span>
+            <span>{applying ? t('applying') : t('applyChanges')}</span>
           </button>
         </div>
       </div>
@@ -147,7 +149,7 @@ export function SourceEditor({ resumeId, revision, onDocumentUpdated }: SourceEd
         <div className="p-space-sm bg-error-container text-on-error-container text-[12px] flex flex-col gap-1 border-b border-error/20">
           <div className="font-semibold flex items-center gap-1">
             <Icons.AlertTriangle size={15} />
-            <span>Validation Errors:</span>
+            <span>{t('validationErrors')}</span>
           </div>
           {errors.map((e, idx) => (
             <div key={idx} className="pl-4 font-mono">
@@ -159,7 +161,7 @@ export function SourceEditor({ resumeId, revision, onDocumentUpdated }: SourceEd
 
       {warnings.length > 0 && (
         <div className="p-space-sm bg-amber-50 text-amber-900 text-[12px] flex flex-col gap-1 border-b border-amber-200">
-          <span className="font-semibold">Warnings:</span>
+          <span className="font-semibold">{t('warnings')}</span>
           {warnings.map((w, idx) => (
             <div key={idx} className="pl-4">
               • {w}
@@ -172,7 +174,7 @@ export function SourceEditor({ resumeId, revision, onDocumentUpdated }: SourceEd
       <div className="flex-1 w-full overflow-hidden relative">
         {loading ? (
           <div className="flex items-center justify-center h-full text-secondary text-sm">
-            Loading {format.toUpperCase()} source...
+            {t('sourceLoading')}
           </div>
         ) : (
           <textarea

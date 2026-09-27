@@ -5,10 +5,12 @@ import React, { useState } from 'react';
 import { A4ResumePreview } from '@/components/A4ResumePreview';
 import { Icons } from '@/components/Icons';
 import { api } from '@/lib/api';
+import { useI18n } from '@/lib/i18n';
 import { ResumeDocument } from '@/lib/types';
 
 export default function ImportPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [content, setContent] = useState<string>('');
   const [previewDoc, setPreviewDoc] = useState<ResumeDocument | null>(null);
   const [detectedFmt, setDetectedFmt] = useState<string>('');
@@ -69,11 +71,11 @@ export default function ImportPage() {
         <div className="flex items-center gap-space-sm">
           <Icons.Upload size={18} />
           <span className="font-headline-md text-headline-md font-semibold">
-            Import & Normalize Resume
+            {t('importTitle')}
           </span>
           {detectedFmt && (
             <span className="font-label-sm px-2 py-0.5 rounded bg-surface-container uppercase text-secondary font-semibold">
-              Format: {detectedFmt}
+              {t('formatLabel')} {detectedFmt}
             </span>
           )}
         </div>
@@ -86,7 +88,7 @@ export default function ImportPage() {
             className="h-8 px-space-lg flex items-center gap-1.5 rounded-lg bg-primary text-on-primary font-label-md shadow hover:bg-primary-container transition-all"
           >
             <Icons.Check size={15} />
-            <span>{applying ? 'Importing...' : 'Confirm & Save to Workspace'}</span>
+            <span>{applying ? '...' : t('confirmAndSave')}</span>
           </button>
         )}
       </div>
@@ -97,7 +99,7 @@ export default function ImportPage() {
           {/* File Upload Box */}
           <div className="flex flex-col gap-2">
             <label className="font-label-sm text-secondary uppercase font-semibold">
-              Upload Resume File (.json, .yaml, .yml, .md)
+              {t('uploadResumeFile')}
             </label>
             <input
               type="file"
@@ -109,7 +111,7 @@ export default function ImportPage() {
 
           <div className="flex items-center gap-2 text-secondary text-[11px]">
             <div className="h-px bg-surface-container-high flex-1" />
-            <span>OR PASTE RAW CONTENT</span>
+            <span>{t('orPasteRaw')}</span>
             <div className="h-px bg-surface-container-high flex-1" />
           </div>
 
@@ -119,7 +121,7 @@ export default function ImportPage() {
               rows={12}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Paste raw YAML, JSON, or Markdown resume text here..."
+              placeholder={t('pasteRawPlaceholder')}
               className="w-full h-64 p-3 rounded-lg bg-surface-container-low font-mono text-[12px] leading-relaxed outline-none border border-surface-container-highest resize-none focus:bg-surface-container-lowest"
             />
 
@@ -129,14 +131,14 @@ export default function ImportPage() {
               disabled={loading || !content.trim()}
               className="h-8 rounded bg-surface-container text-on-surface hover:bg-surface-container-high font-label-md text-label-md transition-colors disabled:opacity-50"
             >
-              {loading ? 'Analyzing Content...' : 'Parse & Generate Preview'}
+              {loading ? t('analyzingContent') : t('parseAndPreview')}
             </button>
           </div>
 
           {/* Parsing Diagnostics */}
           {errors.length > 0 && (
             <div className="p-3 rounded bg-error-container text-on-error-container text-[12px] flex flex-col gap-1">
-              <span className="font-semibold">Parse Errors:</span>
+              <span className="font-semibold">{t('parseErrors')}</span>
               {errors.map((err, idx) => (
                 <div key={idx}>• {err}</div>
               ))}
@@ -145,7 +147,7 @@ export default function ImportPage() {
 
           {warnings.length > 0 && (
             <div className="p-3 rounded bg-amber-50 text-amber-900 text-[12px] flex flex-col gap-1">
-              <span className="font-semibold">Warnings / Migrations:</span>
+              <span className="font-semibold">{t('warningsMigrations')}</span>
               {warnings.map((w, idx) => (
                 <div key={idx}>• {w}</div>
               ))}

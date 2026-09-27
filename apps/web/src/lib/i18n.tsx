@@ -16,11 +16,12 @@ export const translations = {
     importCv: 'Import CV',
     personalTeam: 'Personal Team',
 
-    // Header
+    // Header & Sidebar
     searchPlaceholder: 'Quick search or jump to section...',
     newResume: 'New Resume',
     newDocument: 'New Document',
     import: 'Import',
+    languageLabel: 'Language:',
 
     // Dashboard
     dashboard: 'Dashboard',
@@ -32,13 +33,51 @@ export const translations = {
     lastEdited: 'Last edited',
     statusSaved: 'Saved',
     statusApplied: 'Applied',
+    statusInterview: 'Interview',
     statusInterviewing: 'Interviewing',
+    statusOffer: 'Offer',
+    statusRejected: 'Rejected',
+    statusArchived: 'Archived',
     viewAll: 'View All',
     openStudio: 'Open Studio',
     duplicate: 'Duplicate',
     delete: 'Delete',
     exportPdf: 'Export PDF',
     noResumes: 'No resumes found. Create your first resume!',
+    colDocumentName: 'Document Name',
+    colTargetRole: 'Target Role',
+    colTemplate: 'Template',
+    colLastEdited: 'Last Edited',
+    colActions: 'Actions',
+    colCompany: 'Company',
+    colPosition: 'Position',
+    colStatus: 'Status',
+    colLinkedResume: 'Linked Resume',
+    colDetails: 'Details',
+    loadingResumes: 'Loading resumes...',
+    noResumesCreated: 'No resumes created yet.',
+    createFirstResume: 'Create Your First Resume',
+    recentJobs: 'Recent Jobs',
+    trackedCount: 'tracked',
+    manageTracker: 'Manage tracker',
+    openAction: 'Open',
+    duplicateAction: 'Duplicate',
+    deleteAction: 'Delete',
+    compareAction: 'Compare',
+    statusLinked: 'Linked',
+    statusNone: 'None',
+    statusGeneralProfile: 'General Profile',
+
+    // Resumes Page
+    documents: 'Documents',
+    myResumes: 'My Resumes',
+    myResumesSubtitle: 'Manage your tailored CV variants, master resumes, and version history.',
+    filterResumes: 'Filter resumes...',
+    createResume: 'Create Resume',
+    noResumesFound: 'No resumes found.',
+    editAction: 'Edit',
+    pdfAction: 'PDF',
+    revLabel: 'rev',
 
     // Studio Tabs & Actions
     contentTab: 'Content',
@@ -49,6 +88,7 @@ export const translations = {
     saving: 'Saving...',
     exporting: 'Exporting...',
     sections: 'Sections',
+    loadingStudio: 'Loading CV Workspace Studio...',
 
     // Profile & Sections
     personalProfile: 'Personal Profile',
@@ -124,14 +164,27 @@ export const translations = {
     breakdownJobRelevance: 'Job Relevance',
     breakdownParseability: 'Parseability',
 
-    // Preview Controls
+    // Preview Controls & A4
     zoomOut: 'Zoom Out',
     zoomIn: 'Zoom In',
     reset: 'Reset',
     print: 'Print',
     pageOf: 'Curriculum Vitae',
+    previewSummary: 'Summary',
+    previewExperience: 'Experience',
+    previewEducation: 'Education',
+    previewProjects: 'Projects',
+    previewSkills: 'Core Proficiencies',
+    previewPresent: 'Present',
+    previewTech: 'Tech:',
+    previewUntitledRole: 'Untitled Role',
+    previewYourName: 'Your Name',
 
     // Jobs Page
+    workspace: 'Workspace',
+    careerPipeline: 'Career Pipeline',
+    jobsAndMatchTitle: 'Jobs & Match Analysis',
+    trackedApplications: 'tracked applications',
     jobMatches: 'Target Job Matches',
     addNewJob: 'Add Target Job',
     targetJobsList: 'Target Positions',
@@ -144,9 +197,29 @@ export const translations = {
     matchedKeywords: 'Matched Keywords',
     missingKeywords: 'Missing Keywords / Skills Gap',
     actionPlan: 'Optimization Action Plan',
+    loadingJobs: 'Loading jobs...',
+    noJobsAdded: 'No jobs added yet.',
+    remote: 'Remote',
+    cvCompatibilityRating: 'CV Compatibility Rating',
+    matchPercent: 'Match',
+    calculating: 'Calculating...',
+    matchedRequirements: 'Matched Requirements',
+    missingCompetencies: 'Missing or Weakly Represented',
+    matchInsights: 'Match Insights & Advice',
+    noDescription: 'No description provided.',
+    selectJobToInspect: 'Select a job from the left panel to inspect match analysis.',
+    addNewTargetJob: 'Add New Target Job',
+    companyName: 'Company Name',
+    positionTitle: 'Position Title',
+    jobDescriptionRequirements: 'Job Description / Requirements',
+    jobDescPlaceholder: 'Paste the job posting description here for automated keyword and ATS gap analysis...',
+    cancel: 'Cancel',
+    saveAndAnalyze: 'Save & Analyze',
 
     // Library Page
     careerLibraryTitle: 'Career Library',
+    librarySubheading: 'Global Career Content Repository',
+    libraryDescription: 'Store, tag, and reuse battle-tested achievements, projects, and skills across all resumes.',
     searchSnippets: 'Search reusable bullets, metrics, or technologies...',
     addSnippet: 'Add Snippet',
     allTags: 'All Tags',
@@ -156,6 +229,39 @@ export const translations = {
     tagsLabel: 'Tags (comma separated)',
     saveSnippet: 'Save Snippet',
     noSnippetsFound: 'No snippets matched your criteria.',
+    snippetsStored: 'Snippets Stored',
+    atsMatchAvg: 'ATS Match Avg',
+
+    // Templates Page
+    gallery: 'Gallery',
+    resumeTemplates: 'Resume Templates',
+    templatesSubtitle: 'ATS-friendly visual presentations configured with tabular spacing, readable typography, and authentic A4 scaling.',
+    a4Ready: 'A4 Ready',
+    bestFor: 'Best for:',
+    useTemplate: 'Use Template',
+
+    // Import Page
+    importTitle: 'Import & Normalize Resume',
+    confirmAndSave: 'Confirm & Save to Workspace',
+    uploadResumeFile: 'Upload Resume File (.json, .yaml, .yml, .md)',
+    orPasteRaw: 'OR PASTE RAW CONTENT',
+    pasteRawPlaceholder: 'Paste raw YAML, JSON, or Markdown resume text here...',
+    parseAndPreview: 'Parse & Generate Preview',
+    analyzingContent: 'Analyzing Content...',
+    parseErrors: 'Parse Errors:',
+    warningsMigrations: 'Warnings / Migrations:',
+    formatLabel: 'Format:',
+
+    // Source Editor
+    validate: 'Validate',
+    validating: 'Validating...',
+    validSource: 'Valid',
+    syntaxIssues: 'Syntax Issues',
+    applyChanges: 'Apply Changes',
+    applying: 'Applying...',
+    validationErrors: 'Validation Errors:',
+    warnings: 'Warnings:',
+    sourceLoading: 'Loading source...',
 
     // Settings Page
     settingsTitle: 'Workspace Settings',
@@ -191,11 +297,12 @@ export const translations = {
     importCv: 'CV İçe Aktar',
     personalTeam: 'Kişisel Çalışma Alanı',
 
-    // Header
+    // Header & Sidebar
     searchPlaceholder: 'Hızlı arama yapın veya bölüme atlayın...',
     newResume: 'Yeni Özgeçmiş',
     newDocument: 'Yeni Belge',
     import: 'İçe Aktar',
+    languageLabel: 'Dil:',
 
     // Dashboard
     dashboard: 'Kontrol Paneli',
@@ -207,13 +314,51 @@ export const translations = {
     lastEdited: 'Son düzenleme',
     statusSaved: 'Kaydedildi',
     statusApplied: 'Başvuruldu',
+    statusInterview: 'Mülakat',
     statusInterviewing: 'Görüşülüyor',
+    statusOffer: 'Teklif Alındı',
+    statusRejected: 'Reddedildi',
+    statusArchived: 'Arşivlendi',
     viewAll: 'Tümünü Gör',
     openStudio: 'Stüdyoyu Aç',
     duplicate: 'Kopyala',
     delete: 'Sil',
     exportPdf: 'PDF İndir',
     noResumes: 'Henüz özgeçmiş bulunmuyor. İlk özgeçmişinizi oluşturun!',
+    colDocumentName: 'Belge Adı',
+    colTargetRole: 'Hedef Rol',
+    colTemplate: 'Şablon',
+    colLastEdited: 'Son Düzenleme',
+    colActions: 'İşlemler',
+    colCompany: 'Şirket',
+    colPosition: 'Pozisyon',
+    colStatus: 'Durum',
+    colLinkedResume: 'Bağlı CV',
+    colDetails: 'Detaylar',
+    loadingResumes: 'Özgeçmişler yükleniyor...',
+    noResumesCreated: 'Henüz oluşturulmuş özgeçmiş yok.',
+    createFirstResume: 'İlk Özgeçmişinizi Oluşturun',
+    recentJobs: 'Son İş İlanları',
+    trackedCount: 'takip edilen',
+    manageTracker: 'Takipçiyi Yönet',
+    openAction: 'Aç',
+    duplicateAction: 'Kopyala',
+    deleteAction: 'Sil',
+    compareAction: 'Karşılaştır',
+    statusLinked: 'Bağlandı',
+    statusNone: 'Yok',
+    statusGeneralProfile: 'Genel Profil',
+
+    // Resumes Page
+    documents: 'Belgeler',
+    myResumes: 'Özgeçmişlerim',
+    myResumesSubtitle: 'Özelleştirilmiş CV varyantlarınızı, ana özgeçmişinizi ve sürüm geçmişinizi yönetin.',
+    filterResumes: 'Özgeçmişleri filtrele...',
+    createResume: 'Özgeçmiş Oluştur',
+    noResumesFound: 'Özgeçmiş bulunamadı.',
+    editAction: 'Düzenle',
+    pdfAction: 'PDF',
+    revLabel: 'rev',
 
     // Studio Tabs & Actions
     contentTab: 'İçerik',
@@ -224,6 +369,7 @@ export const translations = {
     saving: 'Kaydediliyor...',
     exporting: 'Dışa aktarılıyor...',
     sections: 'Bölümler',
+    loadingStudio: 'CV Workspace Stüdyosu Yükleniyor...',
 
     // Profile & Sections
     personalProfile: 'Kişisel Profil',
@@ -299,14 +445,27 @@ export const translations = {
     breakdownJobRelevance: 'İş Uyumu',
     breakdownParseability: 'Ayrıştırılabilirlik',
 
-    // Preview Controls
+    // Preview Controls & A4
     zoomOut: 'Uzaklaştır',
     zoomIn: 'Yakınlaştır',
     reset: 'Sıfırla',
     print: 'Yazdır',
     pageOf: 'Özgeçmiş',
+    previewSummary: 'Özet',
+    previewExperience: 'İş Deneyimi',
+    previewEducation: 'Eğitim',
+    previewProjects: 'Projeler',
+    previewSkills: 'Yetkinlikler & Beceriler',
+    previewPresent: 'Günümüz',
+    previewTech: 'Teknolojiler:',
+    previewUntitledRole: 'Pozisyon',
+    previewYourName: 'Ad Soyad',
 
     // Jobs Page
+    workspace: 'Çalışma Alanı',
+    careerPipeline: 'Kariyer Hattı',
+    jobsAndMatchTitle: 'İş İlanları ve Eşleşme Analizi',
+    trackedApplications: 'takip edilen başvuru',
     jobMatches: 'Hedef İlan Eşleşmeleri',
     addNewJob: 'Hedef İlan Ekle',
     targetJobsList: 'Hedef Pozisyonlar',
@@ -319,9 +478,29 @@ export const translations = {
     matchedKeywords: 'Eşleşen Anahtar Kelimeler',
     missingKeywords: 'Eksik Beceriler ve Gelişim Alanları',
     actionPlan: 'Optimizasyon Eylem Planı',
+    loadingJobs: 'İş ilanları yükleniyor...',
+    noJobsAdded: 'Henüz eklenen ilan yok.',
+    remote: 'Uzaktan',
+    cvCompatibilityRating: 'CV Uyumluluk Oranı',
+    matchPercent: 'Eşleşme',
+    calculating: 'Hesaplanıyor...',
+    matchedRequirements: 'Eşleşen Nitelikler',
+    missingCompetencies: 'Eksik veya Zayıf Temsil Edilen',
+    matchInsights: 'Eşleşme İçgörüleri ve Tavsiyeler',
+    noDescription: 'İş tanımı belirtilmedi.',
+    selectJobToInspect: 'Eşleşme analizini incelemek için sol panelden bir iş ilanı seçin.',
+    addNewTargetJob: 'Yeni Hedef İlan Ekle',
+    companyName: 'Şirket Adı',
+    positionTitle: 'Pozisyon Ünvanı',
+    jobDescriptionRequirements: 'İş Tanımı / Gereksinimler',
+    jobDescPlaceholder: 'Otomatik anahtar kelime ve ATS analizi için iş ilanı metnini buraya yapıştırın...',
+    cancel: 'İptal',
+    saveAndAnalyze: 'Kaydet ve Analiz Et',
 
     // Library Page
     careerLibraryTitle: 'Kariyer Kütüphanesi',
+    librarySubheading: 'Global Kariyer İçerik Deposu',
+    libraryDescription: 'Tüm özgeçmişlerinizde başarılarınızı, projelerinizi ve yeteneklerinizi saklayın, etiketleyin ve yeniden kullanın.',
     searchSnippets: 'Kullanıma hazır başarı maddelerini, metrikleri veya teknolojileri arayın...',
     addSnippet: 'Parçacık Ekle',
     allTags: 'Tüm Etiketler',
@@ -331,6 +510,39 @@ export const translations = {
     tagsLabel: 'Etiketler (virgülle ayırın)',
     saveSnippet: 'Parçacığı Kaydet',
     noSnippetsFound: 'Kriterlerinize uygun parçacık bulunamadı.',
+    snippetsStored: 'Kayıtlı Parçacık',
+    atsMatchAvg: 'Ortalama ATS Uyumu',
+
+    // Templates Page
+    gallery: 'Galeri',
+    resumeTemplates: 'CV Şablonları',
+    templatesSubtitle: 'Tablo aralıkları, okunabilir tipografi ve A4 ölçeklendirmesiyle yapılandırılmış ATS dostu görsel sunumlar.',
+    a4Ready: 'A4 Uyumlu',
+    bestFor: 'En uygun:',
+    useTemplate: 'Şablonu Kullan',
+
+    // Import Page
+    importTitle: 'CV İçe Aktar ve Normalize Et',
+    confirmAndSave: 'Onayla ve Çalışma Alanına Kaydet',
+    uploadResumeFile: 'Özgeçmiş Dosyası Yükleyin (.json, .yaml, .yml, .md)',
+    orPasteRaw: 'VEYA HAM İÇERİK YAPIŞTIRIN',
+    pasteRawPlaceholder: 'Ham YAML, JSON veya Markdown özgeçmiş metnini buraya yapıştırın...',
+    parseAndPreview: 'Ayrıştır ve Önizleme Oluştur',
+    analyzingContent: 'İçerik Analiz Ediliyor...',
+    parseErrors: 'Ayrıştırma Hataları:',
+    warningsMigrations: 'Uyarılar / İyileştirmeler:',
+    formatLabel: 'Format:',
+
+    // Source Editor
+    validate: 'Doğrula',
+    validating: 'Doğrulanıyor...',
+    validSource: 'Geçerli',
+    syntaxIssues: 'Sözdizimi Sorunları',
+    applyChanges: 'Değişiklikleri Uygula',
+    applying: 'Uygulanıyor...',
+    validationErrors: 'Doğrulama Hataları:',
+    warnings: 'Uyarılar:',
+    sourceLoading: 'Kaynak kod yükleniyor...',
 
     // Settings Page
     settingsTitle: 'Çalışma Alanı Ayarları',
@@ -357,18 +569,40 @@ export const translations = {
   },
 };
 
-type TranslationKey = keyof typeof translations.en;
+export type TranslationKey = keyof typeof translations.en;
 
 interface I18nContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: TranslationKey) => string;
+  getJobStatusLabel: (status: string) => string;
+}
+
+export function formatJobStatus(status: string, t: (key: TranslationKey) => string): string {
+  switch (status?.toLowerCase()) {
+    case 'saved':
+      return t('statusSaved');
+    case 'applied':
+      return t('statusApplied');
+    case 'interview':
+    case 'interviewing':
+      return t('statusInterview');
+    case 'offer':
+      return t('statusOffer');
+    case 'rejected':
+      return t('statusRejected');
+    case 'archived':
+      return t('statusArchived');
+    default:
+      return status;
+  }
 }
 
 const I18nContext = createContext<I18nContextType>({
   language: 'en',
   setLanguage: () => {},
   t: (key) => translations.en[key] || key,
+  getJobStatusLabel: (status) => status,
 });
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
@@ -398,8 +632,12 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     return translations[language]?.[key] || translations.en[key] || key;
   }
 
+  function getJobStatusLabel(status: string): string {
+    return formatJobStatus(status, t);
+  }
+
   return (
-    <I18nContext.Provider value={{ language, setLanguage, t }}>
+    <I18nContext.Provider value={{ language, setLanguage, t, getJobStatusLabel }}>
       {children}
     </I18nContext.Provider>
   );

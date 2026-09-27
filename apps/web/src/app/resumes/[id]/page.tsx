@@ -9,7 +9,9 @@ import { api } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
 import {
   AnalysisIssue,
+  EducationItem,
   ExperienceItem,
+  ProjectItem,
   ResumeAnalysisReport,
   ResumeDocument,
   SkillGroup,
@@ -156,6 +158,66 @@ export default function ResumeStudioPage() {
     updateField('experience', items);
   }
 
+  // Education handlers
+  function addEducation() {
+    if (!doc) return;
+    const newEdu: EducationItem = {
+      id: `edu-${Date.now()}`,
+      institution: 'University / Institution',
+      degree: 'Degree',
+      fieldOfStudy: 'Field of Study',
+      location: '',
+      startDate: '2020',
+      endDate: '2024',
+      current: false,
+      grade: '',
+      highlights: [],
+    };
+    updateField('education', [newEdu, ...doc.education]);
+  }
+
+  function updateEducationItem(index: number, updated: EducationItem) {
+    if (!doc) return;
+    const items = [...doc.education];
+    items[index] = updated;
+    updateField('education', items);
+  }
+
+  function removeEducationItem(index: number) {
+    if (!doc) return;
+    const items = doc.education.filter((_, i) => i !== index);
+    updateField('education', items);
+  }
+
+  // Project handlers
+  function addProject() {
+    if (!doc) return;
+    const newProj: ProjectItem = {
+      id: `proj-${Date.now()}`,
+      name: 'Project Name',
+      role: 'Role',
+      url: '',
+      startDate: '2023',
+      endDate: '2024',
+      bullets: ['Key outcome or architecture built.'],
+      technologies: [],
+    };
+    updateField('projects', [newProj, ...doc.projects]);
+  }
+
+  function updateProjectItem(index: number, updated: ProjectItem) {
+    if (!doc) return;
+    const items = [...doc.projects];
+    items[index] = updated;
+    updateField('projects', items);
+  }
+
+  function removeProjectItem(index: number) {
+    if (!doc) return;
+    const items = doc.projects.filter((_, i) => i !== index);
+    updateField('projects', items);
+  }
+
   // AI improve summary
   async function handleAiImproveSummary() {
     if (!doc) return;
@@ -192,7 +254,7 @@ export default function ResumeStudioPage() {
   if (loading || !doc) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-3.5rem)] text-secondary">
-        Loading CV Workspace Studio...
+        {t('loadingStudio')}
       </div>
     );
   }
@@ -350,16 +412,16 @@ export default function ResumeStudioPage() {
                 <div className="flex flex-col gap-space-md">
                   <div className="flex items-center justify-between">
                     <span className="font-headline-md text-headline-md text-on-surface font-semibold">
-                      Personal Profile
+                      {t('personalProfile')}
                     </span>
                     <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-widest bg-secondary-container text-on-secondary-container">
-                      Core
+                      {t('core')}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-space-md">
                     <div className="flex flex-col gap-1">
-                      <label className="font-label-sm text-secondary font-medium">First Name</label>
+                      <label className="font-label-sm text-secondary font-medium">{t('firstName')}</label>
                       <input
                         type="text"
                         value={doc.profile.firstName}
@@ -368,7 +430,7 @@ export default function ResumeStudioPage() {
                       />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="font-label-sm text-secondary font-medium">Last Name</label>
+                      <label className="font-label-sm text-secondary font-medium">{t('lastName')}</label>
                       <input
                         type="text"
                         value={doc.profile.lastName}
@@ -378,7 +440,7 @@ export default function ResumeStudioPage() {
                     </div>
 
                     <div className="col-span-2 flex flex-col gap-1">
-                      <label className="font-label-sm text-secondary font-medium">Professional Title</label>
+                      <label className="font-label-sm text-secondary font-medium">{t('professionalTitle')}</label>
                       <input
                         type="text"
                         value={doc.profile.headline}
@@ -389,7 +451,7 @@ export default function ResumeStudioPage() {
                     </div>
 
                     <div className="flex flex-col gap-1">
-                      <label className="font-label-sm text-secondary font-medium">Email Address</label>
+                      <label className="font-label-sm text-secondary font-medium">{t('email')}</label>
                       <input
                         type="email"
                         value={doc.profile.email}
@@ -398,7 +460,7 @@ export default function ResumeStudioPage() {
                       />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="font-label-sm text-secondary font-medium">Phone</label>
+                      <label className="font-label-sm text-secondary font-medium">{t('phone')}</label>
                       <input
                         type="text"
                         value={doc.profile.phone}
@@ -408,7 +470,7 @@ export default function ResumeStudioPage() {
                     </div>
 
                     <div className="col-span-2 flex flex-col gap-1">
-                      <label className="font-label-sm text-secondary font-medium">Location</label>
+                      <label className="font-label-sm text-secondary font-medium">{t('location')}</label>
                       <input
                         type="text"
                         value={doc.profile.location}
@@ -418,7 +480,7 @@ export default function ResumeStudioPage() {
                     </div>
 
                     <div className="flex flex-col gap-1">
-                      <label className="font-label-sm text-secondary font-medium">Website</label>
+                      <label className="font-label-sm text-secondary font-medium">{t('website')}</label>
                       <input
                         type="text"
                         value={doc.profile.website}
@@ -427,7 +489,7 @@ export default function ResumeStudioPage() {
                       />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="font-label-sm text-secondary font-medium">LinkedIn</label>
+                      <label className="font-label-sm text-secondary font-medium">{t('linkedin')}</label>
                       <input
                         type="text"
                         value={doc.profile.linkedin}
@@ -444,7 +506,7 @@ export default function ResumeStudioPage() {
                 <div className="flex flex-col gap-space-sm">
                   <div className="flex items-center justify-between">
                     <span className="font-headline-md text-headline-md text-on-surface font-semibold">
-                      Professional Summary
+                      {t('summary')}
                     </span>
                     <button
                       type="button"
@@ -453,7 +515,7 @@ export default function ResumeStudioPage() {
                       className="flex items-center gap-1 text-primary font-label-sm px-2 py-1 rounded bg-secondary-container hover:bg-surface-container-high transition-colors"
                     >
                       <Icons.Sparkles size={14} />
-                      <span>Improve</span>
+                      <span>{t('improveWithAi')}</span>
                     </button>
                   </div>
                   <textarea
@@ -461,7 +523,7 @@ export default function ResumeStudioPage() {
                     value={doc.summary}
                     onChange={(e) => updateField('summary', e.target.value)}
                     className="w-full p-3 rounded-lg bg-surface-container-low text-on-surface text-body-md leading-relaxed resize-none focus:bg-surface-container-lowest outline-none focus:ring-1 focus:ring-primary"
-                    placeholder="Write a clear, impactful overview of your career and accomplishments..."
+                    placeholder={t('summaryPlaceholder')}
                   />
                 </div>
               )}
@@ -471,7 +533,7 @@ export default function ResumeStudioPage() {
                 <div className="flex flex-col gap-space-md">
                   <div className="flex items-center justify-between">
                     <span className="font-headline-md text-headline-md text-on-surface font-semibold">
-                      Experience
+                      {t('experience')}
                     </span>
                     <button
                       type="button"
@@ -479,7 +541,7 @@ export default function ResumeStudioPage() {
                       className="flex items-center gap-1 font-label-sm text-primary hover:underline"
                     >
                       <Icons.Add size={15} />
-                      <span>Add Role</span>
+                      <span>{t('addRole')}</span>
                     </button>
                   </div>
 
@@ -497,7 +559,7 @@ export default function ResumeStudioPage() {
                               updateExperienceItem(expIdx, { ...exp, position: e.target.value })
                             }
                             className="font-headline-md font-semibold bg-transparent border-0 outline-none text-on-surface w-full"
-                            placeholder="Job Title"
+                            placeholder={t('jobTitle')}
                           />
                           <button
                             type="button"
@@ -516,7 +578,7 @@ export default function ResumeStudioPage() {
                               updateExperienceItem(expIdx, { ...exp, company: e.target.value })
                             }
                             className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none"
-                            placeholder="Company"
+                            placeholder={t('company')}
                           />
                           <input
                             type="text"
@@ -525,13 +587,13 @@ export default function ResumeStudioPage() {
                               updateExperienceItem(expIdx, { ...exp, startDate: e.target.value })
                             }
                             className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none"
-                            placeholder="e.g. 2022 — Present"
+                            placeholder={t('dates')}
                           />
                         </div>
 
                         {/* Bullet achievements */}
                         <div className="flex flex-col gap-2 pt-2">
-                          <span className="font-label-sm text-secondary font-medium">Achievements:</span>
+                          <span className="font-label-sm text-secondary font-medium">{t('achievements')}</span>
                           {exp.bullets.map((b, bIdx) => (
                             <div key={bIdx} className="flex items-start gap-1 group">
                               <textarea
@@ -544,7 +606,7 @@ export default function ResumeStudioPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleAiRewriteBullet(expIdx, bIdx, 'technical')}
-                                  title="AI Polish Bullet"
+                                  title={t('aiPolish')}
                                   className="w-6 h-6 flex items-center justify-center rounded hover:bg-surface-container text-primary"
                                 >
                                   <Icons.Sparkles size={14} />
@@ -566,8 +628,165 @@ export default function ResumeStudioPage() {
                             className="self-start text-[11px] font-medium text-secondary hover:text-on-surface flex items-center gap-1 pt-1"
                           >
                             <Icons.Add size={14} />
-                            <span>Add Bullet</span>
+                            <span>{t('addBullet')}</span>
                           </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Education Section */}
+              {activeSection === 'education' && (
+                <div className="flex flex-col gap-space-md">
+                  <div className="flex items-center justify-between">
+                    <span className="font-headline-md text-headline-md text-on-surface font-semibold">
+                      {t('education')}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={addEducation}
+                      className="flex items-center gap-1 font-label-sm text-primary hover:underline"
+                    >
+                      <Icons.Add size={15} />
+                      <span>{t('addEducation')}</span>
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-space-md">
+                    {doc.education.map((edu, eduIdx) => (
+                      <div
+                        key={edu.id}
+                        className="flex flex-col rounded-xl bg-surface-container-low p-space-md gap-space-sm border border-surface-container-highest"
+                      >
+                        <div className="flex items-center justify-between">
+                          <input
+                            type="text"
+                            value={edu.institution}
+                            onChange={(e) =>
+                              updateEducationItem(eduIdx, { ...edu, institution: e.target.value })
+                            }
+                            className="font-headline-md font-semibold bg-transparent border-0 outline-none text-on-surface w-full"
+                            placeholder={t('institution')}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeEducationItem(eduIdx)}
+                            className="text-secondary hover:text-error"
+                          >
+                            <Icons.Delete size={16} />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            value={edu.degree}
+                            onChange={(e) =>
+                              updateEducationItem(eduIdx, { ...edu, degree: e.target.value })
+                            }
+                            className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none"
+                            placeholder={t('degree')}
+                          />
+                          <input
+                            type="text"
+                            value={edu.fieldOfStudy}
+                            onChange={(e) =>
+                              updateEducationItem(eduIdx, { ...edu, fieldOfStudy: e.target.value })
+                            }
+                            className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none"
+                            placeholder={t('fieldOfStudy')}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            value={edu.startDate}
+                            onChange={(e) =>
+                              updateEducationItem(eduIdx, { ...edu, startDate: e.target.value })
+                            }
+                            className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none"
+                            placeholder={t('dates')}
+                          />
+                          <input
+                            type="text"
+                            value={edu.endDate}
+                            onChange={(e) =>
+                              updateEducationItem(eduIdx, { ...edu, endDate: e.target.value })
+                            }
+                            className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none"
+                            placeholder="End Date"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Projects Section */}
+              {activeSection === 'projects' && (
+                <div className="flex flex-col gap-space-md">
+                  <div className="flex items-center justify-between">
+                    <span className="font-headline-md text-headline-md text-on-surface font-semibold">
+                      {t('projects')}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={addProject}
+                      className="flex items-center gap-1 font-label-sm text-primary hover:underline"
+                    >
+                      <Icons.Add size={15} />
+                      <span>{t('addProject')}</span>
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-space-md">
+                    {doc.projects.map((proj, projIdx) => (
+                      <div
+                        key={proj.id}
+                        className="flex flex-col rounded-xl bg-surface-container-low p-space-md gap-space-sm border border-surface-container-highest"
+                      >
+                        <div className="flex items-center justify-between">
+                          <input
+                            type="text"
+                            value={proj.name}
+                            onChange={(e) =>
+                              updateProjectItem(projIdx, { ...proj, name: e.target.value })
+                            }
+                            className="font-headline-md font-semibold bg-transparent border-0 outline-none text-on-surface w-full"
+                            placeholder={t('projectName')}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeProjectItem(projIdx)}
+                            className="text-secondary hover:text-error"
+                          >
+                            <Icons.Delete size={16} />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            value={proj.role}
+                            onChange={(e) =>
+                              updateProjectItem(projIdx, { ...proj, role: e.target.value })
+                            }
+                            className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none"
+                            placeholder={t('projectRole')}
+                          />
+                          <input
+                            type="text"
+                            value={proj.url}
+                            onChange={(e) =>
+                              updateProjectItem(projIdx, { ...proj, url: e.target.value })
+                            }
+                            className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none"
+                            placeholder={t('projectUrl')}
+                          />
                         </div>
                       </div>
                     ))}
@@ -580,7 +799,7 @@ export default function ResumeStudioPage() {
                 <div className="flex flex-col gap-space-md">
                   <div className="flex items-center justify-between">
                     <span className="font-headline-md text-headline-md text-on-surface font-semibold">
-                      Skill Groups
+                      {t('skills')}
                     </span>
                     <button
                       type="button"
@@ -595,7 +814,7 @@ export default function ResumeStudioPage() {
                       className="flex items-center gap-1 font-label-sm text-primary hover:underline"
                     >
                       <Icons.Add size={15} />
-                      <span>Add Category</span>
+                      <span>{t('addCategory')}</span>
                     </button>
                   </div>
 
@@ -621,7 +840,7 @@ export default function ResumeStudioPage() {
                             updateField('skills', newSkills);
                           }}
                           className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm outline-none"
-                          placeholder="Comma-separated skills (e.g. Python, Docker, React)"
+                          placeholder={t('skillsListPlaceholder')}
                         />
                       </div>
                     ))}
@@ -863,7 +1082,7 @@ export default function ResumeStudioPage() {
                   {/* Strengths */}
                   {analysisReport.strengths.length > 0 && (
                     <div className="flex flex-col gap-1.5">
-                      <span className="font-label-sm text-secondary uppercase tracking-wider">Strengths</span>
+                      <span className="font-label-sm text-secondary uppercase tracking-wider">{t('strengths')}</span>
                       {analysisReport.strengths.map((str, idx) => (
                         <div key={idx} className="flex items-center gap-2 text-[12px] text-on-surface">
                           <Icons.CheckCircle size={15} className="text-on-tertiary-container" />
@@ -876,7 +1095,7 @@ export default function ResumeStudioPage() {
                   {/* Issues */}
                   <div className="flex flex-col gap-2">
                     <span className="font-label-sm text-secondary uppercase tracking-wider">
-                      Suggestions & Issues ({analysisReport.issues.length})
+                      {t('suggestionsAndIssues')} ({analysisReport.issues.length})
                     </span>
                     {analysisReport.issues.map((issue: AnalysisIssue, idx: number) => (
                       <div

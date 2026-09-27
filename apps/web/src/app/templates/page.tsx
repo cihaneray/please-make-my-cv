@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { api } from '@/lib/api';
+import { useI18n } from '@/lib/i18n';
 
 const TEMPLATES = [
   {
@@ -33,6 +34,7 @@ const TEMPLATES = [
 
 export default function TemplatesPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [selectedId, setSelectedId] = useState<string>('minimal');
   const [creating, setCreating] = useState<boolean>(false);
 
@@ -56,13 +58,13 @@ export default function TemplatesPage() {
       <div className="max-w-[1120px] w-full mx-auto px-space-lg py-margin-desktop space-y-space-xl">
         <header className="flex flex-col gap-space-xs pb-space-lg border-b border-surface-container-high">
           <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary">
-            Gallery
+            {t('gallery')}
           </span>
           <h1 className="font-headline-xl text-headline-xl text-on-surface">
-            Resume Templates
+            {t('resumeTemplates')}
           </h1>
           <p className="font-body-md text-body-md text-on-surface-variant">
-            ATS-friendly visual presentations configured with tabular spacing, readable typography, and authentic A4 scaling.
+            {t('templatesSubtitle')}
           </p>
         </header>
 
@@ -103,7 +105,7 @@ export default function TemplatesPage() {
                       {tmpl.name}
                     </span>
                     <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-surface-container text-secondary">
-                      A4 Ready
+                      {t('a4Ready')}
                     </span>
                   </div>
 
@@ -112,7 +114,7 @@ export default function TemplatesPage() {
                   </p>
 
                   <div className="pt-2 text-[11px] text-on-surface-variant font-medium">
-                    <span className="text-secondary">Best for: </span>
+                    <span className="text-secondary">{t('bestFor')} </span>
                     {tmpl.recommendedFor}
                   </div>
                 </div>
@@ -128,7 +130,7 @@ export default function TemplatesPage() {
                     disabled={creating}
                     className="px-3 py-1.5 rounded bg-primary text-on-primary font-label-sm hover:bg-inverse-surface transition-colors shadow-xs"
                   >
-                    Use Template
+                    {t('useTemplate')}
                   </button>
                 </div>
               </div>

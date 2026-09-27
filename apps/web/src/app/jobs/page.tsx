@@ -3,9 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import { Icons } from '@/components/Icons';
 import { api } from '@/lib/api';
+import { useI18n } from '@/lib/i18n';
 import { JobApplication, JobMatchAnalysis, JobStatus, ResumeSummary } from '@/lib/types';
 
 export default function JobsPage() {
+  const { language, t, getJobStatusLabel } = useI18n();
   const [jobs, setJobs] = useState<JobApplication[]>([]);
   const [resumes, setResumes] = useState<ResumeSummary[]>([]);
   const [selectedJob, setSelectedJob] = useState<JobApplication | null>(null);
@@ -107,16 +109,16 @@ export default function JobsPage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-md border-b border-surface-container-high pb-4">
           <div className="flex flex-col gap-space-xs">
             <div className="flex items-center gap-space-xs text-secondary font-label-sm text-label-sm uppercase tracking-wider">
-              <span>Workspace</span>
+              <span>{t('workspace')}</span>
               <span>/</span>
-              <span className="text-on-surface">Career Pipeline</span>
+              <span className="text-on-surface">{t('careerPipeline')}</span>
             </div>
             <div className="flex items-baseline gap-space-md">
               <h1 className="font-headline-xl text-headline-xl text-on-surface tracking-tight">
-                Jobs & Match Analysis
+                {t('jobsAndMatchTitle')}
               </h1>
               <span className="font-label-md text-label-md text-secondary">
-                {jobs.length} tracked applications
+                {jobs.length} {t('trackedApplications')}
               </span>
             </div>
           </div>
@@ -127,7 +129,7 @@ export default function JobsPage() {
             className="h-8 px-space-md flex items-center gap-space-xs rounded bg-primary text-on-primary font-label-md hover:bg-inverse-surface transition-colors shadow-sm"
           >
             <Icons.Add size={16} />
-            <span>Add Target Job</span>
+            <span>{t('addNewJob')}</span>
           </button>
         </div>
 
@@ -136,14 +138,14 @@ export default function JobsPage() {
           {/* Left Column: Job Cards List (4 cols) */}
           <div className="lg:col-span-5 flex flex-col gap-space-xs">
             <div className="flex items-center justify-between px-space-xs text-secondary font-label-sm pb-1">
-              <span>Target Positions ({jobs.length})</span>
+              <span>{t('targetJobsList')} ({jobs.length})</span>
             </div>
 
             {loading ? (
-              <div className="p-space-lg text-secondary">Loading jobs...</div>
+              <div className="p-space-lg text-secondary">{t('loadingJobs')}</div>
             ) : jobs.length === 0 ? (
               <div className="p-space-lg bg-surface-container-lowest rounded-lg border border-surface-container-highest text-secondary text-center">
-                No jobs added yet.
+                {t('noJobsAdded')}
               </div>
             ) : (
               jobs.map((j) => {
@@ -174,12 +176,12 @@ export default function JobsPage() {
                       </div>
 
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full font-label-sm text-[11px] capitalize bg-surface-container-high text-secondary shrink-0">
-                        {j.status}
+                        {getJobStatusLabel(j.status)}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between mt-2 pt-1 text-secondary text-[11px] border-t border-surface-container-high">
-                      <span className="truncate">{j.location || 'Remote'}</span>
+                      <span className="truncate">{j.location || t('remote')}</span>
                       <span>{new Date(j.updatedAt).toLocaleDateString()}</span>
                     </div>
                   </div>
@@ -208,11 +210,11 @@ export default function JobsPage() {
                     onChange={(e) => handleStatusChange(e.target.value)}
                     className="h-8 px-2.5 rounded bg-surface-container text-body-sm capitalize font-medium outline-none border border-surface-container-highest"
                   >
-                    <option value="saved">Saved</option>
-                    <option value="applied">Applied</option>
-                    <option value="interview">Interview</option>
-                    <option value="offer">Offer</option>
-                    <option value="rejected">Rejected</option>
+                    <option value="saved">{t('statusSaved')}</option>
+                    <option value="applied">{t('statusApplied')}</option>
+                    <option value="interview">{t('statusInterview')}</option>
+                    <option value="offer">{t('statusOffer')}</option>
+                    <option value="rejected">{t('statusRejected')}</option>
                   </select>
                 </div>
 
@@ -220,10 +222,14 @@ export default function JobsPage() {
                 <div className="p-4 rounded-xl bg-surface-container-low flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <span className="font-label-sm text-secondary uppercase font-semibold">
-                      CV Compatibility Rating
+                      {t('cvCompatibilityRating')}
                     </span>
                     <span className="text-[20px] font-bold text-on-tertiary-container">
-                      {matching ? 'Calculating...' : `${matchResult?.matchScore || 75}% Match`}
+                      {matching
+                        ? t('calculating')
+                        : language === 'tr'
+                        ? `%${matchResult?.matchScore || 75} ${t('matchPercent')}`
+                        : `${matchResult?.matchScore || 75}% ${t('matchPercent')}`}
                     </span>
                   </div>
 
@@ -236,7 +242,7 @@ export default function JobsPage() {
                 {/* Matched Competencies */}
                 <div className="flex flex-col gap-2">
                   <span className="font-label-sm text-secondary uppercase font-semibold">
-                    Matched Requirements ({matchResult?.matchedSkills.length || 0})
+                    {t('matchedRequirements')} ({matchResult?.matchedSkills.length || 0})
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {matchResult?.matchedSkills.map((sk, idx) => (
@@ -254,7 +260,7 @@ export default function JobsPage() {
                 {matchResult?.missingSkills && matchResult.missingSkills.length > 0 && (
                   <div className="flex flex-col gap-2">
                     <span className="font-label-sm text-secondary uppercase font-semibold">
-                      Missing or Weakly Represented ({matchResult.missingSkills.length})
+                      {t('missingCompetencies')} ({matchResult.missingSkills.length})
                     </span>
                     <div className="flex flex-wrap gap-1.5">
                       {matchResult.missingSkills.map((sk, idx) => (
@@ -273,7 +279,7 @@ export default function JobsPage() {
                 {matchResult?.sectionFeedback && matchResult.sectionFeedback.length > 0 && (
                   <div className="flex flex-col gap-2 pt-2 border-t border-surface-container-high">
                     <span className="font-label-sm text-secondary uppercase font-semibold">
-                      Match Insights & Advice
+                      {t('matchInsights')}
                     </span>
                     {matchResult.sectionFeedback.map((fb, idx) => (
                       <div key={idx} className="p-3 rounded-lg bg-surface-container text-[12px] flex flex-col gap-0.5">
@@ -288,16 +294,16 @@ export default function JobsPage() {
                 {/* Job Description Text */}
                 <div className="flex flex-col gap-1.5 pt-2 border-t border-surface-container-high">
                   <span className="font-label-sm text-secondary uppercase font-semibold">
-                    Job Description
+                    {t('jobDescription')}
                   </span>
                   <div className="p-3 rounded bg-surface-container-low text-[12px] text-on-surface leading-relaxed max-h-60 overflow-y-auto whitespace-pre-wrap">
-                    {selectedJob.description || 'No description provided.'}
+                    {selectedJob.description || t('noDescription')}
                   </div>
                 </div>
               </>
             ) : (
               <div className="p-space-xl text-center text-secondary">
-                Select a job from the left panel to inspect match analysis.
+                {t('selectJobToInspect')}
               </div>
             )}
           </div>
@@ -312,7 +318,7 @@ export default function JobsPage() {
             className="w-full max-w-lg bg-surface-container-lowest p-space-xl rounded-xl shadow-xl flex flex-col gap-space-md border border-surface-container-highest"
           >
             <div className="flex items-center justify-between border-b border-surface-container-high pb-2">
-              <span className="font-headline-md font-semibold">Add New Target Job</span>
+              <span className="font-headline-md font-semibold">{t('addNewTargetJob')}</span>
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
@@ -323,7 +329,7 @@ export default function JobsPage() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="font-label-sm text-secondary">Company Name</label>
+              <label className="font-label-sm text-secondary">{t('companyName')}</label>
               <input
                 type="text"
                 required
@@ -335,7 +341,7 @@ export default function JobsPage() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="font-label-sm text-secondary">Position Title</label>
+              <label className="font-label-sm text-secondary">{t('positionTitle')}</label>
               <input
                 type="text"
                 required
@@ -347,7 +353,7 @@ export default function JobsPage() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="font-label-sm text-secondary">Location</label>
+              <label className="font-label-sm text-secondary">{t('location')}</label>
               <input
                 type="text"
                 value={newLocation}
@@ -358,13 +364,13 @@ export default function JobsPage() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="font-label-sm text-secondary">Job Description / Requirements</label>
+              <label className="font-label-sm text-secondary">{t('jobDescriptionRequirements')}</label>
               <textarea
                 rows={4}
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
                 className="p-2 rounded bg-surface-container-low text-body-sm outline-none border border-surface-container-highest resize-none"
-                placeholder="Paste the job posting description here for automated keyword and ATS gap analysis..."
+                placeholder={t('jobDescPlaceholder')}
               />
             </div>
 
@@ -374,13 +380,13 @@ export default function JobsPage() {
                 onClick={() => setShowAddModal(false)}
                 className="px-3 py-1.5 rounded text-label-sm text-secondary hover:bg-surface-container"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 type="submit"
                 className="px-4 py-1.5 rounded bg-primary text-on-primary text-label-sm font-medium hover:bg-inverse-surface"
               >
-                Save & Analyze
+                {t('saveAndAnalyze')}
               </button>
             </div>
           </form>

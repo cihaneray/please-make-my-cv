@@ -14,7 +14,8 @@ export function A4ResumePreview({ document }: A4ResumePreviewProps) {
   const [zoom, setZoom] = useState<number>(100);
 
   const { profile, summary, experience, education, projects, skills, design, visibility } = document;
-  const fullName = `${profile.firstName} ${profile.lastName}`.trim() || 'Your Name';
+  const isTr = (document.metadata?.language || 'en') === 'tr';
+  const fullName = `${profile.firstName} ${profile.lastName}`.trim() || (isTr ? 'Ad Soyad' : 'Your Name');
   const accentColor = design?.accentColor || '#0F172A';
   const fontFamily = design?.fontFamily || 'Inter';
 
@@ -94,7 +95,7 @@ export function A4ResumePreview({ document }: A4ResumePreviewProps) {
                 className="text-[10px] uppercase tracking-widest font-semibold pb-1 border-b border-surface-container-high"
                 style={{ color: accentColor }}
               >
-                Summary
+                {isTr ? 'ÖZET' : 'Summary'}
               </h3>
               <p className="text-[11.5px] text-on-surface leading-relaxed">
                 {summary}
@@ -109,17 +110,17 @@ export function A4ResumePreview({ document }: A4ResumePreviewProps) {
                 className="text-[10px] uppercase tracking-widest font-semibold pb-1 border-b border-surface-container-high"
                 style={{ color: accentColor }}
               >
-                Experience
+                {isTr ? 'İŞ DENEYİMİ' : 'Experience'}
               </h3>
 
               {experience.map((exp) => (
                 <div key={exp.id} className="flex flex-col gap-1">
                   <div className="flex items-baseline justify-between">
                     <span className="text-[13px] font-semibold text-on-surface">
-                      {exp.position || 'Untitled Role'}
+                      {exp.position || (isTr ? 'Pozisyon' : 'Untitled Role')}
                     </span>
                     <span className="text-[11px] text-secondary font-medium">
-                      {exp.startDate} — {exp.current ? 'Present' : exp.endDate}
+                      {exp.startDate} — {exp.current ? (isTr ? 'Günümüz' : 'Present') : exp.endDate}
                     </span>
                   </div>
 
@@ -147,7 +148,7 @@ export function A4ResumePreview({ document }: A4ResumePreviewProps) {
 
                   {exp.technologies && exp.technologies.length > 0 && (
                     <div className="text-[10.5px] text-secondary pt-0.5">
-                      <span className="font-semibold text-on-surface-variant">Tech: </span>
+                      <span className="font-semibold text-on-surface-variant">{isTr ? 'Teknoloji: ' : 'Tech: '}</span>
                       {exp.technologies.join(', ')}
                     </div>
                   )}
@@ -163,7 +164,7 @@ export function A4ResumePreview({ document }: A4ResumePreviewProps) {
                 className="text-[10px] uppercase tracking-widest font-semibold pb-1 border-b border-surface-container-high"
                 style={{ color: accentColor }}
               >
-                Education
+                {isTr ? 'EĞİTİM' : 'Education'}
               </h3>
 
               {education.map((edu) => (
@@ -173,7 +174,7 @@ export function A4ResumePreview({ document }: A4ResumePreviewProps) {
                       {edu.degree} {edu.fieldOfStudy ? `in ${edu.fieldOfStudy}` : ''}
                     </span>
                     <span className="text-[11px] text-secondary">
-                      {edu.startDate} — {edu.current ? 'Present' : edu.endDate}
+                      {edu.startDate} — {edu.current ? (isTr ? 'Günümüz' : 'Present') : edu.endDate}
                     </span>
                   </div>
                   <div className="text-[11.5px] text-secondary">
@@ -201,7 +202,7 @@ export function A4ResumePreview({ document }: A4ResumePreviewProps) {
                 className="text-[10px] uppercase tracking-widest font-semibold pb-1 border-b border-surface-container-high"
                 style={{ color: accentColor }}
               >
-                Projects
+                {isTr ? 'PROJELER' : 'Projects'}
               </h3>
 
               {projects.map((proj) => (
@@ -241,7 +242,7 @@ export function A4ResumePreview({ document }: A4ResumePreviewProps) {
                 className="text-[10px] uppercase tracking-widest font-semibold pb-1 border-b border-surface-container-high"
                 style={{ color: accentColor }}
               >
-                Core Proficiencies
+                {isTr ? 'YETKİNLİKLER & BECERİLER' : 'Core Proficiencies'}
               </h3>
               <div className="flex flex-col gap-1 pt-0.5">
                 {skills.map((group) => (

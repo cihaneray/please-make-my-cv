@@ -3,9 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import { Icons } from '@/components/Icons';
 import { api } from '@/lib/api';
+import { useI18n } from '@/lib/i18n';
 import { BulletVariant, LibraryItemType, LibrarySnippet } from '@/lib/types';
 
 export default function LibraryPage() {
+  const { t } = useI18n();
   const [snippets, setSnippets] = useState<LibrarySnippet[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<LibraryItemType | 'all'>('all');
@@ -96,14 +98,14 @@ export default function LibraryPage() {
                 </span>
                 <span className="h-1.5 w-1.5 rounded-full bg-tertiary-fixed-dim" />
                 <span className="font-label-sm text-label-sm text-secondary">
-                  Global Career Content Repository
+                  {t('librarySubheading')}
                 </span>
               </div>
               <h1 className="font-headline-xl text-headline-xl text-on-surface tracking-tight">
-                Library & Career Content
+                {t('careerLibraryTitle')}
               </h1>
               <p className="font-body-md text-body-md text-secondary">
-                Store, tag, and reuse battle-tested achievements, projects, and skills across all resumes.
+                {t('libraryDescription')}
               </p>
             </div>
 
@@ -111,7 +113,7 @@ export default function LibraryPage() {
             <div className="flex items-center gap-space-md bg-surface-container-low px-space-md py-space-sm rounded border border-surface-container-highest">
               <div className="flex flex-col">
                 <span className="font-label-sm text-label-sm text-secondary uppercase">
-                  Snippets Stored
+                  {t('snippetsStored')}
                 </span>
                 <span className="font-headline-lg text-headline-lg text-on-surface">
                   {snippets.length}
@@ -120,7 +122,7 @@ export default function LibraryPage() {
               <div className="w-px h-6 bg-surface-container-highest" />
               <div className="flex flex-col">
                 <span className="font-label-sm text-label-sm text-secondary uppercase">
-                  ATS Match Avg
+                  {t('atsMatchAvg')}
                 </span>
                 <span className="font-headline-lg text-headline-lg text-on-tertiary-container">
                   94.2%
@@ -141,7 +143,7 @@ export default function LibraryPage() {
                 <Icons.Search size={16} className="text-secondary" />
                 <input
                   type="text"
-                  placeholder="Search reusable bullets, metrics, or technologies..."
+                  placeholder={t('searchSnippets')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="bg-transparent border-0 outline-none w-full font-body-sm text-body-sm text-on-surface placeholder:text-secondary"
@@ -154,7 +156,7 @@ export default function LibraryPage() {
                 className="h-8 px-space-md flex items-center gap-space-xs rounded bg-primary text-on-primary font-label-sm text-label-sm hover:bg-inverse-surface transition-colors flex-shrink-0 shadow-sm"
               >
                 <Icons.Add size={14} />
-                <span>Add Snippet</span>
+                <span>{t('addSnippet')}</span>
               </button>
             </div>
 
@@ -171,7 +173,7 @@ export default function LibraryPage() {
                       : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
                   }`}
                 >
-                  {tag === 'all' ? 'All Tags' : tag}
+                  {tag === 'all' ? t('allTags') : tag}
                 </button>
               ))}
             </div>
@@ -185,7 +187,7 @@ export default function LibraryPage() {
             >
               <div className="flex items-center justify-between">
                 <span className="font-headline-md text-headline-md text-on-surface">
-                  New Career Achievement Snippet
+                  {t('newSnippetTitle')}
                 </span>
                 <button
                   type="button"
@@ -226,7 +228,7 @@ export default function LibraryPage() {
                   type="submit"
                   className="px-4 py-1.5 rounded bg-primary text-on-primary text-label-sm font-medium"
                 >
-                  Save to Library
+                  {t('saveSnippet')}
                 </button>
               </div>
             </form>
@@ -234,10 +236,10 @@ export default function LibraryPage() {
 
           {/* Snippets List */}
           {loading ? (
-            <div className="p-space-xl text-center text-secondary">Loading library...</div>
+            <div className="p-space-xl text-center text-secondary">{t('searchSnippets')}</div>
           ) : filtered.length === 0 ? (
             <div className="p-space-xl text-center text-secondary bg-surface-container-lowest rounded border border-surface-container-highest">
-              No snippets matched your criteria.
+              {t('noSnippetsFound')}
             </div>
           ) : (
             <div className="flex flex-col gap-space-sm">

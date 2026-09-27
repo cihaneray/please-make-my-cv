@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { Icons } from '@/components/Icons';
 import { api } from '@/lib/api';
+import { useI18n } from '@/lib/i18n';
 import { ResumeSummary } from '@/lib/types';
 
 export default function ResumesPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [resumes, setResumes] = useState<ResumeSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [filterQuery, setFilterQuery] = useState<string>('');
@@ -31,7 +33,7 @@ export default function ResumesPage() {
   async function handleCreateNew() {
     try {
       const doc = await api.createResume({
-        title: 'New Resume',
+        title: t('newResume'),
         targetRole: 'Software Engineer',
       });
       router.push(`/resumes/${doc.metadata.id}`);
@@ -52,13 +54,13 @@ export default function ResumesPage() {
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-lg border-b border-surface-container-high">
           <div className="flex flex-col gap-space-xs">
             <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary">
-              Documents
+              {t('documents')}
             </span>
             <h1 className="font-headline-xl text-headline-xl text-on-surface">
-              My Resumes
+              {t('myResumes')}
             </h1>
             <p className="font-body-md text-body-md text-on-surface-variant">
-              Manage your tailored CV variants, master resumes, and version history.
+              {t('myResumesSubtitle')}
             </p>
           </div>
 
@@ -69,7 +71,7 @@ export default function ResumesPage() {
               </span>
               <input
                 type="text"
-                placeholder="Filter resumes..."
+                placeholder={t('filterResumes')}
                 value={filterQuery}
                 onChange={(e) => setFilterQuery(e.target.value)}
                 className="h-8 pl-8 pr-3 text-body-sm rounded bg-surface-container text-on-surface placeholder:text-secondary outline-none focus:bg-surface-container-lowest transition-colors border border-surface-container-highest"
@@ -82,16 +84,16 @@ export default function ResumesPage() {
               className="h-8 px-space-md flex items-center gap-space-xs rounded bg-primary text-on-primary font-label-md text-label-md hover:bg-inverse-surface transition-colors shadow-sm"
             >
               <Icons.Add size={16} />
-              <span>Create Resume</span>
+              <span>{t('createResume')}</span>
             </button>
           </div>
         </header>
 
         {loading ? (
-          <div className="p-space-xl text-center text-secondary">Loading resumes...</div>
+          <div className="p-space-xl text-center text-secondary">{t('loadingResumes')}</div>
         ) : filtered.length === 0 ? (
           <div className="p-space-xl text-center bg-surface-container-lowest rounded-lg border border-surface-container-highest">
-            <p className="text-secondary font-body-md">No resumes found.</p>
+            <p className="text-secondary font-body-md">{t('noResumesFound')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-md">
@@ -114,7 +116,7 @@ export default function ResumesPage() {
                       </span>
                     </div>
                     <span className="font-body-sm text-body-sm text-secondary">
-                      rev {r.revision}
+                      {t('revLabel')} {r.revision}
                     </span>
                   </div>
 
@@ -126,7 +128,7 @@ export default function ResumesPage() {
                   </Link>
 
                   <span className="font-body-sm text-body-sm text-on-surface-variant">
-                    {r.targetRole || 'General Profile'}
+                    {r.targetRole || t('statusGeneralProfile')}
                   </span>
                 </div>
 
@@ -137,13 +139,13 @@ export default function ResumesPage() {
                       href={`/resumes/${r.id}`}
                       className="px-2.5 py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm transition-colors"
                     >
-                      Edit
+                      {t('editAction')}
                     </Link>
                     <a
                       href={api.getExportUrl(r.id, 'pdf', true)}
                       className="px-2.5 py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm transition-colors"
                     >
-                      PDF
+                      {t('pdfAction')}
                     </a>
                   </div>
                 </div>

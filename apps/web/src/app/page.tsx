@@ -10,7 +10,7 @@ import { JobApplication, ResumeSummary } from '@/lib/types';
 
 export default function HomePage() {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, getJobStatusLabel } = useI18n();
   const [resumes, setResumes] = useState<ResumeSummary[]>([]);
   const [jobs, setJobs] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -126,27 +126,27 @@ export default function HomePage() {
           <div className="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-container-highest overflow-visible">
             {/* Table Header */}
             <div className="grid grid-cols-12 px-space-md py-space-sm bg-surface-container-low text-secondary font-label-sm text-label-sm select-none rounded-t-lg border-b border-surface-container-high">
-              <div className="col-span-4">Document Name</div>
-              <div className="col-span-3">Target Role</div>
-              <div className="col-span-2">Template</div>
-              <div className="col-span-2">Last Edited</div>
-              <div className="col-span-1 text-right">Actions</div>
+              <div className="col-span-4">{t('colDocumentName')}</div>
+              <div className="col-span-3">{t('colTargetRole')}</div>
+              <div className="col-span-2">{t('colTemplate')}</div>
+              <div className="col-span-2">{t('colLastEdited')}</div>
+              <div className="col-span-1 text-right">{t('colActions')}</div>
             </div>
 
             {loading ? (
               <div className="p-space-lg text-center text-secondary font-body-sm">
-                Loading resumes...
+                {t('loadingResumes')}
               </div>
             ) : resumes.length === 0 ? (
               <div className="p-space-xl text-center flex flex-col items-center gap-space-sm">
                 <Icons.Document size={32} className="text-secondary" />
-                <p className="font-body-md text-secondary">No resumes created yet.</p>
+                <p className="font-body-md text-secondary">{t('noResumesCreated')}</p>
                 <button
                   type="button"
                   onClick={handleCreateNew}
                   className="px-3 py-1.5 rounded bg-primary text-on-primary text-label-sm"
                 >
-                  Create Your First Resume
+                  {t('createFirstResume')}
                 </button>
               </div>
             ) : (
@@ -167,7 +167,7 @@ export default function HomePage() {
                     </div>
 
                     <div className="col-span-3 text-on-surface-variant font-body-md text-body-md truncate pr-space-md">
-                      {r.targetRole || 'General Profile'}
+                      {r.targetRole || t('statusGeneralProfile')}
                     </div>
 
                     <div className="col-span-2 flex items-center gap-1.5 flex-wrap">
@@ -208,7 +208,7 @@ export default function HomePage() {
                             href={`/resumes/${r.id}`}
                             className="w-full text-left px-space-sm py-space-xs rounded font-label-md text-label-md text-on-surface hover:bg-surface-container flex items-center justify-between"
                           >
-                            <span>Open</span>
+                            <span>{t('openAction')}</span>
                             <span className="font-label-sm text-secondary">⌘O</span>
                           </Link>
 
@@ -217,7 +217,7 @@ export default function HomePage() {
                             onClick={() => handleDuplicate(r.id)}
                             className="w-full text-left px-space-sm py-space-xs rounded font-label-md text-label-md text-on-surface hover:bg-surface-container flex items-center justify-between"
                           >
-                            <span>Duplicate</span>
+                            <span>{t('duplicateAction')}</span>
                             <span className="font-label-sm text-secondary">⌘D</span>
                           </button>
 
@@ -227,7 +227,7 @@ export default function HomePage() {
                             rel="noreferrer"
                             className="w-full text-left px-space-sm py-space-xs rounded font-label-md text-label-md text-on-surface hover:bg-surface-container"
                           >
-                            Export PDF
+                            {t('exportPdf')}
                           </a>
 
                           <button
@@ -235,7 +235,7 @@ export default function HomePage() {
                             onClick={() => handleDelete(r.id)}
                             className="w-full text-left px-space-sm py-space-xs rounded font-label-md text-label-md text-error hover:bg-error-container"
                           >
-                            Delete
+                            {t('deleteAction')}
                           </button>
                         </div>
                       )}
@@ -252,28 +252,28 @@ export default function HomePage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-space-xs">
               <h2 className="font-headline-md text-headline-md text-on-surface">
-                Recent Jobs
+                {t('recentJobs')}
               </h2>
               <span className="px-space-xs py-0.5 rounded bg-surface-container text-secondary font-label-sm text-label-sm">
-                {jobs.length} tracked
+                {jobs.length} {t('trackedCount')}
               </span>
             </div>
             <Link
               href="/jobs"
               className="font-label-sm text-label-sm text-secondary hover:text-on-surface transition-colors flex items-center gap-space-xs"
             >
-              <span>Manage tracker</span>
+              <span>{t('manageTracker')}</span>
               <Icons.ArrowRight size={14} />
             </Link>
           </div>
 
           <div className="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-container-highest overflow-hidden">
             <div className="grid grid-cols-12 px-space-md py-space-sm bg-surface-container-low text-secondary font-label-sm text-label-sm select-none border-b border-surface-container-high">
-              <div className="col-span-3">Company</div>
-              <div className="col-span-4">Position</div>
-              <div className="col-span-2">Status</div>
-              <div className="col-span-2">Linked Resume</div>
-              <div className="col-span-1 text-right">Details</div>
+              <div className="col-span-3">{t('colCompany')}</div>
+              <div className="col-span-4">{t('colPosition')}</div>
+              <div className="col-span-2">{t('colStatus')}</div>
+              <div className="col-span-2">{t('colLinkedResume')}</div>
+              <div className="col-span-1 text-right">{t('colDetails')}</div>
             </div>
 
             <div className="flex flex-col divide-y divide-surface-container-high">
@@ -297,14 +297,14 @@ export default function HomePage() {
 
                   <div className="col-span-2">
                     <span className="font-label-sm text-label-sm px-space-xs py-0.5 rounded capitalize bg-surface-container text-secondary">
-                      {j.status}
+                      {getJobStatusLabel(j.status)}
                     </span>
                   </div>
 
                   <div className="col-span-2 flex items-center gap-space-xs min-w-0 pr-space-sm">
                     <Icons.Link size={14} className="text-secondary flex-shrink-0" />
                     <span className="font-body-sm text-body-sm text-secondary truncate">
-                      {j.linkedResumeId ? 'Linked' : 'None'}
+                      {j.linkedResumeId ? t('statusLinked') : t('statusNone')}
                     </span>
                   </div>
 
@@ -313,7 +313,7 @@ export default function HomePage() {
                       href={`/jobs?selected=${j.id}`}
                       className="font-label-sm text-label-sm text-secondary group-hover:text-on-surface hover:underline"
                     >
-                      Compare
+                      {t('compareAction')}
                     </Link>
                   </div>
                 </div>
