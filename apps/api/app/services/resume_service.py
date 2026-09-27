@@ -32,9 +32,14 @@ class ResumeService:
             # Parse stats
             try:
                 doc_dict = json.loads(m.document_json)
+                meta = doc_dict.get("metadata", {})
+                lang = meta.get("language", "en")
+                market = meta.get("targetMarket") or meta.get("target_market", "TR")
                 exp_count = len(doc_dict.get("experience", []))
                 skill_count = sum(len(g.get("skills", [])) for g in doc_dict.get("skills", []))
             except Exception:
+                lang = "en"
+                market = "TR"
                 exp_count = 0
                 skill_count = 0
 
@@ -44,6 +49,8 @@ class ResumeService:
                     title=m.title,
                     targetRole=m.target_role,
                     templateId=m.template_id,
+                    language=lang,
+                    targetMarket=market,
                     revision=m.revision,
                     updatedAt=m.updated_at.isoformat(),
                     createdAt=m.created_at.isoformat(),
@@ -80,6 +87,10 @@ class ResumeService:
         doc.metadata.title = request.title
         doc.metadata.targetRole = request.targetRole
         doc.metadata.templateId = request.templateId
+        if request.language:
+            doc.metadata.language = request.language
+        if request.targetMarket:
+            doc.metadata.targetMarket = request.targetMarket
         doc.metadata.revision = 1
         doc.metadata.createdAt = now_iso()
         doc.metadata.updatedAt = now_iso()
@@ -180,16 +191,23 @@ class ResumeService:
             doc_dict["metadata"]["isArchived"] = patch.isArchived
         if patch.tags is not None:
             doc_dict["metadata"]["tags"] = patch.tags
+        if patch.language is not None:
+            doc_dict["metadata"]["language"] = patch.language
+        if patch.targetMarket is not None:
+            doc_dict["metadata"]["targetMarket"] = patch.targetMarket
 
         model.document_json = json.dumps(doc_dict, ensure_ascii=False)
         db.commit()
         db.refresh(model)
 
+        meta = doc_dict.get("metadata", {})
         return ResumeSummaryResponse(
             id=model.id,
             title=model.title,
             targetRole=model.target_role,
             templateId=model.template_id,
+            language=meta.get("language", "en"),
+            targetMarket=meta.get("targetMarket") or meta.get("target_market", "TR"),
             revision=model.revision,
             updatedAt=model.updated_at.isoformat(),
             createdAt=model.created_at.isoformat(),

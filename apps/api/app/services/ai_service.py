@@ -1,5 +1,7 @@
 from typing import Protocol
 
+from app.rules.privacy import KVKKDataMinimizer
+
 
 class AIProvider(Protocol):
     def rewrite_bullet(self, bullet: str, tone: str) -> str: ...
@@ -20,6 +22,8 @@ class DeterministicRuleBasedAIProvider:
                 "Helped with ",
                 "Assisted in ",
                 "Participated in ",
+                "Sorumluydum ",
+                "Görev aldım ",
             ]:
                 if cleaned.startswith(prefix):
                     cleaned = cleaned[len(prefix) :]
@@ -32,7 +36,7 @@ class DeterministicRuleBasedAIProvider:
         elif tone == "business":
             if not any(
                 k in cleaned.lower()
-                for k in ["driving", "improving", "accelerating", "enabling", "enhancing"]
+                for k in ["driving", "improving", "accelerating", "enabling", "enhancing", "katma değer", "iyileştirerek"]
             ):
                 return f"Architected and delivered {cleaned[0].lower() + cleaned[1:]}, enhancing operational effectiveness."
             return cleaned.capitalize() + "."
@@ -59,21 +63,27 @@ class AIService:
 
     @staticmethod
     def rewrite_bullet(bullet: str, tone: str = "technical") -> dict[str, str]:
+        # Enforce KVKK Law No. 6698 / GDPR Data Minimization: Redact any PII before processing
+        safe_bullet = KVKKDataMinimizer.redact_personal_data(bullet)
+
         provider = AIService.get_provider()
-        suggestion = provider.rewrite_bullet(bullet, tone)
+        suggestion = provider.rewrite_bullet(safe_bullet, tone)
         return {
             "original": bullet,
             "tone": tone,
             "suggestion": suggestion,
-            "note": "AI suggestion only. Review carefully to verify all career facts are accurate.",
+            "note": "AI suggestion only. Grounded in source data with KVKK data minimization applied.",
         }
 
     @staticmethod
     def improve_summary(summary: str, target_role: str = "") -> dict[str, str]:
+        # Enforce KVKK Law No. 6698 / GDPR Data Minimization: Redact any PII before processing
+        safe_summary = KVKKDataMinimizer.redact_personal_data(summary)
+
         provider = AIService.get_provider()
-        suggestion = provider.improve_summary(summary, target_role)
+        suggestion = provider.improve_summary(safe_summary, target_role)
         return {
             "original": summary,
             "suggestion": suggestion,
-            "note": "AI suggestion only. Review and customize before applying.",
+            "note": "AI suggestion only. Grounded in source data with KVKK data minimization applied.",
         }

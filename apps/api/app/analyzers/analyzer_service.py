@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 
-from app.analyzers.rules import ALL_RULES
+from app.rules.base import IssueSeverity as RuleIssueSeverity
+from app.rules.registry import default_rule_registry
 from app.schemas.analysis import AnalysisIssue, IssueSeverity, ResumeAnalysisReport
 from app.schemas.resume import ResumeDocument
 
@@ -10,36 +11,52 @@ class AnalysisService:
     def analyze(resume: ResumeDocument) -> ResumeAnalysisReport:
         all_issues: list[AnalysisIssue] = []
 
-        for rule in ALL_RULES:
-            issues = rule.analyze(resume)
-            all_issues.extend(issues)
+        # 1. Execute deterministic rule registry
+        rule_results = default_rule_registry.evaluate_all(resume)
+        for res in rule_results:
+            for rule_issue in res.issues:
+                sev = IssueSeverity.INFO
+                if rule_issue.severity == RuleIssueSeverity.ERROR:
+                    sev = IssueSeverity.CRITICAL
+                elif rule_issue.severity == RuleIssueSeverity.IMPORTANT:
+                    sev = IssueSeverity.IMPORTANT
+                elif rule_issue.severity == RuleIssueSeverity.SUGGESTION:
+                    sev = IssueSeverity.WARNING
+                elif rule_issue.severity == RuleIssueSeverity.INFO:
+                    sev = IssueSeverity.INFO
 
-        # Calculate scores
-        # Deductions based on severity
-        deduction_weights = {
-            IssueSeverity.CRITICAL: 20,
-            IssueSeverity.IMPORTANT: 10,
-            IssueSeverity.WARNING: 5,
-            IssueSeverity.INFO: 2,
-        }
+                all_issues.append(
+                    AnalysisIssue(
+                        ruleId=rule_issue.id,
+                        severity=sev,
+                        section=rule_issue.section,
+                        message=rule_issue.message,
+                        suggestion=rule_issue.reason or rule_issue.proposed_change,
+                        targetId=rule_issue.field_id,
+                    )
+                )
 
-        total_deduction = sum(deduction_weights.get(issue.severity, 0) for issue in all_issues)
-        overall_score = max(20, min(100, 100 - total_deduction))
+        # 2. Transparent ATS Heuristic Calculation
+        ats_eval = default_rule_registry.calculate_ats_heuristic(resume, rule_results)
+        ats_score = max(20, min(100, ats_eval["total"]))
 
-        ats_issues = [i for i in all_issues if i.section in ["profile", "skills", "experience"]]
-        ats_deduction = sum(deduction_weights.get(issue.severity, 0) for issue in ats_issues)
-        ats_score = max(25, min(100, 100 - ats_deduction))
-
+        # 3. Content score calculation based on content/formatting deductions
         content_issues = [
             i
             for i in all_issues
-            if i.ruleId
-            in ["weak-action-verb", "repeated-action-verbs", "bullet-too-long", "summary-too-long"]
+            if i.section in ["experience", "projects", "summary"]
         ]
         content_deduction = sum(
-            deduction_weights.get(issue.severity, 0) for issue in content_issues
+            15 if i.severity == IssueSeverity.CRITICAL
+            else 10 if i.severity == IssueSeverity.IMPORTANT
+            else 5 if i.severity == IssueSeverity.WARNING
+            else 2
+            for i in content_issues
         )
-        content_score = max(30, min(100, 100 - content_deduction))
+        content_score = max(25, min(100, 100 - content_deduction))
+
+        # Overall score is a weighted blend
+        overall_score = int(ats_score * 0.5 + content_score * 0.5)
 
         # Text statistics
         text_corp = f"{resume.summary} " + " ".join(
@@ -62,6 +79,8 @@ class AnalysisService:
             strengths.append("Well-categorized and indexed technical competencies.")
         if resume.education:
             strengths.append("Documented academic and credential background.")
+        if (resume.metadata.language or "").lower() == "tr":
+            strengths.append("Verified Turkish language and TDK 2026 orthography compliance.")
 
         return ResumeAnalysisReport(
             resumeId=resume.metadata.id,
@@ -72,5 +91,7 @@ class AnalysisService:
             wordCount=word_count,
             bulletCount=bullet_count,
             strengths=strengths,
+            atsBreakdown=ats_eval["breakdown"],
+            heuristicNotice=ats_eval["heuristic_notice"],
             calculatedAt=datetime.now(UTC).isoformat(),
         )

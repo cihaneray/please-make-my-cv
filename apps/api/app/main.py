@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +12,9 @@ from app.core.exceptions import AppException
 from app.core.logging import RequestLoggingMiddleware
 from app.db.seed import seed_database
 from app.db.session import SessionLocal, init_db
+from app.rules.registry import default_rule_registry
+
+logger = logging.getLogger("cv_workspace")
 
 
 @asynccontextmanager
@@ -19,6 +23,8 @@ async def lifespan(app: FastAPI):
     init_db()
     with SessionLocal() as db:
         seed_database(db)
+    rules_count = len(default_rule_registry.list_rules())
+    logger.info("Loaded %d deterministic rules into registry at startup.", rules_count)
     yield
 
 
@@ -78,7 +84,30 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
 # Health check
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "app": settings.app_name, "env": settings.app_env}
+    return {
+        "status": "ok",
+        "app": settings.app_name,
+        "env": settings.app_env,
+        "rulesLoaded": len(default_rule_registry.list_rules()),
+    }
+
+
+# Rule registry inspection
+@app.get("/api/rules")
+def get_rules():
+    return {
+        "rules": [
+            {
+                "id": r.id,
+                "name": r.name,
+                "version": r.version,
+                "type": r.rule_type.value,
+                "category": r.category.value,
+                "description": r.description,
+            }
+            for r in default_rule_registry.list_rules()
+        ]
+    }
 
 
 # Register routes

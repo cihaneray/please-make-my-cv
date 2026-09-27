@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 def default_uuid() -> str:
@@ -133,12 +133,21 @@ class ResumeMetadata(BaseModel):
     targetRole: str = ""
     templateId: str = "minimal"
     language: str = "en"
+    targetMarket: str = "TR"
     tags: list[str] = Field(default_factory=list)
     revision: int = 1
     createdAt: str = Field(default_factory=now_iso)
     updatedAt: str = Field(default_factory=now_iso)
     parentResumeId: str | None = None
     isArchived: bool = False
+
+    @model_validator(mode="before")
+    @classmethod
+    def check_target_market(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "target_market" in data and "targetMarket" not in data:
+                data["targetMarket"] = data["target_market"]
+        return data
 
 
 class ResumeDocument(BaseModel):
@@ -163,7 +172,17 @@ class CreateResumeRequest(BaseModel):
     title: str = "Untitled Resume"
     targetRole: str = ""
     templateId: str = "minimal"
+    language: str = "en"
+    targetMarket: str = "TR"
     initialData: ResumeDocument | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def check_target_market(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "target_market" in data and "targetMarket" not in data:
+                data["targetMarket"] = data["target_market"]
+        return data
 
 
 class UpdateResumeRequest(BaseModel):
@@ -175,8 +194,18 @@ class PatchResumeMetadataRequest(BaseModel):
     title: str | None = None
     targetRole: str | None = None
     templateId: str | None = None
+    language: str | None = None
+    targetMarket: str | None = None
     tags: list[str] | None = None
     isArchived: bool | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def check_target_market(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "target_market" in data and "targetMarket" not in data:
+                data["targetMarket"] = data["target_market"]
+        return data
 
 
 class ResumeSummaryResponse(BaseModel):
@@ -184,9 +213,19 @@ class ResumeSummaryResponse(BaseModel):
     title: str
     targetRole: str
     templateId: str
+    language: str = "en"
+    targetMarket: str = "TR"
     revision: int
     updatedAt: str
     createdAt: str
     parentResumeId: str | None = None
     isArchived: bool = False
     stats: dict[str, int] = Field(default_factory=dict)
+
+    @model_validator(mode="before")
+    @classmethod
+    def check_target_market(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "target_market" in data and "targetMarket" not in data:
+                data["targetMarket"] = data["target_market"]
+        return data
