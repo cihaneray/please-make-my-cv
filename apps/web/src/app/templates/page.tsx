@@ -4,33 +4,7 @@ import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { api } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
-
-const TEMPLATES = [
-  {
-    id: 'minimal',
-    name: 'Minimal Swiss',
-    category: 'Design Systems & Product',
-    description: 'Understated editorial layout inspired by Swiss modernist typography, active whitespace, and razor-sharp delineation lines.',
-    recommendedFor: 'Product Designers, UI/UX Specialists, Design Technologists',
-    accent: '#0F172A',
-  },
-  {
-    id: 'technical',
-    name: 'Technical Architecture',
-    category: 'Engineering & Cloud',
-    description: 'Dense, structured information architecture optimized for deep technical stacks, cloud certifications, and bulleted system outcomes.',
-    recommendedFor: 'Backend Architects, Staff Engineers, DevOps, Cloud Developers',
-    accent: '#131B2E',
-  },
-  {
-    id: 'professional',
-    name: 'Executive Editorial',
-    category: 'Leadership & Strategy',
-    description: 'High-contrast typography with balanced executive summary presentation designed for director and VP level visibility.',
-    recommendedFor: 'Engineering Managers, Product Leads, Technical Directors',
-    accent: '#1E293B',
-  },
-];
+import { RESUME_TEMPLATES, SAMPLE_PREVIEW_RESUME } from '@/features/resume-templates';
 
 export default function TemplatesPage() {
   const router = useRouter();
@@ -55,7 +29,7 @@ export default function TemplatesPage() {
 
   return (
     <div className="flex flex-col w-full">
-      <div className="max-w-[1120px] w-full mx-auto px-space-lg py-margin-desktop space-y-space-xl">
+      <div className="max-w-[1180px] w-full mx-auto px-space-lg py-margin-desktop space-y-space-xl">
         <header className="flex flex-col gap-space-xs pb-space-lg border-b border-surface-container-high">
           <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary">
             {t('gallery')}
@@ -69,8 +43,19 @@ export default function TemplatesPage() {
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
-          {TEMPLATES.map((tmpl) => {
+          {RESUME_TEMPLATES.map((tmpl) => {
             const isSelected = selectedId === tmpl.id;
+            const Renderer = tmpl.renderer;
+            const previewDoc = {
+              ...SAMPLE_PREVIEW_RESUME,
+              design: {
+                ...SAMPLE_PREVIEW_RESUME.design,
+                template: tmpl.id,
+                accentColor: tmpl.defaultAccentColor,
+                fontFamily: tmpl.defaultFontFamily,
+              },
+            };
+
             return (
               <div
                 key={tmpl.id}
@@ -82,21 +67,16 @@ export default function TemplatesPage() {
                 }`}
               >
                 <div className="flex flex-col gap-space-sm">
-                  {/* Visual mockup banner */}
-                  <div className="h-40 rounded-lg bg-surface-container-low p-4 flex flex-col justify-between border border-surface-container-highest">
-                    <div className="flex items-center justify-between">
-                      <div className="h-2 w-16 rounded bg-neutral-300" />
-                      <div className="h-2 w-8 rounded bg-neutral-200" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <div className="h-1.5 w-full rounded bg-neutral-200" />
-                      <div className="h-1.5 w-4/5 rounded bg-neutral-200" />
-                      <div className="h-1.5 w-2/3 rounded bg-neutral-200" />
-                    </div>
-                    <div className="flex gap-1">
-                      <div className="h-3 w-8 rounded-full bg-neutral-300" />
-                      <div className="h-3 w-10 rounded-full bg-neutral-300" />
-                      <div className="h-3 w-8 rounded-full bg-neutral-300" />
+                  {/* Real Scaled A4 Preview */}
+                  <div className="h-56 w-full rounded-lg bg-surface-container-low border border-surface-container-highest overflow-hidden relative shadow-inner flex justify-center items-start pt-2">
+                    <div
+                      className="w-[595px] origin-top bg-white p-7 shadow-sm pointer-events-none select-none"
+                      style={{
+                        transform: 'scale(0.38)',
+                        minHeight: '842px',
+                      }}
+                    >
+                      <Renderer document={previewDoc} />
                     </div>
                   </div>
 
@@ -120,7 +100,7 @@ export default function TemplatesPage() {
                 </div>
 
                 <div className="pt-space-lg mt-space-md border-t border-surface-container-high flex items-center justify-between">
-                  <span className="font-label-sm text-secondary capitalize">{tmpl.id} theme</span>
+                  <span className="font-label-sm text-secondary capitalize">{tmpl.id}</span>
                   <button
                     type="button"
                     onClick={(e) => {
