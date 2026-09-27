@@ -1,3 +1,6 @@
+import re
+import unicodedata
+
 from app.exporters.html_pdf_exporter import HtmlPdfExporter
 from app.exporters.json_exporter import JsonExporter
 from app.exporters.markdown_exporter import MarkdownExporter
@@ -7,6 +10,14 @@ from app.parsers.markdown_parser import MarkdownParser
 from app.parsers.yaml_parser import YamlParser
 from app.schemas.import_export import DataFormat
 from app.schemas.resume import ResumeDocument
+
+
+def _sanitize_filename(name: str) -> str:
+    tr_map = str.maketrans({"ç": "c", "Ç": "C", "ğ": "g", "Ğ": "G", "ı": "i", "İ": "I", "ö": "o", "Ö": "O", "ş": "s", "Ş": "S", "ü": "u", "Ü": "U"})
+    transliterated = name.translate(tr_map)
+    normalized = unicodedata.normalize("NFKD", transliterated).encode("ascii", "ignore").decode("ascii")
+    cleaned = re.sub(r"[^a-zA-Z0-9_\-]+", "_", normalized).strip("_")
+    return cleaned or "resume"
 
 
 class ConversionService:
@@ -40,7 +51,8 @@ class ConversionService:
     @staticmethod
     def export(doc: ResumeDocument, target_format: DataFormat) -> tuple[str, str, str]:
         """Exports ResumeDocument into the target format, returning (content, mime_type, filename)."""
-        base_name = doc.metadata.title.lower().replace(" ", "_") or "resume"
+        base_name = _sanitize_filename(doc.metadata.title.lower())
+
 
         if target_format == DataFormat.JSON:
             text = JsonExporter.export(doc)
