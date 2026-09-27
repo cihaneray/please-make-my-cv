@@ -1,4 +1,6 @@
-# CV Workspace (`it-is-good-cv`)
+# please-make-my-cv
+
+> Your CV. Smarter. Sharper. Job-ready.
 
 A production-quality, local-first CV & Resume Workspace designed with the **Calm Editorial Workspace** design aesthetic (Swiss modernist precision, Inter typography, razor-thin hairlines, and realistic A4 document scaling).
 
