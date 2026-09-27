@@ -33,7 +33,7 @@ export function ProfessionalTemplate({ document, isPrintMode, className = '' }: 
       }}
     >
       {/* Professional Header - Centered & Authoritative */}
-      <header className="text-center pb-3 border-b-2" style={{ borderColor: accentColor }}>
+      <header data-cv-header="true" className="text-center pb-3 border-b-2" style={{ borderColor: accentColor }}>
         <h1
           className="text-[25px] font-bold tracking-normal uppercase"
           style={{ color: accentColor, letterSpacing: '0.04em' }}
@@ -64,7 +64,7 @@ export function ProfessionalTemplate({ document, isPrintMode, className = '' }: 
           titleClassName="text-[11px] font-bold uppercase tracking-widest pb-1 border-b"
           titleStyle={{ color: accentColor, borderColor: accentColor }}
         >
-          <p className="pt-2 text-[11.5px] text-neutral-800 leading-relaxed font-sans text-justify">
+          <p data-cv-entry="true" className="pt-2 text-[11.5px] text-neutral-800 leading-relaxed font-sans text-justify">
             {summary}
           </p>
         </ResumeSection>
@@ -79,7 +79,7 @@ export function ProfessionalTemplate({ document, isPrintMode, className = '' }: 
         >
           <div className="pt-2 space-y-4">
             {experience.map((exp) => (
-              <div key={exp.id} className="space-y-1">
+              <div data-cv-entry="true" key={exp.id} className="space-y-1">
                 <div className="flex items-baseline justify-between gap-4">
                   <div className="font-bold text-[13px] text-neutral-900">
                     <span>{exp.company}</span>
@@ -132,7 +132,7 @@ export function ProfessionalTemplate({ document, isPrintMode, className = '' }: 
         >
           <div className="pt-2 space-y-3">
             {education.map((edu) => (
-              <div key={edu.id} className="space-y-0.5">
+              <div data-cv-entry="true" key={edu.id} className="space-y-0.5">
                 <div className="flex items-baseline justify-between gap-4">
                   <div className="font-bold text-[12.5px] text-neutral-900">
                     {edu.institution}
@@ -173,7 +173,7 @@ export function ProfessionalTemplate({ document, isPrintMode, className = '' }: 
         >
           <div className="pt-2 space-y-3">
             {projects.map((proj) => (
-              <div key={proj.id} className="space-y-0.5">
+              <div data-cv-entry="true" key={proj.id} className="space-y-0.5">
                 <div className="flex items-baseline justify-between gap-4">
                   <div className="font-bold text-[12.5px] text-neutral-900 flex items-center gap-2">
                     <span>{proj.name}</span>
@@ -219,7 +219,7 @@ export function ProfessionalTemplate({ document, isPrintMode, className = '' }: 
           titleClassName="text-[11px] font-bold uppercase tracking-widest pb-1 border-b"
           titleStyle={{ color: accentColor, borderColor: accentColor }}
         >
-          <div className="pt-2 font-sans">
+          <div data-cv-entry="true" className="pt-2 font-sans">
             <SkillGroupList skills={skills} variant="categorized-lines" />
           </div>
         </ResumeSection>
@@ -234,7 +234,7 @@ export function ProfessionalTemplate({ document, isPrintMode, className = '' }: 
         >
           <div className="pt-2 space-y-1.5 text-[11px] font-sans">
             {certifications.map((c) => (
-              <div key={c.id} className="flex items-baseline justify-between">
+              <div data-cv-entry="true" key={c.id} className="flex items-baseline justify-between">
                 <div>
                   <strong className="font-semibold text-neutral-900">{c.name}</strong>
                   {c.issuer && <span className="text-neutral-600"> — {c.issuer}</span>}
@@ -255,7 +255,7 @@ export function ProfessionalTemplate({ document, isPrintMode, className = '' }: 
           titleClassName="text-[11px] font-bold uppercase tracking-widest pb-1 border-b"
           titleStyle={{ color: accentColor, borderColor: accentColor }}
         >
-          <div className="pt-2 flex flex-wrap gap-x-5 gap-y-1 text-[11.5px] font-sans">
+          <div data-cv-entry="true" className="pt-2 flex flex-wrap gap-x-5 gap-y-1 text-[11.5px] font-sans">
             {languages.map((l) => (
               <span key={l.id} className="text-neutral-800">
                 <strong className="font-semibold text-neutral-900">{l.language}:</strong>{' '}
@@ -277,7 +277,7 @@ export function ProfessionalTemplate({ document, isPrintMode, className = '' }: 
           >
             <div className="pt-2 space-y-2.5">
               {cs.items.map((item) => (
-                <div key={item.id} className="space-y-0.5">
+                <div data-cv-entry="true" key={item.id} className="space-y-0.5">
                   <div className="flex items-baseline justify-between">
                     <span className="font-bold text-[12.5px] text-neutral-900">{item.title}</span>
                     {item.date && (

@@ -33,7 +33,7 @@ export function MinimalTemplate({ document, isPrintMode, className = '' }: Resum
       }}
     >
       {/* Minimal Header */}
-      <header className="pb-3 border-b border-neutral-200/80">
+      <header data-cv-header="true" className="pb-3 border-b border-neutral-200/80">
         <div className="flex flex-col gap-1">
           <h1
             className="text-[24px] font-medium tracking-tight"
@@ -64,7 +64,7 @@ export function MinimalTemplate({ document, isPrintMode, className = '' }: Resum
           title={titles.summary}
           titleClassName="text-[10px] uppercase font-semibold tracking-widest text-neutral-400 pb-1 border-b border-neutral-100"
         >
-          <p className="pt-2 text-[11.5px] text-neutral-700 leading-relaxed max-w-prose">
+          <p data-cv-entry="true" className="pt-2 text-[11.5px] text-neutral-700 leading-relaxed max-w-prose">
             {summary}
           </p>
         </ResumeSection>
@@ -78,7 +78,7 @@ export function MinimalTemplate({ document, isPrintMode, className = '' }: Resum
         >
           <div className="pt-2 space-y-4">
             {experience.map((exp) => (
-              <div key={exp.id} className="space-y-1">
+              <div data-cv-entry="true" key={exp.id} className="space-y-1">
                 <div className="flex items-baseline justify-between gap-4">
                   <div className="font-medium text-[12.5px] text-neutral-900">
                     {exp.position}
@@ -127,7 +127,7 @@ export function MinimalTemplate({ document, isPrintMode, className = '' }: Resum
         >
           <div className="pt-2 space-y-3">
             {education.map((edu) => (
-              <div key={edu.id} className="space-y-0.5">
+              <div data-cv-entry="true" key={edu.id} className="space-y-0.5">
                 <div className="flex items-baseline justify-between gap-4">
                   <div className="font-medium text-[12px] text-neutral-900">
                     {edu.degree} {edu.fieldOfStudy ? `in ${edu.fieldOfStudy}` : ''}
@@ -163,7 +163,7 @@ export function MinimalTemplate({ document, isPrintMode, className = '' }: Resum
         >
           <div className="pt-2 space-y-3">
             {projects.map((proj) => (
-              <div key={proj.id} className="space-y-0.5">
+              <div data-cv-entry="true" key={proj.id} className="space-y-0.5">
                 <div className="flex items-baseline justify-between gap-4">
                   <div className="font-medium text-[12px] text-neutral-900 flex items-center gap-2">
                     <span>{proj.name}</span>
@@ -208,7 +208,7 @@ export function MinimalTemplate({ document, isPrintMode, className = '' }: Resum
           title={titles.skills}
           titleClassName="text-[10px] uppercase font-semibold tracking-widest text-neutral-400 pb-1 border-b border-neutral-100"
         >
-          <div className="pt-2">
+          <div data-cv-entry="true" className="pt-2">
             <SkillGroupList skills={skills} variant="categorized-lines" />
           </div>
         </ResumeSection>
@@ -222,7 +222,7 @@ export function MinimalTemplate({ document, isPrintMode, className = '' }: Resum
         >
           <div className="pt-2 space-y-1.5 text-[11px]">
             {certifications.map((c) => (
-              <div key={c.id} className="flex items-baseline justify-between">
+              <div data-cv-entry="true" key={c.id} className="flex items-baseline justify-between">
                 <div>
                   <span className="font-medium text-neutral-900">{c.name}</span>
                   {c.issuer && <span className="text-neutral-500"> — {c.issuer}</span>}
@@ -242,7 +242,7 @@ export function MinimalTemplate({ document, isPrintMode, className = '' }: Resum
           title={titles.languages}
           titleClassName="text-[10px] uppercase font-semibold tracking-widest text-neutral-400 pb-1 border-b border-neutral-100"
         >
-          <div className="pt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
+          <div data-cv-entry="true" className="pt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
             {languages.map((l) => (
               <span key={l.id} className="text-neutral-700">
                 <strong className="font-medium text-neutral-900">{l.language}</strong>
@@ -263,7 +263,7 @@ export function MinimalTemplate({ document, isPrintMode, className = '' }: Resum
           >
             <div className="pt-2 space-y-2.5">
               {cs.items.map((item) => (
-                <div key={item.id} className="space-y-0.5">
+                <div data-cv-entry="true" key={item.id} className="space-y-0.5">
                   <div className="flex items-baseline justify-between">
                     <span className="font-medium text-[12px] text-neutral-900">{item.title}</span>
                     {item.date && (

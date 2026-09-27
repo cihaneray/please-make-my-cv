@@ -33,7 +33,7 @@ export function TechnicalTemplate({ document, isPrintMode, className = '' }: Res
       }}
     >
       {/* Technical Header */}
-      <header className="pb-2.5 border-b-2" style={{ borderColor: accentColor }}>
+      <header data-cv-header="true" className="pb-2.5 border-b-2" style={{ borderColor: accentColor }}>
         <div className="flex flex-col gap-1">
           <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
             <h1
@@ -72,7 +72,7 @@ export function TechnicalTemplate({ document, isPrintMode, className = '' }: Res
           titleClassName="text-[10px] font-bold tracking-wider pb-0.5 border-b border-neutral-300"
           titleStyle={{ color: accentColor }}
         >
-          <p className="pt-1.5 text-[11px] text-neutral-800 leading-relaxed font-normal">
+          <p data-cv-entry="true" className="pt-1.5 text-[11px] text-neutral-800 leading-relaxed font-normal">
             {summary}
           </p>
         </ResumeSection>
@@ -85,7 +85,7 @@ export function TechnicalTemplate({ document, isPrintMode, className = '' }: Res
           titleClassName="text-[10px] font-bold tracking-wider pb-0.5 border-b border-neutral-300"
           titleStyle={{ color: accentColor }}
         >
-          <div className="pt-1.5 space-y-1 text-[11px]">
+          <div data-cv-entry="true" className="pt-1.5 space-y-1 text-[11px]">
             {skills.map((group) => (
               <div key={group.id} className="flex items-baseline gap-2">
                 <span className="font-semibold text-neutral-900 shrink-0 font-mono text-[10.5px]">
@@ -109,7 +109,7 @@ export function TechnicalTemplate({ document, isPrintMode, className = '' }: Res
         >
           <div className="pt-1.5 space-y-3.5">
             {experience.map((exp) => (
-              <div key={exp.id} className="space-y-1">
+              <div data-cv-entry="true" key={exp.id} className="space-y-1">
                 <div className="flex items-baseline justify-between gap-2">
                   <div className="text-[12px] font-bold text-neutral-900">
                     <span>{exp.position}</span>
@@ -160,7 +160,7 @@ export function TechnicalTemplate({ document, isPrintMode, className = '' }: Res
         >
           <div className="pt-1.5 space-y-3">
             {projects.map((proj) => (
-              <div key={proj.id} className="space-y-0.5">
+              <div data-cv-entry="true" key={proj.id} className="space-y-0.5">
                 <div className="flex items-baseline justify-between gap-2">
                   <div className="text-[12px] font-bold text-neutral-900 flex items-center gap-2">
                     <span>{proj.name}</span>
@@ -209,7 +209,7 @@ export function TechnicalTemplate({ document, isPrintMode, className = '' }: Res
         >
           <div className="pt-1.5 space-y-2">
             {education.map((edu) => (
-              <div key={edu.id} className="space-y-0.5">
+              <div data-cv-entry="true" key={edu.id} className="space-y-0.5">
                 <div className="flex items-baseline justify-between gap-2">
                   <div className="text-[12px] font-semibold text-neutral-900">
                     <span>{edu.degree}</span>
@@ -247,7 +247,7 @@ export function TechnicalTemplate({ document, isPrintMode, className = '' }: Res
         >
           <div className="pt-1.5 space-y-1 text-[11px]">
             {certifications.map((c) => (
-              <div key={c.id} className="flex items-baseline justify-between">
+              <div data-cv-entry="true" key={c.id} className="flex items-baseline justify-between">
                 <div>
                   <span className="font-semibold text-neutral-900">{c.name}</span>
                   {c.issuer && <span className="text-neutral-600"> — {c.issuer}</span>}
@@ -271,7 +271,7 @@ export function TechnicalTemplate({ document, isPrintMode, className = '' }: Res
           titleClassName="text-[10px] font-bold tracking-wider pb-0.5 border-b border-neutral-300"
           titleStyle={{ color: accentColor }}
         >
-          <div className="pt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
+          <div data-cv-entry="true" className="pt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
             {languages.map((l) => (
               <span key={l.id} className="text-neutral-700 font-mono">
                 <strong className="font-semibold text-neutral-900 font-sans">{l.language}</strong>
@@ -293,7 +293,7 @@ export function TechnicalTemplate({ document, isPrintMode, className = '' }: Res
           >
             <div className="pt-1.5 space-y-2">
               {cs.items.map((item) => (
-                <div key={item.id} className="space-y-0.5">
+                <div data-cv-entry="true" key={item.id} className="space-y-0.5">
                   <div className="flex items-baseline justify-between">
                     <span className="font-bold text-[12px] text-neutral-900">{item.title}</span>
                     {item.date && (

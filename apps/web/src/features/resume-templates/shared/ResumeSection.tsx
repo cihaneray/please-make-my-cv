@@ -19,6 +19,7 @@ export function ResumeSection({
 }: ResumeSectionProps) {
   return (
     <section
+      data-cv-section="true"
       className={`break-inside-avoid print:break-inside-avoid ${className}`}
       style={{
         breakInside: 'avoid',
@@ -28,6 +29,7 @@ export function ResumeSection({
     >
       {title && (
         <h2
+          data-cv-heading="true"
           className={`font-semibold tracking-wider select-text ${titleClassName}`}
           style={{
             breakAfter: 'avoid',
