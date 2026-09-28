@@ -5,8 +5,17 @@ from app.schemas.resume import ResumeDocument
 
 class MatchingService:
     @staticmethod
-    def match(resume: ResumeDocument, job_id: str, job_description: str) -> JobMatchAnalysis:
-        job_keywords = extract_keywords_from_text(job_description)
+    def match(
+        resume: ResumeDocument,
+        job_id: str,
+        job_description: str,
+        requirements: list[str] | None = None,
+    ) -> JobMatchAnalysis:
+        job_keywords = (
+            {normalize_keyword(term) for term in requirements if term.strip()}
+            if requirements is not None
+            else extract_keywords_from_text(job_description)
+        )
 
         # Extract all resume terms
         resume_terms: set[str] = set()
@@ -36,11 +45,25 @@ class MatchingService:
         if resume.profile.headline:
             resume_terms.update(extract_keywords_from_text(resume.profile.headline))
 
+        if requirements is not None:
+            import re
+
+            content = " ".join(
+                [resume.summary, resume.profile.headline]
+                + [
+                    f"{entry.position} {entry.summary} {' '.join(entry.bullets)}"
+                    for entry in resume.experience
+                ]
+                + [" ".join(entry.bullets) for entry in resume.projects]
+            ).lower()
+            for term in job_keywords:
+                if re.search(r"(?<!\w)" + re.escape(term) + r"(?!\w)", content):
+                    resume_terms.add(term)
         # Intersect
         if not job_keywords:
-            matched: list[str] = list(resume_terms)[:5]
+            matched: list[str] = []
             missing: list[str] = []
-            score = 75.0
+            score = None
         else:
             matched_set = job_keywords.intersection(resume_terms)
             missing_set = job_keywords.difference(resume_terms)
@@ -72,6 +95,8 @@ class MatchingService:
             f"Found {len(matched)} matching requirements and {len(missing)} missing keywords."
         )
 
+        if score is None:
+            summary = "Insufficient recognized requirements. This matcher currently covers technology vocabulary; no compatibility score was calculated."
         return JobMatchAnalysis(
             jobId=job_id,
             resumeId=resume.metadata.id,

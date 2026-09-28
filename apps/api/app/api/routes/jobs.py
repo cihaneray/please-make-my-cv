@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Body, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -61,8 +61,31 @@ def delete_job(
 def match_job_with_resume(
     job_id: str,
     resume_id: str,
+    requirements: list[str] | None = Body(default=None, embed=True),
     db: Session = Depends(get_db),
 ):
     job = JobService.get_job(db, job_id)
     resume = ResumeService.get_resume(db, resume_id)
-    return MatchingService.match(resume, job_id=job.id, job_description=job.description)
+    return MatchingService.match(
+        resume, job_id=job.id, job_description=job.description, requirements=requirements
+    )
+
+
+@router.get("/{job_id}/snapshots")
+def application_snapshots(job_id: str, db: Session = Depends(get_db)):
+    import json
+
+    from app.db.models import ApplicationSnapshotModel
+
+    JobService.get_job(db, job_id)
+    return [
+        {
+            "id": row.id,
+            "createdAt": row.created_at.isoformat(),
+            "document": json.loads(row.document_json),
+        }
+        for row in db.query(ApplicationSnapshotModel)
+        .filter_by(job_id=job_id)
+        .order_by(ApplicationSnapshotModel.created_at.desc())
+        .all()
+    ]

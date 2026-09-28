@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
+from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -166,6 +167,25 @@ class ResumeDocument(BaseModel):
     design: DesignSettings = Field(default_factory=DesignSettings)
     visibility: VisibilitySettings = Field(default_factory=VisibilitySettings)
 
+    @model_validator(mode="after")
+    def unique_entry_ids(self):
+        collections = [
+            self.profile.links,
+            self.experience,
+            self.education,
+            self.projects,
+            self.skills,
+            self.certifications,
+            self.languages,
+            self.customSections,
+        ]
+        collections.extend(section.items for section in self.customSections)
+        for entries in collections:
+            ids = [entry.id for entry in entries]
+            if any(not value.strip() for value in ids) or len(set(ids)) != len(ids):
+                raise ValueError("Each section must have unique, nonempty entry IDs.")
+        return self
+
 
 # Request and Response schemas
 class CreateResumeRequest(BaseModel):
@@ -191,6 +211,7 @@ class UpdateResumeRequest(BaseModel):
 
 
 class PatchResumeMetadataRequest(BaseModel):
+    revision: int = Field(ge=1)
     title: str | None = None
     targetRole: str | None = None
     templateId: str | None = None

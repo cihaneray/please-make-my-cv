@@ -37,9 +37,7 @@ class TurkishLanguageRule(BaseRule):
         "takım çalışmasına yatkın",
     ]
 
-    def evaluate(
-        self, resume: ResumeDocument, context: dict[str, Any] | None = None
-    ) -> RuleResult:
+    def evaluate(self, resume: ResumeDocument, context: dict[str, Any] | None = None) -> RuleResult:
         issues: list[RuleIssue] = []
 
         is_turkish = (resume.metadata.language or "").lower() == "tr"
@@ -63,7 +61,7 @@ class TurkishLanguageRule(BaseRule):
                 proposed = f"%{num}"
                 issues.append(
                     RuleIssue(
-                        id=f"tdk-percent-{len(issues)+1}",
+                        id=f"tdk-percent-{len(issues) + 1}",
                         rule_id=self.id,
                         severity=IssueSeverity.SUGGESTION,
                         category=RuleCategory.LANGUAGE,
@@ -93,7 +91,7 @@ class TurkishLanguageRule(BaseRule):
                 if re.match(r"^\s*ben\s+", bullet, re.IGNORECASE):
                     issues.append(
                         RuleIssue(
-                            id=f"tr-pronoun-ben-{len(issues)+1}",
+                            id=f"tr-pronoun-ben-{len(issues) + 1}",
                             rule_id=self.id,
                             severity=IssueSeverity.SUGGESTION,
                             category=RuleCategory.LANGUAGE,
@@ -112,7 +110,7 @@ class TurkishLanguageRule(BaseRule):
                     if slop in bullet_lower:
                         issues.append(
                             RuleIssue(
-                                id=f"tr-ai-slop-{len(issues)+1}",
+                                id=f"tr-ai-slop-{len(issues) + 1}",
                                 rule_id=self.id,
                                 severity=IssueSeverity.SUGGESTION,
                                 category=RuleCategory.CONTENT,

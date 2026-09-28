@@ -1,9 +1,5 @@
-import pytest
-from fastapi.testclient import TestClient
-
-from app.main import app
 from app.rules.ats import ATSParseabilityRule
-from app.rules.base import IssueSeverity, RuleCategory
+from app.rules.base import RuleCategory
 from app.rules.facts import FactIntegrityRule
 from app.rules.job_match import JobKeywordMatchRule
 from app.rules.privacy import KVKKDataMinimizer, KVKKPrivacyRule, is_valid_tckn
@@ -16,11 +12,6 @@ from app.schemas.resume import (
     ResumeMetadata,
     SkillGroup,
 )
-
-
-@pytest.fixture
-def client():
-    return TestClient(app)
 
 
 def test_rule_registry_initialization():
@@ -42,7 +33,10 @@ def test_turkish_language_rule_tdk_percentage():
             ExperienceItem(
                 company="Tech A.Ş.",
                 position="Yazılım Mühendisi",
-                bullets=["Bellek tüketimini 30 % azalttım.", "Ben FastAPI ile mikroservis geliştirdim."],
+                bullets=[
+                    "Bellek tüketimini 30 % azalttım.",
+                    "Ben FastAPI ile mikroservis geliştirdim.",
+                ],
             )
         ],
     )
@@ -74,12 +68,16 @@ def test_ats_parseability_rule_email_and_duplicates():
             ExperienceItem(
                 company="Company A",
                 position="Dev",
-                bullets=["Engineered scalable microservices handling massive request volume daily."],
+                bullets=[
+                    "Engineered scalable microservices handling massive request volume daily."
+                ],
             ),
             ExperienceItem(
                 company="Company B",
                 position="Dev",
-                bullets=["Engineered scalable microservices handling massive request volume daily."],
+                bullets=[
+                    "Engineered scalable microservices handling massive request volume daily."
+                ],
             ),
         ],
     )

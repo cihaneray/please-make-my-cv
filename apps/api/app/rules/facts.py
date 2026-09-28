@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from typing import Any
 
 from app.rules.base import (
@@ -44,9 +43,7 @@ class FactIntegrityRule(BaseRule):
         "katılım sağladım",
     ]
 
-    def evaluate(
-        self, resume: ResumeDocument, context: dict[str, Any] | None = None
-    ) -> RuleResult:
+    def evaluate(self, resume: ResumeDocument, context: dict[str, Any] | None = None) -> RuleResult:
         issues: list[RuleIssue] = []
 
         # 1. Experience structural integrity
@@ -131,7 +128,9 @@ class FactIntegrityRule(BaseRule):
                     consecutive_count = 1
 
             # Check weak openings
-            weak_verbs = self.WEAK_VERBS_TR if resume.metadata.language == "tr" else self.WEAK_VERBS_EN
+            weak_verbs = (
+                self.WEAK_VERBS_TR if resume.metadata.language == "tr" else self.WEAK_VERBS_EN
+            )
             for b_idx, bullet in enumerate(exp.bullets):
                 b_lower = bullet.lower()
                 for weak in weak_verbs:

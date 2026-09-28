@@ -1,12 +1,13 @@
-from contextlib import asynccontextmanager
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
-from app.api.routes import ai, export, imports, jobs, library, resumes, source
+from app.api.routes import ai, export, imports, jobs, library, resumes, source, workspace
+from app.core.body_limit import BodyLimitMiddleware
 from app.core.config import settings
 from app.core.exceptions import AppException
 from app.core.logging import RequestLoggingMiddleware
@@ -20,9 +21,11 @@ logger = logging.getLogger("cv_workspace")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize DB schemas and seed demo data on startup
-    init_db()
-    with SessionLocal() as db:
-        seed_database(db)
+    if not getattr(app.state, "skip_database_startup", False):
+        init_db()
+        if settings.seed_demo:
+            with SessionLocal() as db:
+                seed_database(db)
     rules_count = len(default_rule_registry.list_rules())
     logger.info("Loaded %d deterministic rules into registry at startup.", rules_count)
     yield
@@ -38,6 +41,8 @@ app = FastAPI(
 
 # Request logging middleware
 app.add_middleware(RequestLoggingMiddleware)
+
+app.add_middleware(BodyLimitMiddleware, limit=settings.max_upload_size_bytes)
 
 # CORS configuration
 app.add_middleware(
@@ -118,9 +123,10 @@ app.include_router(export.router, prefix=settings.api_prefix)
 app.include_router(jobs.router, prefix=settings.api_prefix)
 app.include_router(library.router, prefix=settings.api_prefix)
 app.include_router(ai.router, prefix=settings.api_prefix)
+app.include_router(workspace.router, prefix=settings.api_prefix)
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)

@@ -95,3 +95,74 @@ def compare_resumes(
     source_doc = ResumeService.get_resume(db, resume_id)
     target_doc = ResumeService.get_resume(db, target_id)
     return ComparisonService.compare(source_doc, target_doc)
+
+
+@router.post("/{resume_id}/analysis", response_model=ResumeAnalysisReport)
+def analyze_draft(resume_id: str, document: ResumeDocument):
+    return AnalysisService.analyze(document)
+
+
+@router.post("/{resume_id}/preview")
+def preview_draft(resume_id: str, document: ResumeDocument):
+    from fastapi import Response
+
+    from app.exporters.html_pdf_exporter import HtmlPdfExporter
+
+    return Response(
+        HtmlPdfExporter.render_html(document),
+        media_type="text/html",
+        headers={
+            "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+        },
+    )
+
+
+@router.post("/{resume_id}/export")
+def export_draft(resume_id: str, document: ResumeDocument):
+    from fastapi import Response
+
+    from app.schemas.import_export import DataFormat
+    from app.services.conversion_service import ConversionService
+
+    content, mime, filename = ConversionService.export(document, DataFormat.PDF)
+    return Response(
+        content,
+        media_type=mime,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/{resume_id}/history")
+def history(resume_id: str, db: Session = Depends(get_db)):
+    from app.db.models import ResumeRevisionModel
+
+    ResumeService.get_resume(db, resume_id)
+    return [
+        {
+            "revision": row.revision,
+            "createdAt": row.created_at.isoformat(),
+            "document": ResumeDocument.model_validate_json(row.document_json),
+        }
+        for row in db.query(ResumeRevisionModel)
+        .filter_by(resume_id=resume_id)
+        .order_by(ResumeRevisionModel.revision.desc())
+        .all()
+    ]
+
+
+@router.post("/{resume_id}/restore/{revision}", response_model=ResumeDocument)
+def restore(resume_id: str, revision: int, expected_revision: int, db: Session = Depends(get_db)):
+    from app.core.exceptions import EntityNotFoundException
+    from app.db.models import ResumeRevisionModel
+
+    row = db.get(ResumeRevisionModel, (resume_id, revision))
+    if not row:
+        raise EntityNotFoundException("Revision", str(revision))
+    return ResumeService.update_resume(
+        db,
+        resume_id,
+        UpdateResumeRequest(
+            revision=expected_revision,
+            document=ResumeDocument.model_validate_json(row.document_json),
+        ),
+    )

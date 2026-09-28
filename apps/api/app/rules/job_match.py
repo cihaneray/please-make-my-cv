@@ -51,14 +51,14 @@ class JobKeywordMatchRule(BaseRule):
         cleaned = term.strip().lower()
         return cls.CANONICAL_SYNONYMS.get(cleaned, cleaned)
 
-    def evaluate(
-        self, resume: ResumeDocument, context: dict[str, Any] | None = None
-    ) -> RuleResult:
+    def evaluate(self, resume: ResumeDocument, context: dict[str, Any] | None = None) -> RuleResult:
         context = context or {}
         job_keywords: list[str] = context.get("keywords", [])
         if not job_keywords and resume.metadata.targetRole:
             # Derive basic target role keywords
-            job_keywords = [w for w in re.split(r"[\s/,]+", resume.metadata.targetRole) if len(w) > 2]
+            job_keywords = [
+                w for w in re.split(r"[\s/,]+", resume.metadata.targetRole) if len(w) > 2
+            ]
 
         if not job_keywords:
             return RuleResult(
@@ -101,7 +101,7 @@ class JobKeywordMatchRule(BaseRule):
                         evidence_found.setdefault(kw, []).append(
                             {
                                 "section": "experience",
-                                "item": exp.company or f"Experience #{exp_idx+1}",
+                                "item": exp.company or f"Experience #{exp_idx + 1}",
                                 "text": bullet[:100] + ("..." if len(bullet) > 100 else ""),
                             }
                         )

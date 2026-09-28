@@ -68,8 +68,6 @@ class BaseRule(ABC):
     description: str
 
     @abstractmethod
-    def evaluate(
-        self, resume: ResumeDocument, context: dict[str, Any] | None = None
-    ) -> RuleResult:
+    def evaluate(self, resume: ResumeDocument, context: dict[str, Any] | None = None) -> RuleResult:
         """Execute deterministic evaluation against the canonical ResumeDocument."""
         ...

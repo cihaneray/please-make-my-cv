@@ -57,13 +57,21 @@ def preview_import_content(request: ImportValidateRequest):
 
 @router.post("/apply", response_model=ResumeDocument, status_code=status.HTTP_201_CREATED)
 def apply_import(request: ImportApplyRequest, db: Session = Depends(get_db)):
+    if request.overwriteExistingId is not None:
+        from app.core.exceptions import ValidationException
+
+        raise ValidationException(
+            "Import creates a new resume. Use revision-protected updates to replace an existing document."
+        )
     doc = request.document
     title = request.targetTitle or doc.metadata.title or "Imported Resume"
 
     create_req = CreateResumeRequest(
         title=title,
         targetRole=doc.metadata.targetRole,
-        templateId=doc.metadata.templateId,
+        templateId=doc.design.template
+        if "design" in doc.model_fields_set
+        else doc.metadata.templateId,
         initialData=doc,
     )
     return ResumeService.create_resume(db, create_req)

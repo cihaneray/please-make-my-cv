@@ -42,6 +42,7 @@ class KVKKDataMinimizer:
     @classmethod
     def redact_personal_data(cls, text: str) -> str:
         """Strips or redacts PII before sending to any external AI provider."""
+
         def replace_tckn(m: re.Match) -> str:
             val = m.group(0)
             return "[TCKN_REDACTED]" if is_valid_tckn(val) else val
@@ -102,9 +103,7 @@ class KVKKPrivacyRule(BaseRule):
         r"\bapt(?:\.)?\b",
     ]
 
-    def evaluate(
-        self, resume: ResumeDocument, context: dict[str, Any] | None = None
-    ) -> RuleResult:
+    def evaluate(self, resume: ResumeDocument, context: dict[str, Any] | None = None) -> RuleResult:
         issues: list[RuleIssue] = []
 
         all_texts: list[tuple[str, str, str]] = [
@@ -128,7 +127,7 @@ class KVKKPrivacyRule(BaseRule):
                 if is_valid_tckn(val):
                     issues.append(
                         RuleIssue(
-                            id=f"privacy-tckn-{len(issues)+1}",
+                            id=f"privacy-tckn-{len(issues) + 1}",
                             rule_id=self.id,
                             severity=IssueSeverity.IMPORTANT,
                             category=RuleCategory.PRIVACY,
@@ -145,7 +144,7 @@ class KVKKPrivacyRule(BaseRule):
             if KVKKDataMinimizer.IBAN_PATTERN.search(text):
                 issues.append(
                     RuleIssue(
-                        id=f"privacy-iban-{len(issues)+1}",
+                        id=f"privacy-iban-{len(issues) + 1}",
                         rule_id=self.id,
                         severity=IssueSeverity.IMPORTANT,
                         category=RuleCategory.PRIVACY,
@@ -164,7 +163,7 @@ class KVKKPrivacyRule(BaseRule):
                 if kw in text_lower:
                     issues.append(
                         RuleIssue(
-                            id=f"privacy-sensitive-{len(issues)+1}",
+                            id=f"privacy-sensitive-{len(issues) + 1}",
                             rule_id=self.id,
                             severity=IssueSeverity.SUGGESTION,
                             category=RuleCategory.PRIVACY,

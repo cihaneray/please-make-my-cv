@@ -92,7 +92,7 @@ def extract_keywords_from_text(text: str) -> set[str]:
     cleaned_text = text.lower()
 
     # Match against dictionary of known tech keywords
-    for kw in KNOWN_TECH_KEYWORDS:
+    for kw in KNOWN_TECH_KEYWORDS | set(SYNONYM_MAP) | set(SYNONYM_MAP.values()):
         # Regex word boundary check
         pattern = r"\b" + re.escape(kw) + r"\b"
         if re.search(pattern, cleaned_text):

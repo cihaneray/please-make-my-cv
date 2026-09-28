@@ -4,8 +4,9 @@ from datetime import UTC, datetime
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import EntityNotFoundException
-from app.db.models import JobModel
+from app.db.models import ApplicationSnapshotModel, JobModel
 from app.schemas.job import CreateJobRequest, JobApplication, JobStatus, UpdateJobRequest
+from app.services.resume_service import ResumeService
 
 
 def now_iso() -> str:
@@ -71,6 +72,14 @@ class JobService:
             linked_resume_id=request.linkedResumeId,
         )
         db.add(model)
+        if request.linkedResumeId:
+            doc = ResumeService.get_resume(db, request.linkedResumeId)
+            if request.status == JobStatus.APPLIED:
+                db.add(
+                    ApplicationSnapshotModel(
+                        id=str(uuid.uuid4()), job_id=new_id, document_json=doc.model_dump_json()
+                    )
+                )
         db.commit()
         db.refresh(model)
         return JobService.get_job(db, new_id)
@@ -81,6 +90,7 @@ class JobService:
         if not m:
             raise EntityNotFoundException("Job", job_id)
 
+        was_applied = m.status == JobStatus.APPLIED.value
         if request.company is not None:
             m.company = request.company
         if request.position is not None:
@@ -95,9 +105,17 @@ class JobService:
             m.notes = request.notes
         if request.status is not None:
             m.status = request.status.value
-        if request.linkedResumeId is not None:
+        if "linkedResumeId" in request.model_fields_set:
             m.linked_resume_id = request.linkedResumeId
 
+        if m.linked_resume_id:
+            doc = ResumeService.get_resume(db, m.linked_resume_id)
+            if m.status == JobStatus.APPLIED.value and not was_applied:
+                db.add(
+                    ApplicationSnapshotModel(
+                        id=str(uuid.uuid4()), job_id=m.id, document_json=doc.model_dump_json()
+                    )
+                )
         db.commit()
         db.refresh(m)
         return JobService.get_job(db, job_id)

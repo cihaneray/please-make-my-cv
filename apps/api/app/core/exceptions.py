@@ -50,6 +50,6 @@ class ValidationException(AppException):
         super().__init__(
             code="RESUME_VALIDATION_FAILED",
             message=message,
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=422,
             details=details,
         )

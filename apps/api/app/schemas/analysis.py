@@ -31,7 +31,7 @@ class ResumeAnalysisReport(BaseModel):
     wordCount: int = 0
     bulletCount: int = 0
     strengths: list[str] = Field(default_factory=list)
-    atsBreakdown: dict[str, int] | None = None
+    atsBreakdown: dict[str, int | None] | None = None
     heuristicNotice: str | None = None
     calculatedAt: str = ""
 

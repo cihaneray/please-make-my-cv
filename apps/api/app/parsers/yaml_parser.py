@@ -1,41 +1,36 @@
-from typing import Any
+from datetime import date
 
 import yaml
-from pydantic import ValidationError
 
-from app.schemas.resume import ResumeDocument
+from app.parsers.structured import parse_document
 
 
 class YamlParser:
     @staticmethod
-    def parse(text: str) -> tuple[ResumeDocument | None, list[str], list[str]]:
-        warnings: list[str] = []
-        errors: list[str] = []
-
+    def parse(text):
         try:
-            # Strictly use safe_load to guarantee security against arbitrary Python object instantiation
+            if any(isinstance(token, yaml.tokens.AliasToken) for token in yaml.scan(text)):
+                return (
+                    None,
+                    [],
+                    ["YAML aliases are not supported. Expand aliases before importing."],
+                )
             data = yaml.safe_load(text)
-        except yaml.YAMLError as e:
-            return None, warnings, [f"YAML syntax error: {str(e)}"]
+        except (yaml.YAMLError, RecursionError, ValueError) as exc:
+            return None, [], [f"Invalid YAML syntax: {exc}"]
 
-        if not isinstance(data, dict):
-            return None, warnings, ["YAML document must be a dictionary/mapping."]
-
-        resume_payload: dict[str, Any] = data.get("resume", data)
-
-        schema_version = data.get("schemaVersion") or resume_payload.get("metadata", {}).get(
-            "schemaVersion", 1
-        )
-        if isinstance(schema_version, int) and schema_version > 1:
-            warnings.append(
-                f"Schema version {schema_version} detected. Using backward-compatible parsing."
-            )
+        def normalize(value, key=""):
+            if isinstance(value, dict):
+                return {k: normalize(v, str(k)) for k, v in value.items()}
+            if isinstance(value, list):
+                return [normalize(v) for v in value]
+            if key.endswith("Date") and isinstance(value, date):
+                return value.isoformat()
+            if key.endswith("Date") and type(value) is int and 1000 <= value <= 9999:
+                return str(value)
+            return value
 
         try:
-            doc = ResumeDocument.model_validate(resume_payload)
-            return doc, warnings, errors
-        except ValidationError as e:
-            validation_errors = [
-                f"{'.'.join(str(loc) for loc in err['loc'])}: {err['msg']}" for err in e.errors()
-            ]
-            return None, warnings, validation_errors
+            return parse_document(normalize(data))
+        except RecursionError:
+            return None, [], ["Document nesting exceeds the supported depth."]

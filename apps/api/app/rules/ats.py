@@ -30,9 +30,7 @@ class ATSParseabilityRule(BaseRule):
     EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
     PHONE_REGEX = re.compile(r"^[\d\s\+\(\)\-\.]{7,25}$")
 
-    def evaluate(
-        self, resume: ResumeDocument, context: dict[str, Any] | None = None
-    ) -> RuleResult:
+    def evaluate(self, resume: ResumeDocument, context: dict[str, Any] | None = None) -> RuleResult:
         issues: list[RuleIssue] = []
 
         # 1. Contact checks
@@ -112,7 +110,7 @@ class ATSParseabilityRule(BaseRule):
                     prev_field = seen_bullets[bullet_key]
                     issues.append(
                         RuleIssue(
-                            id=f"ats-dup-bullet-{len(issues)+1}",
+                            id=f"ats-dup-bullet-{len(issues) + 1}",
                             rule_id=self.id,
                             severity=IssueSeverity.IMPORTANT,
                             category=RuleCategory.CONSISTENCY,
@@ -134,7 +132,7 @@ class ATSParseabilityRule(BaseRule):
                 if len(words) > 100:
                     issues.append(
                         RuleIssue(
-                            id=f"ats-bullet-length-{len(issues)+1}",
+                            id=f"ats-bullet-length-{len(issues) + 1}",
                             rule_id=self.id,
                             severity=IssueSeverity.SUGGESTION,
                             category=RuleCategory.FORMATTING,
@@ -182,7 +180,9 @@ class ATSParseabilityRule(BaseRule):
         passed = not any(
             i.severity in [IssueSeverity.ERROR, IssueSeverity.IMPORTANT] for i in issues
         )
-        score_impact = min(30, sum(8 if i.severity == IssueSeverity.IMPORTANT else 4 for i in issues))
+        score_impact = min(
+            30, sum(8 if i.severity == IssueSeverity.IMPORTANT else 4 for i in issues)
+        )
 
         return RuleResult(
             rule_id=self.id,

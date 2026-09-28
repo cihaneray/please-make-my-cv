@@ -23,7 +23,9 @@ class RuleRegistry:
 
     def register(self, rule: BaseRule) -> None:
         self._rules[rule.id] = rule
-        logger.info("Registered rule: %s (v%s, type: %s)", rule.id, rule.version, rule.rule_type.value)
+        logger.info(
+            "Registered rule: %s (v%s, type: %s)", rule.id, rule.version, rule.rule_type.value
+        )
 
     def get_rule(self, rule_id: str) -> BaseRule | None:
         return self._rules.get(rule_id)
@@ -60,7 +62,7 @@ class RuleRegistry:
             "readability": 20,
             "contact": 15,
             "consistency": 15,
-            "job_relevance": 20,
+            "job_relevance": None,
             "parseability": 10,
         }
 
@@ -77,7 +79,7 @@ class RuleRegistry:
             elif issue.category == RuleCategory.PRIVACY:
                 scores["structure"] = max(0, scores["structure"] - deduction)
             elif issue.category == RuleCategory.JOB_MATCH:
-                scores["job_relevance"] = max(0, scores["job_relevance"] - deduction)
+                pass  # Job-specific scoring is provided by the matching endpoint.
             elif issue.category == RuleCategory.LANGUAGE:
                 scores["readability"] = max(0, scores["readability"] - deduction)
 
@@ -86,7 +88,7 @@ class RuleRegistry:
         if not resume.profile.phone:
             scores["contact"] = max(0, scores["contact"] - 5)
 
-        total = sum(scores.values())
+        total = round(sum(value for value in scores.values() if value is not None) / 80 * 100)
 
         return {
             "breakdown": scores,
@@ -94,8 +96,10 @@ class RuleRegistry:
             "total_issues": len(all_issues),
             "critical_count": sum(1 for i in all_issues if i.severity == IssueSeverity.ERROR),
             "important_count": sum(1 for i in all_issues if i.severity == IssueSeverity.IMPORTANT),
-            "suggestion_count": sum(1 for i in all_issues if i.severity == IssueSeverity.SUGGESTION),
-            "heuristic_notice": "Internal ATS heuristic based on deterministic validation. Not an external ATS endorsement.",
+            "suggestion_count": sum(
+                1 for i in all_issues if i.severity == IssueSeverity.SUGGESTION
+            ),
+            "heuristic_notice": "Internal document heuristic. Job relevance is not assessed here; use Jobs to compare a specific description. Not an external ATS endorsement.",
         }
 
 

@@ -4,7 +4,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_name: str = "CV Workspace API"
     app_env: str = "development"
-    debug: bool = True
+    debug: bool = False
+    seed_demo: bool = False
     api_prefix: str = "/api"
 
     # Database
@@ -18,13 +19,10 @@ class Settings(BaseSettings):
         "http://127.0.0.1:8000",
     ]
 
-    # AI Configuration (strictly optional, disabled by default for privacy)
-    ai_enabled: bool = False
-    ai_provider: str = "none"  # "openai" | "anthropic" | "gemini" | "ollama" | "none"
-    openai_api_key: str | None = None
-    anthropic_api_key: str | None = None
-    gemini_api_key: str | None = None
-    ollama_base_url: str = "http://localhost:11434"
+    # Optional model connection configured through local Settings UI.
+    ai_config_path: str = "data/ai-settings.json"
+    pdf_browser_channel: str | None = None
+    pdf_browser_executable: str | None = None
 
     # File uploads
     max_upload_size_bytes: int = 5 * 1024 * 1024  # 5 MB

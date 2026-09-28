@@ -38,22 +38,23 @@ class AnalysisService:
 
         # 2. Transparent ATS Heuristic Calculation
         ats_eval = default_rule_registry.calculate_ats_heuristic(resume, rule_results)
-        ats_score = max(20, min(100, ats_eval["total"]))
+        ats_score = max(0, min(100, ats_eval["total"]))
 
         # 3. Content score calculation based on content/formatting deductions
         content_issues = [
-            i
-            for i in all_issues
-            if i.section in ["experience", "projects", "summary"]
+            i for i in all_issues if i.section in ["experience", "projects", "summary"]
         ]
         content_deduction = sum(
-            15 if i.severity == IssueSeverity.CRITICAL
-            else 10 if i.severity == IssueSeverity.IMPORTANT
-            else 5 if i.severity == IssueSeverity.WARNING
+            15
+            if i.severity == IssueSeverity.CRITICAL
+            else 10
+            if i.severity == IssueSeverity.IMPORTANT
+            else 5
+            if i.severity == IssueSeverity.WARNING
             else 2
             for i in content_issues
         )
-        content_score = max(25, min(100, 100 - content_deduction))
+        content_score = max(0, min(100, 100 - content_deduction))
 
         # Overall score is a weighted blend
         overall_score = int(ats_score * 0.5 + content_score * 0.5)
@@ -72,15 +73,11 @@ class AnalysisService:
         if resume.profile.email and resume.profile.phone and resume.profile.headline:
             strengths.append("Complete contact profile with clear professional headline.")
         if bullet_count >= 5:
-            strengths.append(
-                f"Substantial quantified experience ({bullet_count} accomplishment bullets)."
-            )
+            strengths.append(f"Documented experience ({bullet_count} accomplishment bullets).")
         if sum(len(g.skills) for g in resume.skills) >= 6:
             strengths.append("Well-categorized and indexed technical competencies.")
         if resume.education:
             strengths.append("Documented academic and credential background.")
-        if (resume.metadata.language or "").lower() == "tr":
-            strengths.append("Verified Turkish language and TDK 2026 orthography compliance.")
 
         return ResumeAnalysisReport(
             resumeId=resume.metadata.id,

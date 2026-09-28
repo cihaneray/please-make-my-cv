@@ -12,11 +12,12 @@ class DataFormat(str, Enum):
     YAML = "yaml"
     MARKDOWN = "markdown"
     PDF = "pdf"
+    HTML = "html"
 
 
 class ImportValidateRequest(BaseModel):
     format: DataFormat | None = None
-    content: str
+    content: str = Field(max_length=5 * 1024 * 1024)
 
 
 class ImportValidationResult(BaseModel):
@@ -45,7 +46,7 @@ class ImportApplyRequest(BaseModel):
 
 class SourceValidationRequest(BaseModel):
     format: DataFormat  # JSON | YAML | MARKDOWN
-    content: str
+    content: str = Field(max_length=5 * 1024 * 1024)
 
 
 class SourceValidationResponse(BaseModel):
@@ -57,7 +58,7 @@ class SourceValidationResponse(BaseModel):
 
 class SourceApplyRequest(BaseModel):
     format: DataFormat
-    content: str
+    content: str = Field(max_length=5 * 1024 * 1024)
     revision: int
 
 

@@ -63,7 +63,7 @@ class UpdateJobRequest(BaseModel):
 class JobMatchAnalysis(BaseModel):
     jobId: str
     resumeId: str
-    matchScore: float  # 0 to 100
+    matchScore: float | None  # 0 to 100
     matchedSkills: list[str] = Field(default_factory=list)
     missingSkills: list[str] = Field(default_factory=list)
     recommendedKeywords: list[str] = Field(default_factory=list)

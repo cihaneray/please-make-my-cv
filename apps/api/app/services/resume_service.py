@@ -2,10 +2,11 @@ import json
 import uuid
 from datetime import UTC, datetime
 
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ConcurrencyConflictException, EntityNotFoundException
-from app.db.models import ResumeModel
+from app.db.models import ResumeModel, ResumeRevisionModel
 from app.schemas.resume import (
     CreateResumeRequest,
     PatchResumeMetadataRequest,
@@ -81,16 +82,19 @@ class ResumeService:
 
     @staticmethod
     def create_resume(db: Session, request: CreateResumeRequest) -> ResumeDocument:
-        doc = request.initialData or ResumeDocument()
+        doc = request.initialData.model_copy(deep=True) if request.initialData else ResumeDocument()
         new_id = str(uuid.uuid4())
         doc.metadata.id = new_id
         doc.metadata.title = request.title
         doc.metadata.targetRole = request.targetRole
-        doc.metadata.templateId = request.templateId
-        if request.language:
+        if "templateId" in request.model_fields_set or not request.initialData:
+            doc.design.template = request.templateId
+        doc.metadata.templateId = doc.design.template
+        if "language" in request.model_fields_set:
             doc.metadata.language = request.language
-        if request.targetMarket:
+        if "targetMarket" in request.model_fields_set:
             doc.metadata.targetMarket = request.targetMarket
+        doc.metadata.isArchived = False
         doc.metadata.revision = 1
         doc.metadata.createdAt = now_iso()
         doc.metadata.updatedAt = now_iso()
@@ -122,20 +126,42 @@ class ResumeService:
                 current_revision=model.revision, attempted_revision=request.revision
             )
 
-        new_revision = model.revision + 1
-        updated_doc = request.document
+        updated_doc = request.document.model_copy(deep=True)
         updated_doc.metadata.id = resume_id
-        updated_doc.metadata.revision = new_revision
+        updated_doc.metadata.createdAt = ResumeDocument.model_validate_json(
+            model.document_json
+        ).metadata.createdAt
+        updated_doc.metadata.parentResumeId = model.parent_resume_id
+        updated_doc.metadata.revision = request.revision + 1
         updated_doc.metadata.updatedAt = now_iso()
-
-        model.title = updated_doc.metadata.title
-        model.target_role = updated_doc.metadata.targetRole
-        model.template_id = updated_doc.metadata.templateId
-        model.revision = new_revision
-        model.document_json = json.dumps(updated_doc.model_dump(), ensure_ascii=False)
-
+        updated_doc.metadata.templateId = updated_doc.design.template
+        previous = model.document_json
+        result = db.execute(
+            update(ResumeModel)
+            .where(ResumeModel.id == resume_id, ResumeModel.revision == request.revision)
+            .values(
+                title=updated_doc.metadata.title,
+                target_role=updated_doc.metadata.targetRole,
+                template_id=updated_doc.design.template,
+                revision=updated_doc.metadata.revision,
+                is_archived=updated_doc.metadata.isArchived,
+                document_json=updated_doc.model_dump_json(),
+            )
+            .execution_options(synchronize_session=False)
+        )
+        if result.rowcount != 1:
+            db.rollback()
+            db.expire_all()
+            current = db.get(ResumeModel, resume_id)
+            raise ConcurrencyConflictException(current.revision if current else 0, request.revision)
+        if not db.get(ResumeRevisionModel, (resume_id, request.revision)):
+            db.add(
+                ResumeRevisionModel(
+                    resume_id=resume_id, revision=request.revision, document_json=previous
+                )
+            )
         db.commit()
-        db.refresh(model)
+        db.expire_all()
         return updated_doc
 
     @staticmethod
@@ -148,6 +174,7 @@ class ResumeService:
         new_doc.metadata.id = new_id
         new_doc.metadata.title = new_title or f"{existing.metadata.title} (Copy)"
         new_doc.metadata.parentResumeId = existing.metadata.id
+        new_doc.metadata.isArchived = False
         new_doc.metadata.revision = 1
         new_doc.metadata.createdAt = now_iso()
         new_doc.metadata.updatedAt = now_iso()
@@ -175,45 +202,17 @@ class ResumeService:
         if not model:
             raise EntityNotFoundException("Resume", resume_id)
 
-        doc_dict = json.loads(model.document_json)
-
-        if patch.title is not None:
-            model.title = patch.title
-            doc_dict["metadata"]["title"] = patch.title
-        if patch.targetRole is not None:
-            model.target_role = patch.targetRole
-            doc_dict["metadata"]["targetRole"] = patch.targetRole
-        if patch.templateId is not None:
-            model.template_id = patch.templateId
-            doc_dict["metadata"]["templateId"] = patch.templateId
-        if patch.isArchived is not None:
-            model.is_archived = patch.isArchived
-            doc_dict["metadata"]["isArchived"] = patch.isArchived
-        if patch.tags is not None:
-            doc_dict["metadata"]["tags"] = patch.tags
-        if patch.language is not None:
-            doc_dict["metadata"]["language"] = patch.language
-        if patch.targetMarket is not None:
-            doc_dict["metadata"]["targetMarket"] = patch.targetMarket
-
-        model.document_json = json.dumps(doc_dict, ensure_ascii=False)
-        db.commit()
-        db.refresh(model)
-
-        meta = doc_dict.get("metadata", {})
-        return ResumeSummaryResponse(
-            id=model.id,
-            title=model.title,
-            targetRole=model.target_role,
-            templateId=model.template_id,
-            language=meta.get("language", "en"),
-            targetMarket=meta.get("targetMarket") or meta.get("target_market", "TR"),
-            revision=model.revision,
-            updatedAt=model.updated_at.isoformat(),
-            createdAt=model.created_at.isoformat(),
-            parentResumeId=model.parent_resume_id,
-            isArchived=model.is_archived,
+        doc = ResumeService.get_resume(db, resume_id)
+        for field in patch.model_fields_set - {"revision"}:
+            value = getattr(patch, field)
+            if value is not None:
+                setattr(doc.metadata, field, value)
+                if field == "templateId":
+                    doc.design.template = value
+        ResumeService.update_resume(
+            db, resume_id, UpdateResumeRequest(revision=patch.revision, document=doc)
         )
+        return next(r for r in ResumeService.list_resumes(db, True) if r.id == resume_id)
 
     @staticmethod
     def delete_resume(db: Session, resume_id: str, permanent: bool = False) -> None:
@@ -222,8 +221,13 @@ class ResumeService:
             raise EntityNotFoundException("Resume", resume_id)
 
         if permanent:
+            db.query(ResumeRevisionModel).filter_by(resume_id=resume_id).delete()
             db.delete(model)
         else:
             # Soft delete (Section 63)
-            model.is_archived = True
+            doc = ResumeService.get_resume(db, resume_id)
+            doc.metadata.isArchived = True
+            ResumeService.update_resume(
+                db, resume_id, UpdateResumeRequest(revision=model.revision, document=doc)
+            )
         db.commit()
