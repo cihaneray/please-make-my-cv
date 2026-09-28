@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## Unreleased
+
+- Configurable OpenAI-compatible/Ollama resume reviews with explained scores and actionable feedback.
+- Chromium launch fallback to installed browsers, explicit overrides, and PDF diagnostics. - reliability and workflow remediation
+
+- Prevented draft/source overwrites and save-response races; added recovery, undo, revision history and archive restore.
+- Added atomic database revision checks, schema migrations, immutable application snapshots and additive workspace backup/restore.
+- Secured HTML generation and implemented actual PDF output, shared live rendering and exact PDF page previews.
+- Corrected import defaults, malformed-input errors, template selection, Markdown parsing and unsafe Markdown source replacement.
+- Added complete field editing, library insertion, job editing, explicit requirements matching and non-blocking error feedback.
+- Removed unsupported AI/scoring/privacy claims and remote font requests; documented local-only deployment.
+- Generated frontend contracts from backend models; added backend regressions, production-browser tests and CI/container checks.
+
+Historical release descriptions below describe the implementation at release time; current behavior and limitations are documented in README.md.
+
 ## [0.2.0] - 2026-09-27
 
 ### Added

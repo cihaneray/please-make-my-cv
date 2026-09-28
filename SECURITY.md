@@ -1,66 +1,22 @@
-# Security Policy
+# Security and deployment boundary
 
-`please-make-my-cv` takes the security, confidentiality, and privacy of your career data seriously. Because this application processes sensitive personal information (contact details, employment history, certifications, compensation preferences, and identification data), it is architected with a **local-first, privacy-by-design** approach.
+This application is intended for a single user on a trusted local machine. It has no application authentication or per-user authorization. The default commands and Compose ports bind to loopback. CORS is not authentication. Public or shared-network hosting requires a separately designed authentication and access-control boundary.
 
----
+## Implemented protections
 
-## Supported Versions
+- Request bodies are bounded to 5 MB before parsing.
+- YAML uses safe loading, rejects aliases and handles malformed/nested input errors.
+- Structured imports reject unknown fields and unsupported versions instead of dropping data.
+- HTML content is escaped; styling values are restricted. Export HTML has a restrictive content security policy; preview HTML runs in a sandboxed iframe.
+- PDF generation blocks network requests and disables page JavaScript.
+- Document writes use atomic revision checks and save previous versions.
+- Restore validates backups and creates new records in a transaction.
+- Demo seeding is opt-in, and tests isolate database access.
 
-Only the latest release and the current `main` branch receive security patches.
+## Important limits
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.2.x   | :white_check_mark: |
-| 0.1.x   | :x:                |
-| < 0.1.0 | :x:                |
+Database files, browser recovery drafts, downloaded PDFs and backups contain personal data. Local storage is not encryption. Protect the machine and its backups, and use full-disk encryption if appropriate for your installation. The application does not certify legal compliance or verify the truth of resume content.
 
----
+Basic editorial buttons use local text cleanup. Optional resume reviews use an OpenAI-compatible or Ollama connection configured in Settings. Reviews transmit career content only on request; direct profile contact fields are omitted. API keys are stored in the backend AI_CONFIG_PATH file (default data/ai-settings.json), not encrypted by the application, and are excluded from Git, container build context, API responses, and workspace backups. Protect this file with OS access controls. Changing the endpoint or provider drops an existing key to prevent accidental forwarding. Personal-data pattern redaction is incomplete by nature and must not be treated as anonymization.
 
-## Reporting a Vulnerability
-
-If you discover a security vulnerability or privacy leak in `please-make-my-cv`, please report it responsibly rather than opening a public issue on GitHub.
-
-### How to Report
-1. Email your report to: **security@please-make-my-cv.local** (or submit via [GitHub Security Advisories](https://github.com/cihaneray/please-make-my-cv/security/advisories/new)).
-2. Include the following details:
-   - A clear description of the vulnerability and potential impact.
-   - Step-by-step reproduction instructions or proof-of-concept (PoC).
-   - Component affected (`apps/api`, `apps/web`, export pipelines, or parsing engines).
-   - Operating system and environment details.
-
-### Response Timeline
-- **Initial Acknowledgement**: Within 48 hours.
-- **Triage & Assessment**: Within 5 business days.
-- **Remediation & Patch**: Dependent on severity, typically within 14 business days.
-- **Public Disclosure**: Coordinated after the fix has been merged and released.
-
----
-
-## Core Security & Privacy Principles
-
-### 1. Local-First & Zero Telemetry
-- By default, all resume documents, career snippets, and job applications are stored strictly in your local SQLite database on your machine.
-- No third-party analytics, tracking pixels, or remote telemetry are embedded.
-
-### 2. KVKK & GDPR Data Minimization
-- The backend incorporates deterministic data minimizers designed to detect and flag high-risk sensitive attributes (such as T.C. Kimlik No, national identification numbers, marital status, military status, and photos) when tailoring resumes for international or privacy-conscious target markets.
-
-### 3. Safe Parsing & Deserialization
-- **YAML**: Parsed exclusively through safe loaders (`yaml.safe_load`) to prevent arbitrary code execution via Python object desync.
-- **JSON**: Validated via strict Pydantic v2 and Zod models with type enforcement and sanitized payloads.
-- **HTML/PDF Export**: All user inputs in the HTML export pipeline are escaped via standard HTML entity escaping (`html.escape`) to prevent cross-site scripting (XSS) or server-side injection during document compilation.
-
-### 4. AI Provider Privacy (Strictly Opt-In)
-- AI features are **disabled by default**.
-- When configured, API keys are loaded strictly from server-side environment variables and are never exposed or transmitted to the client browser.
-- Local LLM providers (e.g., Ollama) are supported for full air-gapped offline operation.
-
----
-
-## Guidelines for Self-Hosting & Deployment
-
-When deploying `please-make-my-cv` to a remote server or production environment:
-1. **Enforce HTTPS / TLS**: Terminate TLS at a secure reverse proxy (Nginx, Caddy, or Cloudflare) with modern ciphers.
-2. **Restrict CORS Origins**: Update `CORS_ORIGINS` in `apps/api/.env` to include only your trusted frontend domain.
-3. **Protect Environment Secrets**: Never commit `.env` or production credentials to source control.
-4. **Network Isolation**: Ensure the API and database are accessible only through authenticated internal networks or reverse proxies.
+For reports, use the repository's private vulnerability-reporting channel if available. Do not post personal data or live credentials in public issues. No response-time or monitored-email guarantee is implied by this document.
