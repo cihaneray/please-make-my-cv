@@ -1,20 +1,20 @@
-import React from 'react';
-import { SkillGroup } from '@/lib/types';
+import React from "react";
+import { SkillGroup } from "@/lib/types";
 
 interface SkillGroupListProps {
   skills?: SkillGroup[];
-  variant?: 'categorized-lines' | 'pill-tags' | 'technical-grid';
+  variant?: "categorized-lines" | "pill-tags" | "technical-grid";
   className?: string;
 }
 
 export function SkillGroupList({
   skills,
-  variant = 'categorized-lines',
-  className = '',
+  variant = "categorized-lines",
+  className = "",
 }: SkillGroupListProps) {
   if (!skills || skills.length === 0) return null;
 
-  if (variant === 'pill-tags') {
+  if (variant === "pill-tags") {
     return (
       <div className={`space-y-2.5 ${className}`}>
         {skills.map((group) => (
@@ -38,16 +38,18 @@ export function SkillGroupList({
     );
   }
 
-  if (variant === 'technical-grid') {
+  if (variant === "technical-grid") {
     return (
-      <div className={`grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-[11px] ${className}`}>
+      <div
+        className={`grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-[11px] ${className}`}
+      >
         {skills.map((group) => (
           <div key={group.id} className="flex items-baseline gap-2">
             <span className="font-semibold text-neutral-900 shrink-0 font-mono text-[10.5px]">
               {group.category}:
             </span>
             <span className="text-neutral-700 leading-relaxed">
-              {group.skills.join(', ')}
+              {group.skills.join(", ")}
             </span>
           </div>
         ))}
@@ -63,9 +65,7 @@ export function SkillGroupList({
           <span className="font-semibold text-neutral-900 shrink-0">
             {group.category}:
           </span>
-          <span className="text-neutral-600">
-            {group.skills.join(', ')}
-          </span>
+          <span className="text-neutral-600">{group.skills.join(", ")}</span>
         </div>
       ))}
     </div>

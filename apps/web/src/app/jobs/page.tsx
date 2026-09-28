@@ -1,10 +1,17 @@
-'use client';
+"use client";
+import { notify } from "@/components/Notifications";
 
-import React, { useEffect, useState } from 'react';
-import { Icons } from '@/components/Icons';
-import { api } from '@/lib/api';
-import { useI18n } from '@/lib/i18n';
-import { JobApplication, JobMatchAnalysis, JobStatus, ResumeSummary } from '@/lib/types';
+import { JobTools } from "@/components/JobTools";
+import React, { useEffect, useState } from "react";
+import { Icons } from "@/components/Icons";
+import { api } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
+import {
+  JobApplication,
+  JobMatchAnalysis,
+  JobStatus,
+  ResumeSummary,
+} from "@/lib/types";
 
 export default function JobsPage() {
   const { language, t, getJobStatusLabel } = useI18n();
@@ -17,12 +24,12 @@ export default function JobsPage() {
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
 
   // New job form state
-  const [newCompany, setNewCompany] = useState('');
-  const [newPosition, setNewPosition] = useState('');
-  const [newDesc, setNewDesc] = useState('');
-  const [newLocation, setNewLocation] = useState('');
-  const [newStatus, setNewStatus] = useState<JobStatus>('saved' as JobStatus);
-  const [linkedResume, setLinkedResume] = useState<string>('');
+  const [newCompany, setNewCompany] = useState("");
+  const [newPosition, setNewPosition] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [newLocation, setNewLocation] = useState("");
+  const [newStatus, setNewStatus] = useState<JobStatus>("saved" as JobStatus);
+  const [linkedResume, setLinkedResume] = useState<string>("");
 
   useEffect(() => {
     async function load() {
@@ -38,7 +45,9 @@ export default function JobsPage() {
           setSelectedJob(jobList[0]);
         }
       } catch (err: any) {
-        console.error('Failed to load jobs:', err);
+        notify(
+          "Could not load data. Check the API connection and reload to retry.",
+        );
       } finally {
         setLoading(false);
       }
@@ -49,22 +58,28 @@ export default function JobsPage() {
   // Whenever selectedJob or linked resume changes, run Match analysis!
   useEffect(() => {
     if (!selectedJob) return;
-    const resumeIdToMatch = selectedJob.linkedResumeId || (resumes[0] ? resumes[0].id : null);
+    const resumeIdToMatch =
+      selectedJob.linkedResumeId || (resumes[0] ? resumes[0].id : null);
     if (!resumeIdToMatch) return;
 
+    let cancelled = false;
+    setMatchResult(null);
     async function runMatch() {
       try {
         setMatching(true);
         const res = await api.matchJob(selectedJob!.id, resumeIdToMatch!);
-        setMatchResult(res);
+        if (!cancelled) setMatchResult(res);
       } catch (err) {
-        console.error('Match failed:', err);
+        console.error("Match failed:", err);
       } finally {
-        setMatching(false);
+        if (!cancelled) setMatching(false);
       }
     }
 
     runMatch();
+    return () => {
+      cancelled = true;
+    };
   }, [selectedJob, resumes]);
 
   async function handleCreateJob(e: React.FormEvent) {
@@ -82,12 +97,12 @@ export default function JobsPage() {
       setJobs([created, ...jobs]);
       setSelectedJob(created);
       setShowAddModal(false);
-      setNewCompany('');
-      setNewPosition('');
-      setNewDesc('');
-      setNewLocation('');
+      setNewCompany("");
+      setNewPosition("");
+      setNewDesc("");
+      setNewLocation("");
     } catch (err: any) {
-      alert(`Create job failed: ${err.message}`);
+      notify(`Create job failed: ${err.message}`);
     }
   }
 
@@ -98,7 +113,7 @@ export default function JobsPage() {
       setSelectedJob(updated);
       setJobs(jobs.map((j) => (j.id === updated.id ? updated : j)));
     } catch (err: any) {
-      alert(`Status update failed: ${err.message}`);
+      notify(`Status update failed: ${err.message}`);
     }
   }
 
@@ -109,16 +124,16 @@ export default function JobsPage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-md border-b border-surface-container-high pb-4">
           <div className="flex flex-col gap-space-xs">
             <div className="flex items-center gap-space-xs text-secondary font-label-sm text-label-sm uppercase tracking-wider">
-              <span>{t('workspace')}</span>
+              <span>{t("workspace")}</span>
               <span>/</span>
-              <span className="text-on-surface">{t('careerPipeline')}</span>
+              <span className="text-on-surface">{t("careerPipeline")}</span>
             </div>
             <div className="flex items-baseline gap-space-md">
               <h1 className="font-headline-xl text-headline-xl text-on-surface tracking-tight">
-                {t('jobsAndMatchTitle')}
+                {t("jobsAndMatchTitle")}
               </h1>
               <span className="font-label-md text-label-md text-secondary">
-                {jobs.length} {t('trackedApplications')}
+                {jobs.length} {t("trackedApplications")}
               </span>
             </div>
           </div>
@@ -129,7 +144,7 @@ export default function JobsPage() {
             className="h-8 px-space-md flex items-center gap-space-xs rounded bg-primary text-on-primary font-label-md hover:bg-inverse-surface transition-colors shadow-sm"
           >
             <Icons.Add size={16} />
-            <span>{t('addNewJob')}</span>
+            <span>{t("addNewJob")}</span>
           </button>
         </div>
 
@@ -138,14 +153,18 @@ export default function JobsPage() {
           {/* Left Column: Job Cards List (4 cols) */}
           <div className="lg:col-span-5 flex flex-col gap-space-xs">
             <div className="flex items-center justify-between px-space-xs text-secondary font-label-sm pb-1">
-              <span>{t('targetJobsList')} ({jobs.length})</span>
+              <span>
+                {t("targetJobsList")} ({jobs.length})
+              </span>
             </div>
 
             {loading ? (
-              <div className="p-space-lg text-secondary">{t('loadingJobs')}</div>
+              <div className="p-space-lg text-secondary">
+                {t("loadingJobs")}
+              </div>
             ) : jobs.length === 0 ? (
               <div className="p-space-lg bg-surface-container-lowest rounded-lg border border-surface-container-highest text-secondary text-center">
-                {t('noJobsAdded')}
+                {t("noJobsAdded")}
               </div>
             ) : (
               jobs.map((j) => {
@@ -156,8 +175,8 @@ export default function JobsPage() {
                     onClick={() => setSelectedJob(j)}
                     className={`p-space-md rounded-lg transition-all cursor-pointer border ${
                       isSelected
-                        ? 'bg-surface-container-lowest border-primary shadow-sm'
-                        : 'bg-surface-container border-transparent hover:bg-surface-container-high'
+                        ? "bg-surface-container-lowest border-primary shadow-sm"
+                        : "bg-surface-container border-transparent hover:bg-surface-container-high"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-space-sm mb-1">
@@ -181,7 +200,9 @@ export default function JobsPage() {
                     </div>
 
                     <div className="flex items-center justify-between mt-2 pt-1 text-secondary text-[11px] border-t border-surface-container-high">
-                      <span className="truncate">{j.location || t('remote')}</span>
+                      <span className="truncate">
+                        {j.location || t("remote")}
+                      </span>
                       <span>{new Date(j.updatedAt).toLocaleDateString()}</span>
                     </div>
                   </div>
@@ -200,7 +221,8 @@ export default function JobsPage() {
                       {selectedJob.position}
                     </span>
                     <span className="font-headline-md text-secondary font-medium">
-                      {selectedJob.company} {selectedJob.location ? `• ${selectedJob.location}` : ''}
+                      {selectedJob.company}{" "}
+                      {selectedJob.location ? `• ${selectedJob.location}` : ""}
                     </span>
                   </div>
 
@@ -210,39 +232,58 @@ export default function JobsPage() {
                     onChange={(e) => handleStatusChange(e.target.value)}
                     className="h-8 px-2.5 rounded bg-surface-container text-body-sm capitalize font-medium outline-none border border-surface-container-highest"
                   >
-                    <option value="saved">{t('statusSaved')}</option>
-                    <option value="applied">{t('statusApplied')}</option>
-                    <option value="interview">{t('statusInterview')}</option>
-                    <option value="offer">{t('statusOffer')}</option>
-                    <option value="rejected">{t('statusRejected')}</option>
+                    <option value="saved">{t("statusSaved")}</option>
+                    <option value="applied">{t("statusApplied")}</option>
+                    <option value="interview">{t("statusInterview")}</option>
+                    <option value="offer">{t("statusOffer")}</option>
+                    <option value="rejected">{t("statusRejected")}</option>
                   </select>
                 </div>
 
+                <JobTools
+                  key={`${selectedJob.id}-${selectedJob.updatedAt}`}
+                  job={selectedJob}
+                  resumes={resumes}
+                  onSaved={(updated) => {
+                    setSelectedJob(updated);
+                    setJobs((items) =>
+                      items.map((item) =>
+                        item.id === updated.id ? updated : item,
+                      ),
+                    );
+                  }}
+                  onMatch={setMatchResult}
+                />
                 {/* Match Analysis Gauge & Summary */}
                 <div className="p-4 rounded-xl bg-surface-container-low flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <span className="font-label-sm text-secondary uppercase font-semibold">
-                      {t('cvCompatibilityRating')}
+                      {t("cvCompatibilityRating")}
                     </span>
                     <span className="text-[20px] font-bold text-on-tertiary-container">
                       {matching
-                        ? t('calculating')
-                        : language === 'tr'
-                        ? `%${matchResult?.matchScore || 75} ${t('matchPercent')}`
-                        : `${matchResult?.matchScore || 75}% ${t('matchPercent')}`}
+                        ? t("calculating")
+                        : matchResult?.matchScore == null
+                          ? language === "tr"
+                            ? "Değerlendirilmedi"
+                            : "Not assessed"
+                          : language === "tr"
+                            ? `%${matchResult?.matchScore ?? "Not assessed"} ${t("matchPercent")}`
+                            : `${matchResult?.matchScore ?? "Not assessed"}% ${t("matchPercent")}`}
                     </span>
                   </div>
 
                   <p className="text-[12.5px] text-on-surface leading-normal">
                     {matchResult?.summary ||
-                      'Comparing required technologies and qualifications from the job description against your CV.'}
+                      "Comparing required technologies and qualifications from the job description against your CV."}
                   </p>
                 </div>
 
                 {/* Matched Competencies */}
                 <div className="flex flex-col gap-2">
                   <span className="font-label-sm text-secondary uppercase font-semibold">
-                    {t('matchedRequirements')} ({matchResult?.matchedSkills.length || 0})
+                    {t("matchedRequirements")} (
+                    {matchResult?.matchedSkills.length || 0})
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {matchResult?.matchedSkills.map((sk, idx) => (
@@ -257,53 +298,63 @@ export default function JobsPage() {
                 </div>
 
                 {/* Missing / Gap Competencies */}
-                {matchResult?.missingSkills && matchResult.missingSkills.length > 0 && (
-                  <div className="flex flex-col gap-2">
-                    <span className="font-label-sm text-secondary uppercase font-semibold">
-                      {t('missingCompetencies')} ({matchResult.missingSkills.length})
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {matchResult.missingSkills.map((sk, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200"
-                        >
-                          ! {sk}
-                        </span>
-                      ))}
+                {matchResult?.missingSkills &&
+                  matchResult.missingSkills.length > 0 && (
+                    <div className="flex flex-col gap-2">
+                      <span className="font-label-sm text-secondary uppercase font-semibold">
+                        {t("missingCompetencies")} (
+                        {matchResult.missingSkills.length})
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {matchResult.missingSkills.map((sk, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200"
+                          >
+                            ! {sk}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Section Feedback & Advisory Recommendations */}
-                {matchResult?.sectionFeedback && matchResult.sectionFeedback.length > 0 && (
-                  <div className="flex flex-col gap-2 pt-2 border-t border-surface-container-high">
-                    <span className="font-label-sm text-secondary uppercase font-semibold">
-                      {t('matchInsights')}
-                    </span>
-                    {matchResult.sectionFeedback.map((fb, idx) => (
-                      <div key={idx} className="p-3 rounded-lg bg-surface-container text-[12px] flex flex-col gap-0.5">
-                        <span className="font-semibold text-on-surface">{fb.section}</span>
-                        <p className="text-secondary">{fb.message}</p>
-                        <p className="text-primary font-medium pt-0.5">{fb.recommendation}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {matchResult?.sectionFeedback &&
+                  matchResult.sectionFeedback.length > 0 && (
+                    <div className="flex flex-col gap-2 pt-2 border-t border-surface-container-high">
+                      <span className="font-label-sm text-secondary uppercase font-semibold">
+                        {t("matchInsights")}
+                      </span>
+                      {matchResult.sectionFeedback.map((fb, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3 rounded-lg bg-surface-container text-[12px] flex flex-col gap-0.5"
+                        >
+                          <span className="font-semibold text-on-surface">
+                            {fb.section}
+                          </span>
+                          <p className="text-secondary">{fb.message}</p>
+                          <p className="text-primary font-medium pt-0.5">
+                            {fb.recommendation}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                 {/* Job Description Text */}
                 <div className="flex flex-col gap-1.5 pt-2 border-t border-surface-container-high">
                   <span className="font-label-sm text-secondary uppercase font-semibold">
-                    {t('jobDescription')}
+                    {t("jobDescription")}
                   </span>
                   <div className="p-3 rounded bg-surface-container-low text-[12px] text-on-surface leading-relaxed max-h-60 overflow-y-auto whitespace-pre-wrap">
-                    {selectedJob.description || t('noDescription')}
+                    {selectedJob.description || t("noDescription")}
                   </div>
                 </div>
               </>
             ) : (
               <div className="p-space-xl text-center text-secondary">
-                {t('selectJobToInspect')}
+                {t("selectJobToInspect")}
               </div>
             )}
           </div>
@@ -318,8 +369,11 @@ export default function JobsPage() {
             className="w-full max-w-lg bg-surface-container-lowest p-space-xl rounded-xl shadow-xl flex flex-col gap-space-md border border-surface-container-highest"
           >
             <div className="flex items-center justify-between border-b border-surface-container-high pb-2">
-              <span className="font-headline-md font-semibold">{t('addNewTargetJob')}</span>
+              <span className="font-headline-md font-semibold">
+                {t("addNewTargetJob")}
+              </span>
               <button
+                aria-label="Close"
                 type="button"
                 onClick={() => setShowAddModal(false)}
                 className="text-secondary hover:text-on-surface"
@@ -329,7 +383,9 @@ export default function JobsPage() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="font-label-sm text-secondary">{t('companyName')}</label>
+              <label className="font-label-sm text-secondary">
+                {t("companyName")}
+              </label>
               <input
                 type="text"
                 required
@@ -341,7 +397,9 @@ export default function JobsPage() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="font-label-sm text-secondary">{t('positionTitle')}</label>
+              <label className="font-label-sm text-secondary">
+                {t("positionTitle")}
+              </label>
               <input
                 type="text"
                 required
@@ -353,7 +411,9 @@ export default function JobsPage() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="font-label-sm text-secondary">{t('location')}</label>
+              <label className="font-label-sm text-secondary">
+                {t("location")}
+              </label>
               <input
                 type="text"
                 value={newLocation}
@@ -364,13 +424,15 @@ export default function JobsPage() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="font-label-sm text-secondary">{t('jobDescriptionRequirements')}</label>
+              <label className="font-label-sm text-secondary">
+                {t("jobDescriptionRequirements")}
+              </label>
               <textarea
                 rows={4}
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
                 className="p-2 rounded bg-surface-container-low text-body-sm outline-none border border-surface-container-highest resize-none"
-                placeholder={t('jobDescPlaceholder')}
+                placeholder={t("jobDescPlaceholder")}
               />
             </div>
 
@@ -380,13 +442,13 @@ export default function JobsPage() {
                 onClick={() => setShowAddModal(false)}
                 className="px-3 py-1.5 rounded text-label-sm text-secondary hover:bg-surface-container"
               >
-                {t('cancel')}
+                {t("cancel")}
               </button>
               <button
                 type="submit"
                 className="px-4 py-1.5 rounded bg-primary text-on-primary text-label-sm font-medium hover:bg-inverse-surface"
               >
-                {t('saveAndAnalyze')}
+                {t("saveAndAnalyze")}
               </button>
             </div>
           </form>

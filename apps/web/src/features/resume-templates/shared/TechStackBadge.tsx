@@ -1,33 +1,41 @@
-import React from 'react';
+import React from "react";
 
 interface TechStackBadgeProps {
   technologies?: string[];
   label?: string;
-  variant?: 'tags' | 'inline' | 'subtle';
+  variant?: "tags" | "inline" | "subtle";
   className?: string;
 }
 
 export function TechStackBadge({
   technologies,
-  label = 'Technologies:',
-  variant = 'tags',
-  className = '',
+  label = "Technologies:",
+  variant = "tags",
+  className = "",
 }: TechStackBadgeProps) {
   if (!technologies || technologies.length === 0) return null;
 
-  if (variant === 'inline') {
+  if (variant === "inline") {
     return (
-      <div className={`text-[11px] text-neutral-600 leading-normal ${className}`}>
+      <div
+        className={`text-[11px] text-neutral-600 leading-normal ${className}`}
+      >
         <span className="font-medium text-neutral-800 mr-1.5">{label}</span>
-        <span>{technologies.join(', ')}</span>
+        <span>{technologies.join(", ")}</span>
       </div>
     );
   }
 
-  if (variant === 'subtle') {
+  if (variant === "subtle") {
     return (
-      <div className={`flex flex-wrap items-center gap-1.5 pt-0.5 ${className}`}>
-        {label && <span className="text-[10px] font-medium text-neutral-500 mr-0.5">{label}</span>}
+      <div
+        className={`flex flex-wrap items-center gap-1.5 pt-0.5 ${className}`}
+      >
+        {label && (
+          <span className="text-[10px] font-medium text-neutral-500 mr-0.5">
+            {label}
+          </span>
+        )}
         {technologies.map((t, i) => (
           <span
             key={i}
@@ -42,7 +50,11 @@ export function TechStackBadge({
 
   return (
     <div className={`flex flex-wrap items-center gap-1 pt-1 ${className}`}>
-      {label && <span className="text-[10px] font-medium text-neutral-600 mr-1">{label}</span>}
+      {label && (
+        <span className="text-[10px] font-medium text-neutral-600 mr-1">
+          {label}
+        </span>
+      )}
       {technologies.map((t, i) => (
         <span
           key={i}

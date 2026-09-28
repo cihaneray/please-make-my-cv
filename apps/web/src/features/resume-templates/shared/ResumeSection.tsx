@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface ResumeSectionProps {
   title?: string;
@@ -11,10 +11,10 @@ interface ResumeSectionProps {
 
 export function ResumeSection({
   title,
-  titleClassName = '',
+  titleClassName = "",
   titleStyle,
   children,
-  className = '',
+  className = "",
   style,
 }: ResumeSectionProps) {
   return (
@@ -22,8 +22,8 @@ export function ResumeSection({
       data-cv-section="true"
       className={`break-inside-avoid print:break-inside-avoid ${className}`}
       style={{
-        breakInside: 'avoid',
-        pageBreakInside: 'avoid',
+        breakInside: "avoid",
+        pageBreakInside: "avoid",
         ...style,
       }}
     >
@@ -32,8 +32,8 @@ export function ResumeSection({
           data-cv-heading="true"
           className={`font-semibold tracking-wider select-text ${titleClassName}`}
           style={{
-            breakAfter: 'avoid',
-            pageBreakAfter: 'avoid',
+            breakAfter: "avoid",
+            pageBreakAfter: "avoid",
             ...titleStyle,
           }}
         >

@@ -1,12 +1,13 @@
-'use client';
+"use client";
+import { notify } from "@/components/Notifications";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
-import { Icons } from '@/components/Icons';
-import { api } from '@/lib/api';
-import { useI18n } from '@/lib/i18n';
-import { JobApplication, ResumeSummary } from '@/lib/types';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { Icons } from "@/components/Icons";
+import { api } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
+import { JobApplication, ResumeSummary } from "@/lib/types";
 
 export default function HomePage() {
   const router = useRouter();
@@ -27,7 +28,9 @@ export default function HomePage() {
         setResumes(resList);
         setJobs(jobList);
       } catch (err: any) {
-        console.error('Failed to load dashboard data:', err);
+        notify(
+          "Could not load data. Check the API connection and reload to retry.",
+        );
       } finally {
         setLoading(false);
       }
@@ -40,17 +43,17 @@ export default function HomePage() {
       const duplicated = await api.duplicateResume(id);
       router.push(`/resumes/${duplicated.metadata.id}`);
     } catch (err: any) {
-      alert(`Could not duplicate: ${err.message}`);
+      notify(`Could not duplicate: ${err.message}`);
     }
   }
 
   async function handleDelete(id: string) {
-    if (confirm('Are you sure you want to delete this resume?')) {
+    if (confirm("Are you sure you want to delete this resume?")) {
       try {
         await api.deleteResume(id);
         setResumes((prev) => prev.filter((r) => r.id !== id));
       } catch (err: any) {
-        alert(`Delete failed: ${err.message}`);
+        notify(`Delete failed: ${err.message}`);
       }
     }
   }
@@ -58,12 +61,12 @@ export default function HomePage() {
   async function handleCreateNew() {
     try {
       const newResume = await api.createResume({
-        title: 'New Resume',
-        targetRole: 'Full Stack Engineer',
+        title: "New Resume",
+        targetRole: "Full Stack Engineer",
       });
       router.push(`/resumes/${newResume.metadata.id}`);
     } catch (err: any) {
-      alert(`Create failed: ${err.message}`);
+      notify(`Create failed: ${err.message}`);
     }
   }
 
@@ -74,13 +77,13 @@ export default function HomePage() {
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-lg border-b border-surface-container-high">
           <div className="flex flex-col gap-space-xs">
             <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary">
-              {t('dashboard')}
+              {t("dashboard")}
             </span>
             <h1 className="font-headline-xl text-headline-xl text-on-surface">
-              {t('dashboardTitle')}
+              {t("dashboardTitle")}
             </h1>
             <p className="font-body-md text-body-md text-on-surface-variant">
-              {t('dashboardSubtitle')}
+              {t("dashboardSubtitle")}
             </p>
           </div>
 
@@ -90,7 +93,7 @@ export default function HomePage() {
               className="h-8 px-space-md flex items-center gap-space-xs rounded bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors shadow-sm"
             >
               <Icons.Upload size={16} className="text-secondary" />
-              <span>{t('importCv')}</span>
+              <span>{t("importCv")}</span>
             </Link>
             <button
               type="button"
@@ -98,7 +101,7 @@ export default function HomePage() {
               className="h-8 px-space-md flex items-center gap-space-xs rounded bg-primary text-on-primary font-label-md text-label-md hover:bg-inverse-surface transition-colors shadow-sm"
             >
               <Icons.Add size={16} />
-              <span>{t('newResume')}</span>
+              <span>{t("newResume")}</span>
             </button>
           </div>
         </header>
@@ -108,7 +111,7 @@ export default function HomePage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-space-xs">
               <h2 className="font-headline-md text-headline-md text-on-surface">
-                {t('recentResumes')}
+                {t("recentResumes")}
               </h2>
               <span className="px-space-xs py-0.5 rounded bg-surface-container text-secondary font-label-sm text-label-sm">
                 {resumes.length}
@@ -118,7 +121,7 @@ export default function HomePage() {
               href="/resumes"
               className="font-label-sm text-label-sm text-secondary hover:text-on-surface transition-colors flex items-center gap-space-xs"
             >
-              <span>{t('viewAll')}</span>
+              <span>{t("viewAll")}</span>
               <Icons.ArrowRight size={14} />
             </Link>
           </div>
@@ -126,27 +129,29 @@ export default function HomePage() {
           <div className="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-container-highest overflow-visible">
             {/* Table Header */}
             <div className="grid grid-cols-12 px-space-md py-space-sm bg-surface-container-low text-secondary font-label-sm text-label-sm select-none rounded-t-lg border-b border-surface-container-high">
-              <div className="col-span-4">{t('colDocumentName')}</div>
-              <div className="col-span-3">{t('colTargetRole')}</div>
-              <div className="col-span-2">{t('colTemplate')}</div>
-              <div className="col-span-2">{t('colLastEdited')}</div>
-              <div className="col-span-1 text-right">{t('colActions')}</div>
+              <div className="col-span-4">{t("colDocumentName")}</div>
+              <div className="col-span-3">{t("colTargetRole")}</div>
+              <div className="col-span-2">{t("colTemplate")}</div>
+              <div className="col-span-2">{t("colLastEdited")}</div>
+              <div className="col-span-1 text-right">{t("colActions")}</div>
             </div>
 
             {loading ? (
               <div className="p-space-lg text-center text-secondary font-body-sm">
-                {t('loadingResumes')}
+                {t("loadingResumes")}
               </div>
             ) : resumes.length === 0 ? (
               <div className="p-space-xl text-center flex flex-col items-center gap-space-sm">
                 <Icons.Document size={32} className="text-secondary" />
-                <p className="font-body-md text-secondary">{t('noResumesCreated')}</p>
+                <p className="font-body-md text-secondary">
+                  {t("noResumesCreated")}
+                </p>
                 <button
                   type="button"
                   onClick={handleCreateNew}
                   className="px-3 py-1.5 rounded bg-primary text-on-primary text-label-sm"
                 >
-                  {t('createFirstResume')}
+                  {t("createFirstResume")}
                 </button>
               </div>
             ) : (
@@ -157,7 +162,10 @@ export default function HomePage() {
                     className="group grid grid-cols-12 items-center px-space-md py-space-md hover:bg-surface-container-low transition-colors relative"
                   >
                     <div className="col-span-4 flex items-center gap-space-sm min-w-0 pr-space-md">
-                      <Icons.Document size={18} className="text-secondary group-hover:text-on-surface transition-colors flex-shrink-0" />
+                      <Icons.Document
+                        size={18}
+                        className="text-secondary group-hover:text-on-surface transition-colors flex-shrink-0"
+                      />
                       <Link
                         href={`/resumes/${r.id}`}
                         className="font-label-lg text-label-lg text-on-surface truncate hover:underline underline-offset-2"
@@ -167,7 +175,7 @@ export default function HomePage() {
                     </div>
 
                     <div className="col-span-3 text-on-surface-variant font-body-md text-body-md truncate pr-space-md">
-                      {r.targetRole || t('statusGeneralProfile')}
+                      {r.targetRole || t("statusGeneralProfile")}
                     </div>
 
                     <div className="col-span-2 flex items-center gap-1.5 flex-wrap">
@@ -175,10 +183,10 @@ export default function HomePage() {
                         {r.templateId}
                       </span>
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface font-medium uppercase">
-                        {(r.language || 'en').toUpperCase()}
+                        {(r.language || "en").toUpperCase()}
                       </span>
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-container-highest text-primary font-semibold">
-                        {r.targetMarket || 'TR'}
+                        {r.targetMarket || "TR"}
                       </span>
                     </div>
 
@@ -188,6 +196,7 @@ export default function HomePage() {
 
                     <div className="col-span-1 flex justify-end relative">
                       <button
+                        aria-label="More"
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -208,8 +217,10 @@ export default function HomePage() {
                             href={`/resumes/${r.id}`}
                             className="w-full text-left px-space-sm py-space-xs rounded font-label-md text-label-md text-on-surface hover:bg-surface-container flex items-center justify-between"
                           >
-                            <span>{t('openAction')}</span>
-                            <span className="font-label-sm text-secondary">⌘O</span>
+                            <span>{t("openAction")}</span>
+                            <span className="font-label-sm text-secondary">
+                              ⌘O
+                            </span>
                           </Link>
 
                           <button
@@ -217,17 +228,19 @@ export default function HomePage() {
                             onClick={() => handleDuplicate(r.id)}
                             className="w-full text-left px-space-sm py-space-xs rounded font-label-md text-label-md text-on-surface hover:bg-surface-container flex items-center justify-between"
                           >
-                            <span>{t('duplicateAction')}</span>
-                            <span className="font-label-sm text-secondary">⌘D</span>
+                            <span>{t("duplicateAction")}</span>
+                            <span className="font-label-sm text-secondary">
+                              ⌘D
+                            </span>
                           </button>
 
                           <a
-                            href={api.getExportUrl(r.id, 'pdf', false)}
+                            href={api.getExportUrl(r.id, "pdf", false)}
                             target="_blank"
                             rel="noreferrer"
                             className="w-full text-left px-space-sm py-space-xs rounded font-label-md text-label-md text-on-surface hover:bg-surface-container"
                           >
-                            {t('exportPdf')}
+                            {t("exportPdf")}
                           </a>
 
                           <button
@@ -235,7 +248,7 @@ export default function HomePage() {
                             onClick={() => handleDelete(r.id)}
                             className="w-full text-left px-space-sm py-space-xs rounded font-label-md text-label-md text-error hover:bg-error-container"
                           >
-                            {t('deleteAction')}
+                            {t("deleteAction")}
                           </button>
                         </div>
                       )}
@@ -252,28 +265,28 @@ export default function HomePage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-space-xs">
               <h2 className="font-headline-md text-headline-md text-on-surface">
-                {t('recentJobs')}
+                {t("recentJobs")}
               </h2>
               <span className="px-space-xs py-0.5 rounded bg-surface-container text-secondary font-label-sm text-label-sm">
-                {jobs.length} {t('trackedCount')}
+                {jobs.length} {t("trackedCount")}
               </span>
             </div>
             <Link
               href="/jobs"
               className="font-label-sm text-label-sm text-secondary hover:text-on-surface transition-colors flex items-center gap-space-xs"
             >
-              <span>{t('manageTracker')}</span>
+              <span>{t("manageTracker")}</span>
               <Icons.ArrowRight size={14} />
             </Link>
           </div>
 
           <div className="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-container-highest overflow-hidden">
             <div className="grid grid-cols-12 px-space-md py-space-sm bg-surface-container-low text-secondary font-label-sm text-label-sm select-none border-b border-surface-container-high">
-              <div className="col-span-3">{t('colCompany')}</div>
-              <div className="col-span-4">{t('colPosition')}</div>
-              <div className="col-span-2">{t('colStatus')}</div>
-              <div className="col-span-2">{t('colLinkedResume')}</div>
-              <div className="col-span-1 text-right">{t('colDetails')}</div>
+              <div className="col-span-3">{t("colCompany")}</div>
+              <div className="col-span-4">{t("colPosition")}</div>
+              <div className="col-span-2">{t("colStatus")}</div>
+              <div className="col-span-2">{t("colLinkedResume")}</div>
+              <div className="col-span-1 text-right">{t("colDetails")}</div>
             </div>
 
             <div className="flex flex-col divide-y divide-surface-container-high">
@@ -302,9 +315,12 @@ export default function HomePage() {
                   </div>
 
                   <div className="col-span-2 flex items-center gap-space-xs min-w-0 pr-space-sm">
-                    <Icons.Link size={14} className="text-secondary flex-shrink-0" />
+                    <Icons.Link
+                      size={14}
+                      className="text-secondary flex-shrink-0"
+                    />
                     <span className="font-body-sm text-body-sm text-secondary truncate">
-                      {j.linkedResumeId ? t('statusLinked') : t('statusNone')}
+                      {j.linkedResumeId ? t("statusLinked") : t("statusNone")}
                     </span>
                   </div>
 
@@ -313,7 +329,7 @@ export default function HomePage() {
                       href={`/jobs?selected=${j.id}`}
                       className="font-label-sm text-label-sm text-secondary group-hover:text-on-surface hover:underline"
                     >
-                      {t('compareAction')}
+                      {t("compareAction")}
                     </Link>
                   </div>
                 </div>

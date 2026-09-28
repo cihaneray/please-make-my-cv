@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface BulletListProps {
   bullets?: string[];
@@ -9,8 +9,8 @@ interface BulletListProps {
 
 export function BulletList({
   bullets,
-  className = 'space-y-1',
-  bulletClassName = 'text-neutral-700 leading-relaxed text-[11px]',
+  className = "space-y-1",
+  bulletClassName = "text-neutral-700 leading-relaxed text-[11px]",
   bulletChar,
 }: BulletListProps) {
   if (!bullets || bullets.length === 0) return null;

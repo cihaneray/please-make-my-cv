@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import React from 'react';
-import { useI18n } from '@/lib/i18n';
-import { Icons } from './Icons';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import React from "react";
+import { useI18n } from "@/lib/i18n";
+import { Icons } from "./Icons";
 
 export function Sidebar() {
   const pathname = usePathname();
   const { language, setLanguage, t } = useI18n();
 
   const navItems = [
-    { label: t('home'), href: '/', icon: Icons.Home },
-    { label: t('resumes'), href: '/resumes', icon: Icons.Document },
-    { label: t('jobs'), href: '/jobs', icon: Icons.Jobs },
-    { label: t('library'), href: '/library', icon: Icons.Library },
-    { label: t('templates'), href: '/templates', icon: Icons.Templates },
-    { label: t('settings'), href: '/settings', icon: Icons.Settings },
+    { label: t("home"), href: "/", icon: Icons.Home },
+    { label: t("resumes"), href: "/resumes", icon: Icons.Document },
+    { label: t("jobs"), href: "/jobs", icon: Icons.Jobs },
+    { label: t("library"), href: "/library", icon: Icons.Library },
+    { label: t("templates"), href: "/templates", icon: Icons.Templates },
+    { label: t("settings"), href: "/settings", icon: Icons.Settings },
   ];
 
   return (
@@ -36,8 +36,8 @@ export function Sidebar() {
         <nav className="flex flex-col gap-space-xs p-space-sm">
           {navItems.map((item) => {
             const isActive =
-              item.href === '/'
-                ? pathname === '/'
+              item.href === "/"
+                ? pathname === "/"
                 : pathname.startsWith(item.href);
             const Icon = item.icon;
 
@@ -47,8 +47,8 @@ export function Sidebar() {
                 href={item.href}
                 className={`flex items-center gap-space-md px-space-md py-space-xs rounded transition-colors text-label-md font-label-md ${
                   isActive
-                    ? 'bg-surface-container-high text-on-surface font-semibold'
-                    : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+                    ? "bg-surface-container-high text-on-surface font-semibold"
+                    : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
                 }`}
               >
                 <Icon size={18} />
@@ -63,15 +63,15 @@ export function Sidebar() {
       <div className="flex flex-col p-space-sm border-t border-surface-container-high gap-space-xs">
         {/* Language quick switcher */}
         <div className="flex items-center justify-between px-space-md py-1 bg-surface-container-low rounded-lg border border-surface-container-high text-[11px] font-semibold text-secondary">
-          <span>{t('languageLabel')}</span>
+          <span>{t("languageLabel")}</span>
           <div className="flex items-center gap-1">
             <button
               type="button"
-              onClick={() => setLanguage('en')}
+              onClick={() => setLanguage("en")}
               className={`px-1.5 py-0.5 rounded transition-all ${
-                language === 'en'
-                  ? 'bg-primary text-on-primary shadow-xs font-bold'
-                  : 'text-secondary hover:text-on-surface'
+                language === "en"
+                  ? "bg-primary text-on-primary shadow-xs font-bold"
+                  : "text-secondary hover:text-on-surface"
               }`}
             >
               EN
@@ -79,11 +79,11 @@ export function Sidebar() {
             <span>/</span>
             <button
               type="button"
-              onClick={() => setLanguage('tr')}
+              onClick={() => setLanguage("tr")}
               className={`px-1.5 py-0.5 rounded transition-all ${
-                language === 'tr'
-                  ? 'bg-primary text-on-primary shadow-xs font-bold'
-                  : 'text-secondary hover:text-on-surface'
+                language === "tr"
+                  ? "bg-primary text-on-primary shadow-xs font-bold"
+                  : "text-secondary hover:text-on-surface"
               }`}
             >
               TR
@@ -96,7 +96,7 @@ export function Sidebar() {
           className="flex items-center gap-space-md px-space-md py-space-xs rounded text-on-surface-variant font-label-md text-label-md hover:bg-surface-container hover:text-on-surface transition-colors"
         >
           <Icons.Upload size={18} />
-          <span>{t('importCv')}</span>
+          <span>{t("importCv")}</span>
         </Link>
 
         <div className="pt-space-xs mt-space-xs border-t border-surface-container-high">
@@ -107,7 +107,7 @@ export function Sidebar() {
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="font-label-md text-label-md text-on-surface truncate">
-                  {t('personalTeam')}
+                  {t("personalTeam")}
                 </span>
                 <span className="font-body-sm text-body-sm text-secondary truncate">
                   workspace.cv

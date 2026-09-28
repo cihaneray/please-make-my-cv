@@ -35,45 +35,171 @@ import {
   User,
   X,
   Zap,
-} from 'lucide-react';
-import React from 'react';
+} from "lucide-react";
+import React from "react";
 
 export const Icons = {
-  Home: ({ className, size = 18 }: { className?: string; size?: number }) => <Home size={size} className={className} />,
-  Document: ({ className, size = 18 }: { className?: string; size?: number }) => <FileText size={size} className={className} />,
-  Jobs: ({ className, size = 18 }: { className?: string; size?: number }) => <Briefcase size={size} className={className} />,
-  Library: ({ className, size = 18 }: { className?: string; size?: number }) => <Folder size={size} className={className} />,
-  Templates: ({ className, size = 18 }: { className?: string; size?: number }) => <LayoutGrid size={size} className={className} />,
-  Settings: ({ className, size = 18 }: { className?: string; size?: number }) => <Settings size={size} className={className} />,
-  Add: ({ className, size = 16 }: { className?: string; size?: number }) => <Plus size={size} className={className} />,
-  Search: ({ className, size = 16 }: { className?: string; size?: number }) => <Search size={size} className={className} />,
-  Upload: ({ className, size = 16 }: { className?: string; size?: number }) => <Upload size={size} className={className} />,
-  Download: ({ className, size = 16 }: { className?: string; size?: number }) => <Download size={size} className={className} />,
-  Save: ({ className, size = 16 }: { className?: string; size?: number }) => <Save size={size} className={className} />,
-  Check: ({ className, size = 16 }: { className?: string; size?: number }) => <Check size={size} className={className} />,
-  CheckCircle: ({ className, size = 16 }: { className?: string; size?: number }) => <CheckCircle size={size} className={className} />,
-  AlertCircle: ({ className, size = 16 }: { className?: string; size?: number }) => <AlertCircle size={size} className={className} />,
-  AlertTriangle: ({ className, size = 16 }: { className?: string; size?: number }) => <AlertTriangle size={size} className={className} />,
-  Sparkles: ({ className, size = 14 }: { className?: string; size?: number }) => <Sparkles size={size} className={className} />,
-  Code: ({ className, size = 16 }: { className?: string; size?: number }) => <Code size={size} className={className} />,
-  Delete: ({ className, size = 16 }: { className?: string; size?: number }) => <Trash2 size={size} className={className} />,
-  Close: ({ className, size = 16 }: { className?: string; size?: number }) => <X size={size} className={className} />,
-  Print: ({ className, size = 16 }: { className?: string; size?: number }) => <Printer size={size} className={className} />,
-  Minus: ({ className, size = 16 }: { className?: string; size?: number }) => <Minus size={size} className={className} />,
-  ArrowRight: ({ className, size = 14 }: { className?: string; size?: number }) => <ArrowRight size={size} className={className} />,
-  More: ({ className, size = 16 }: { className?: string; size?: number }) => <MoreHorizontal size={size} className={className} />,
-  User: ({ className, size = 16 }: { className?: string; size?: number }) => <User size={size} className={className} />,
-  Unfold: ({ className, size = 16 }: { className?: string; size?: number }) => <ChevronsUpDown size={size} className={className} />,
-  Link: ({ className, size = 14 }: { className?: string; size?: number }) => <LinkIcon size={size} className={className} />,
-  Graduation: ({ className, size = 16 }: { className?: string; size?: number }) => <GraduationCap size={size} className={className} />,
-  Terminal: ({ className, size = 16 }: { className?: string; size?: number }) => <Terminal size={size} className={className} />,
-  Zap: ({ className, size = 16 }: { className?: string; size?: number }) => <Zap size={size} className={className} />,
-  Quote: ({ className, size = 16 }: { className?: string; size?: number }) => <Quote size={size} className={className} />,
-  Eye: ({ className, size = 16 }: { className?: string; size?: number }) => <Eye size={size} className={className} />,
-  Play: ({ className, size = 14 }: { className?: string; size?: number }) => <Play size={size} className={className} />,
-  Undo: ({ className, size = 16 }: { className?: string; size?: number }) => <Undo size={size} className={className} />,
-  Redo: ({ className, size = 16 }: { className?: string; size?: number }) => <Redo size={size} className={className} />,
-  Globe: ({ className, size = 16 }: { className?: string; size?: number }) => <Globe size={size} className={className} />,
-  Language: ({ className, size = 16 }: { className?: string; size?: number }) => <Globe size={size} className={className} />,
-  Shield: ({ className, size = 16 }: { className?: string; size?: number }) => <Shield size={size} className={className} />,
+  Home: ({ className, size = 18 }: { className?: string; size?: number }) => (
+    <Home size={size} className={className} />
+  ),
+  Document: ({
+    className,
+    size = 18,
+  }: {
+    className?: string;
+    size?: number;
+  }) => <FileText size={size} className={className} />,
+  Jobs: ({ className, size = 18 }: { className?: string; size?: number }) => (
+    <Briefcase size={size} className={className} />
+  ),
+  Library: ({
+    className,
+    size = 18,
+  }: {
+    className?: string;
+    size?: number;
+  }) => <Folder size={size} className={className} />,
+  Templates: ({
+    className,
+    size = 18,
+  }: {
+    className?: string;
+    size?: number;
+  }) => <LayoutGrid size={size} className={className} />,
+  Settings: ({
+    className,
+    size = 18,
+  }: {
+    className?: string;
+    size?: number;
+  }) => <Settings size={size} className={className} />,
+  Add: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <Plus size={size} className={className} />
+  ),
+  Search: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <Search size={size} className={className} />
+  ),
+  Upload: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <Upload size={size} className={className} />
+  ),
+  Download: ({
+    className,
+    size = 16,
+  }: {
+    className?: string;
+    size?: number;
+  }) => <Download size={size} className={className} />,
+  Save: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <Save size={size} className={className} />
+  ),
+  Check: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <Check size={size} className={className} />
+  ),
+  CheckCircle: ({
+    className,
+    size = 16,
+  }: {
+    className?: string;
+    size?: number;
+  }) => <CheckCircle size={size} className={className} />,
+  AlertCircle: ({
+    className,
+    size = 16,
+  }: {
+    className?: string;
+    size?: number;
+  }) => <AlertCircle size={size} className={className} />,
+  AlertTriangle: ({
+    className,
+    size = 16,
+  }: {
+    className?: string;
+    size?: number;
+  }) => <AlertTriangle size={size} className={className} />,
+  Sparkles: ({
+    className,
+    size = 14,
+  }: {
+    className?: string;
+    size?: number;
+  }) => <Sparkles size={size} className={className} />,
+  Code: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <Code size={size} className={className} />
+  ),
+  Delete: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <Trash2 size={size} className={className} />
+  ),
+  Close: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <X size={size} className={className} />
+  ),
+  Print: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <Printer size={size} className={className} />
+  ),
+  Minus: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <Minus size={size} className={className} />
+  ),
+  ArrowRight: ({
+    className,
+    size = 14,
+  }: {
+    className?: string;
+    size?: number;
+  }) => <ArrowRight size={size} className={className} />,
+  More: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <MoreHorizontal size={size} className={className} />
+  ),
+  User: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <User size={size} className={className} />
+  ),
+  Unfold: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <ChevronsUpDown size={size} className={className} />
+  ),
+  Link: ({ className, size = 14 }: { className?: string; size?: number }) => (
+    <LinkIcon size={size} className={className} />
+  ),
+  Graduation: ({
+    className,
+    size = 16,
+  }: {
+    className?: string;
+    size?: number;
+  }) => <GraduationCap size={size} className={className} />,
+  Terminal: ({
+    className,
+    size = 16,
+  }: {
+    className?: string;
+    size?: number;
+  }) => <Terminal size={size} className={className} />,
+  Zap: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <Zap size={size} className={className} />
+  ),
+  Quote: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <Quote size={size} className={className} />
+  ),
+  Eye: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <Eye size={size} className={className} />
+  ),
+  Play: ({ className, size = 14 }: { className?: string; size?: number }) => (
+    <Play size={size} className={className} />
+  ),
+  Undo: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <Undo size={size} className={className} />
+  ),
+  Redo: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <Redo size={size} className={className} />
+  ),
+  Globe: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <Globe size={size} className={className} />
+  ),
+  Language: ({
+    className,
+    size = 16,
+  }: {
+    className?: string;
+    size?: number;
+  }) => <Globe size={size} className={className} />,
+  Shield: ({ className, size = 16 }: { className?: string; size?: number }) => (
+    <Shield size={size} className={className} />
+  ),
 };

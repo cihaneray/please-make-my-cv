@@ -1,22 +1,27 @@
-'use client';
+"use client";
+import { notify } from "@/components/Notifications";
 
-import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
-import { A4ResumePreview } from '@/components/A4ResumePreview';
-import { Icons } from '@/components/Icons';
-import { api } from '@/lib/api';
-import { useI18n } from '@/lib/i18n';
-import { ResumeDocument } from '@/lib/types';
+import { useRouter } from "next/navigation";
+import React, { useState, useRef } from "react";
+import { A4ResumePreview } from "@/components/A4ResumePreview";
+import { Icons } from "@/components/Icons";
+import { api } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
+import { ResumeDocument } from "@/lib/types";
 
 export default function ImportPage() {
   const router = useRouter();
   const { t } = useI18n();
-  const [content, setContent] = useState<string>('');
+  const generation = useRef(0);
+  const [validatedContent, setValidatedContent] = useState("");
+  const [content, setContent] = useState<string>("");
   const [previewDoc, setPreviewDoc] = useState<ResumeDocument | null>(null);
-  const [detectedFmt, setDetectedFmt] = useState<string>('');
+  const [detectedFmt, setDetectedFmt] = useState<string>("");
   const [warnings, setWarnings] = useState<string[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
-  const [sectionSummary, setSectionSummary] = useState<Record<string, number>>({});
+  const [sectionSummary, setSectionSummary] = useState<Record<string, number>>(
+    {},
+  );
   const [loading, setLoading] = useState<boolean>(false);
   const [applying, setApplying] = useState<boolean>(false);
 
@@ -24,6 +29,10 @@ export default function ImportPage() {
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors(["Maximum file size is 5 MB."]);
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (event) => {
       const text = event.target?.result as string;
@@ -34,31 +43,36 @@ export default function ImportPage() {
   }
 
   async function runPreview(textToPreview = content) {
+    const request = ++generation.current;
+    setPreviewDoc(null);
+    setValidatedContent("");
     if (!textToPreview.trim()) return;
     try {
       setLoading(true);
       setErrors([]);
       const res = await api.previewImport(textToPreview);
+      if (request !== generation.current) return;
+      setValidatedContent(textToPreview);
       setDetectedFmt(res.detectedFormat);
       setWarnings(res.warnings);
       setErrors(res.errors);
       setPreviewDoc(res.previewDocument);
       setSectionSummary(res.sectionSummary);
     } catch (err: any) {
-      setErrors([err.message || 'Import preview failed.']);
+      setErrors([err.message || "Import preview failed."]);
     } finally {
-      setLoading(false);
+      if (request === generation.current) setLoading(false);
     }
   }
 
   async function handleApply() {
-    if (!previewDoc) return;
+    if (!previewDoc || loading || validatedContent !== content) return;
     try {
       setApplying(true);
       const imported = await api.applyImport(previewDoc);
       router.push(`/resumes/${imported.metadata.id}`);
     } catch (err: any) {
-      alert(`Import apply failed: ${err.message}`);
+      notify(`Import apply failed: ${err.message}`);
     } finally {
       setApplying(false);
     }
@@ -71,11 +85,11 @@ export default function ImportPage() {
         <div className="flex items-center gap-space-sm">
           <Icons.Upload size={18} />
           <span className="font-headline-md text-headline-md font-semibold">
-            {t('importTitle')}
+            {t("importTitle")}
           </span>
           {detectedFmt && (
             <span className="font-label-sm px-2 py-0.5 rounded bg-surface-container uppercase text-secondary font-semibold">
-              {t('formatLabel')} {detectedFmt}
+              {t("formatLabel")} {detectedFmt}
             </span>
           )}
         </div>
@@ -84,11 +98,11 @@ export default function ImportPage() {
           <button
             type="button"
             onClick={handleApply}
-            disabled={applying}
+            disabled={applying || loading || validatedContent !== content}
             className="h-8 px-space-lg flex items-center gap-1.5 rounded-lg bg-primary text-on-primary font-label-md shadow hover:bg-primary-container transition-all"
           >
             <Icons.Check size={15} />
-            <span>{applying ? '...' : t('confirmAndSave')}</span>
+            <span>{applying ? "..." : t("confirmAndSave")}</span>
           </button>
         )}
       </div>
@@ -99,7 +113,7 @@ export default function ImportPage() {
           {/* File Upload Box */}
           <div className="flex flex-col gap-2">
             <label className="font-label-sm text-secondary uppercase font-semibold">
-              {t('uploadResumeFile')}
+              {t("uploadResumeFile")}
             </label>
             <input
               type="file"
@@ -111,7 +125,7 @@ export default function ImportPage() {
 
           <div className="flex items-center gap-2 text-secondary text-[11px]">
             <div className="h-px bg-surface-container-high flex-1" />
-            <span>{t('orPasteRaw')}</span>
+            <span>{t("orPasteRaw")}</span>
             <div className="h-px bg-surface-container-high flex-1" />
           </div>
 
@@ -120,8 +134,14 @@ export default function ImportPage() {
             <textarea
               rows={12}
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder={t('pasteRawPlaceholder')}
+              onChange={(e) => {
+                generation.current++;
+                setContent(e.target.value);
+                setPreviewDoc(null);
+                setValidatedContent("");
+                setLoading(false);
+              }}
+              placeholder={t("pasteRawPlaceholder")}
               className="w-full h-64 p-3 rounded-lg bg-surface-container-low font-mono text-[12px] leading-relaxed outline-none border border-surface-container-highest resize-none focus:bg-surface-container-lowest"
             />
 
@@ -131,14 +151,14 @@ export default function ImportPage() {
               disabled={loading || !content.trim()}
               className="h-8 rounded bg-surface-container text-on-surface hover:bg-surface-container-high font-label-md text-label-md transition-colors disabled:opacity-50"
             >
-              {loading ? t('analyzingContent') : t('parseAndPreview')}
+              {loading ? t("analyzingContent") : t("parseAndPreview")}
             </button>
           </div>
 
           {/* Parsing Diagnostics */}
           {errors.length > 0 && (
             <div className="p-3 rounded bg-error-container text-on-error-container text-[12px] flex flex-col gap-1">
-              <span className="font-semibold">{t('parseErrors')}</span>
+              <span className="font-semibold">{t("parseErrors")}</span>
               {errors.map((err, idx) => (
                 <div key={idx}>• {err}</div>
               ))}
@@ -147,7 +167,7 @@ export default function ImportPage() {
 
           {warnings.length > 0 && (
             <div className="p-3 rounded bg-amber-50 text-amber-900 text-[12px] flex flex-col gap-1">
-              <span className="font-semibold">{t('warningsMigrations')}</span>
+              <span className="font-semibold">{t("warningsMigrations")}</span>
               {warnings.map((w, idx) => (
                 <div key={idx}>• {w}</div>
               ))}
@@ -161,12 +181,32 @@ export default function ImportPage() {
                 Detected Resume Structure
               </span>
               <div className="grid grid-cols-2 gap-2 text-[12px]">
-                <div>Name: <strong>{previewDoc.profile.firstName} {previewDoc.profile.lastName}</strong></div>
-                <div>Experience: <strong>{sectionSummary.experience || 0} roles</strong></div>
-                <div>Education: <strong>{sectionSummary.education || 0} entries</strong></div>
-                <div>Skills: <strong>{sectionSummary.skills || 0} competencies</strong></div>
-                <div>Projects: <strong>{sectionSummary.projects || 0} items</strong></div>
-                <div>Custom: <strong>{sectionSummary.customSections || 0} sections</strong></div>
+                <div>
+                  Name:{" "}
+                  <strong>
+                    {previewDoc.profile.firstName} {previewDoc.profile.lastName}
+                  </strong>
+                </div>
+                <div>
+                  Experience:{" "}
+                  <strong>{sectionSummary.experience || 0} roles</strong>
+                </div>
+                <div>
+                  Education:{" "}
+                  <strong>{sectionSummary.education || 0} entries</strong>
+                </div>
+                <div>
+                  Skills:{" "}
+                  <strong>{sectionSummary.skills || 0} competencies</strong>
+                </div>
+                <div>
+                  Projects:{" "}
+                  <strong>{sectionSummary.projects || 0} items</strong>
+                </div>
+                <div>
+                  Custom:{" "}
+                  <strong>{sectionSummary.customSections || 0} sections</strong>
+                </div>
               </div>
             </div>
           )}
@@ -177,7 +217,8 @@ export default function ImportPage() {
           <A4ResumePreview document={previewDoc} />
         ) : (
           <div className="flex-1 bg-surface-container flex items-center justify-center text-secondary text-body-md">
-            Upload or paste content to see normalized A4 canvas preview before importing.
+            Upload or paste content to see normalized A4 canvas preview before
+            importing.
           </div>
         )}
       </div>

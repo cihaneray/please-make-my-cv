@@ -1,15 +1,19 @@
-'use client';
+"use client";
+import { notify } from "@/components/Notifications";
 
-import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
-import { api } from '@/lib/api';
-import { useI18n } from '@/lib/i18n';
-import { RESUME_TEMPLATES, SAMPLE_PREVIEW_RESUME } from '@/features/resume-templates';
+import { useRouter } from "next/navigation";
+import React, { useState } from "react";
+import { api } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
+import {
+  RESUME_TEMPLATES,
+  SAMPLE_PREVIEW_RESUME,
+} from "@/features/resume-templates";
 
 export default function TemplatesPage() {
   const router = useRouter();
   const { t } = useI18n();
-  const [selectedId, setSelectedId] = useState<string>('minimal');
+  const [selectedId, setSelectedId] = useState<string>("minimal");
   const [creating, setCreating] = useState<boolean>(false);
 
   async function handleUseTemplate(templateId: string) {
@@ -21,7 +25,7 @@ export default function TemplatesPage() {
       });
       router.push(`/resumes/${newResume.metadata.id}`);
     } catch (err: any) {
-      alert(`Failed to create resume: ${err.message}`);
+      notify(`Failed to create resume: ${err.message}`);
     } finally {
       setCreating(false);
     }
@@ -32,13 +36,13 @@ export default function TemplatesPage() {
       <div className="max-w-[1180px] w-full mx-auto px-space-lg py-margin-desktop space-y-space-xl">
         <header className="flex flex-col gap-space-xs pb-space-lg border-b border-surface-container-high">
           <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary">
-            {t('gallery')}
+            {t("gallery")}
           </span>
           <h1 className="font-headline-xl text-headline-xl text-on-surface">
-            {t('resumeTemplates')}
+            {t("resumeTemplates")}
           </h1>
           <p className="font-body-md text-body-md text-on-surface-variant">
-            {t('templatesSubtitle')}
+            {t("templatesSubtitle")}
           </p>
         </header>
 
@@ -62,8 +66,8 @@ export default function TemplatesPage() {
                 onClick={() => setSelectedId(tmpl.id)}
                 className={`p-space-lg rounded-xl bg-surface-container-lowest border transition-all flex flex-col justify-between cursor-pointer ${
                   isSelected
-                    ? 'border-primary ring-1 ring-primary/20 shadow-md'
-                    : 'border-surface-container-highest hover:border-outline-variant shadow-sm'
+                    ? "border-primary ring-1 ring-primary/20 shadow-md"
+                    : "border-surface-container-highest hover:border-outline-variant shadow-sm"
                 }`}
               >
                 <div className="flex flex-col gap-space-sm">
@@ -72,8 +76,8 @@ export default function TemplatesPage() {
                     <div
                       className="w-[595px] origin-top bg-white p-7 shadow-sm pointer-events-none select-none"
                       style={{
-                        transform: 'scale(0.38)',
-                        minHeight: '842px',
+                        transform: "scale(0.38)",
+                        minHeight: "842px",
                       }}
                     >
                       <Renderer document={previewDoc} />
@@ -85,7 +89,7 @@ export default function TemplatesPage() {
                       {tmpl.name}
                     </span>
                     <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-surface-container text-secondary">
-                      {t('a4Ready')}
+                      {t("a4Ready")}
                     </span>
                   </div>
 
@@ -94,13 +98,15 @@ export default function TemplatesPage() {
                   </p>
 
                   <div className="pt-2 text-[11px] text-on-surface-variant font-medium">
-                    <span className="text-secondary">{t('bestFor')} </span>
+                    <span className="text-secondary">{t("bestFor")} </span>
                     {tmpl.recommendedFor}
                   </div>
                 </div>
 
                 <div className="pt-space-lg mt-space-md border-t border-surface-container-high flex items-center justify-between">
-                  <span className="font-label-sm text-secondary capitalize">{tmpl.id}</span>
+                  <span className="font-label-sm text-secondary capitalize">
+                    {tmpl.id}
+                  </span>
                   <button
                     type="button"
                     onClick={(e) => {
@@ -110,7 +116,7 @@ export default function TemplatesPage() {
                     disabled={creating}
                     className="px-3 py-1.5 rounded bg-primary text-on-primary font-label-sm hover:bg-inverse-surface transition-colors shadow-xs"
                   >
-                    {t('useTemplate')}
+                    {t("useTemplate")}
                   </button>
                 </div>
               </div>

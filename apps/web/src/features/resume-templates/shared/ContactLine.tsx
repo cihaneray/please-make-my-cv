@@ -1,6 +1,6 @@
-import React from 'react';
-import { Profile } from '@/lib/types';
-import { normalizeUrl, cleanDisplayUrl } from '../utils/contact-helpers';
+import React from "react";
+import { Profile } from "@/lib/types";
+import { normalizeUrl, cleanDisplayUrl } from "../utils/contact-helpers";
 
 interface ContactLineProps {
   profile: Profile;
@@ -12,10 +12,10 @@ interface ContactLineProps {
 
 export function ContactLine({
   profile,
-  separator = '•',
-  className = '',
-  itemClassName = '',
-  linkClassName = 'hover:underline',
+  separator = "•",
+  className = "",
+  itemClassName = "",
+  linkClassName = "hover:underline",
 }: ContactLineProps) {
   const items: React.ReactNode[] = [];
 
@@ -28,7 +28,7 @@ export function ContactLine({
         title="Email"
       >
         {profile.email}
-      </a>
+      </a>,
     );
   }
 
@@ -41,16 +41,12 @@ export function ContactLine({
         title="Phone"
       >
         {profile.phone}
-      </a>
+      </a>,
     );
   }
 
   if (profile.location) {
-    items.push(
-      <span key="location">
-        {profile.location}
-      </span>
-    );
+    items.push(<span key="location">{profile.location}</span>);
   }
 
   if (profile.website) {
@@ -65,7 +61,7 @@ export function ContactLine({
         title="Portfolio / Website"
       >
         {cleanDisplayUrl(profile.website)}
-      </a>
+      </a>,
     );
   }
 
@@ -81,7 +77,7 @@ export function ContactLine({
         title="LinkedIn Profile"
       >
         {cleanDisplayUrl(profile.linkedin)}
-      </a>
+      </a>,
     );
   }
 
@@ -97,7 +93,7 @@ export function ContactLine({
         title="GitHub Profile"
       >
         {cleanDisplayUrl(profile.github)}
-      </a>
+      </a>,
     );
   }
 
@@ -114,7 +110,7 @@ export function ContactLine({
             title={l.label || cleanDisplayUrl(l.url)}
           >
             {l.label || cleanDisplayUrl(l.url)}
-          </a>
+          </a>,
         );
       }
     });
@@ -126,9 +122,13 @@ export function ContactLine({
     <div className={`flex flex-wrap items-center gap-x-2 gap-y-1 ${className}`}>
       {items.map((node, idx) => (
         <React.Fragment key={idx}>
-          <span className={`inline-flex items-center ${itemClassName}`}>{node}</span>
+          <span className={`inline-flex items-center ${itemClassName}`}>
+            {node}
+          </span>
           {idx < items.length - 1 && (
-            <span className="opacity-40 select-none text-[0.8em]">{separator}</span>
+            <span className="opacity-40 select-none text-[0.8em]">
+              {separator}
+            </span>
           )}
         </React.Fragment>
       ))}

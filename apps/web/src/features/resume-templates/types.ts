@@ -1,7 +1,7 @@
-import React from 'react';
-import { ResumeDocument } from '@/lib/types';
+import React from "react";
+import { ResumeDocument } from "@/lib/types";
 
-export type ResumeTemplateId = 'minimal' | 'technical' | 'professional';
+export type ResumeTemplateId = "minimal" | "technical" | "professional";
 
 export interface ResumeTemplateProps {
   document: ResumeDocument;
