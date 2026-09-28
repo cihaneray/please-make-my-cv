@@ -6,13 +6,16 @@ WORKDIR /app
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
 # Copy dependency files
-COPY pyproject.toml .
+COPY pyproject.toml uv.lock ./
 
 # Install dependencies using uv
-RUN uv sync --no-dev
+RUN uv sync --frozen --no-dev
+RUN uv run playwright install --with-deps chromium
 
 # Copy application source code
 COPY app/ ./app/
+COPY migrations/ ./migrations/
+COPY alembic.ini ./
 
 ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8000

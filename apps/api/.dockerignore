@@ -1,0 +1,11 @@
+.venv
+node_modules
+.next
+__pycache__
+*.db
+.env*
+.git
+test-results
+
+data/
+**/ai-settings.json

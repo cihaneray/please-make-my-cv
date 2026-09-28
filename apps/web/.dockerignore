@@ -1,0 +1,10 @@
+.venv
+node_modules
+.next
+__pycache__
+*.db
+.env*
+.git
+test-results
+
+.next-e2e/

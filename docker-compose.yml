@@ -1,15 +1,13 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:16-alpine
     container_name: cv-workspace-db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: cv_workspace
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -25,11 +23,20 @@ services:
     container_name: cv-workspace-api
     environment:
       APP_ENV: production
-      DATABASE_URL: postgresql://postgres:postgrespassword@db:5432/cv_workspace
-      CORS_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
-      AI_ENABLED: "false"
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/cv_workspace
+      CORS_ORIGINS: '["http://localhost:3000","http://127.0.0.1:3000"]'
+      AI_CONFIG_PATH: /app/data/ai-settings.json
+    volumes:
+      - ai_settings:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
     depends_on:
       db:
         condition: service_healthy
@@ -38,13 +45,22 @@ services:
     build:
       context: ./apps/web
       dockerfile: Dockerfile
+      args:
+        API_INTERNAL_URL: http://api:8000
     container_name: cv-workspace-web
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000/api
+      API_INTERNAL_URL: http://api:8000
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
 volumes:
   postgres_data:
+  ai_settings:

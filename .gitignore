@@ -70,7 +70,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+/lib/
 lib64/
 parts/
 sdist/
@@ -197,5 +197,22 @@ AGENTS.md
 CLAUDE.md
 
 # Documentation & Reference artifacts
-Docs/
+Docs/*
+!Docs/api.md
+!Docs/architecture.md
+!Docs/remediation-report.md
 
+
+!**/.env.example
+test-results/
+playwright-report/
+output/
+tmp/
+
+.next-e2e/
+
+# Backend-only LLM credentials
+**/ai-settings.json
+**/.ai-settings-*.tmp
+
+**/e2e-ai-settings.json

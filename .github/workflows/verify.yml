@@ -1,0 +1,39 @@
+name: Verify workspace
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: pip install uv
+      - run: uv sync --frozen
+        working-directory: apps/api
+      - run: uv run playwright install --with-deps chromium
+        working-directory: apps/api
+      - run: uv run ruff check . && uv run ruff format --check . && uv run pytest -q && uv run python scripts/generate_types.py --check
+        working-directory: apps/api
+      - run: npm ci
+        working-directory: apps/web
+      - run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+      - run: npm run lint && npm test
+        working-directory: apps/web
+  containers:
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_PASSWORD: disposable-ci-password
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose config --quiet
+      - run: docker compose up --build --wait --wait-timeout 240
+      - run: curl --fail http://127.0.0.1:8000/api/health && curl --fail http://127.0.0.1:3000/api/health
+      - if: always()
+        run: docker compose logs && docker compose down --volumes
