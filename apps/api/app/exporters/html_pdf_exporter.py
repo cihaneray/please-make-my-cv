@@ -54,18 +54,44 @@ class HtmlPdfExporter:
     @staticmethod
     def render_html(doc: ResumeDocument) -> str:
         """Renders an A4 print-optimized HTML document with CSS styling matching the chosen template."""
-        template_id = (doc.design.template or doc.metadata.template_id or "minimal").lower().strip()
+        template_id = (doc.design.template or doc.metadata.templateId or "minimal").lower().strip()
         if template_id not in ["minimal", "technical", "professional"]:
             template_id = "minimal"
 
         is_tr = (doc.metadata.language or "en").lower() == "tr"
         font_family = doc.design.fontFamily or (
-            "Georgia, serif" if template_id == "professional" else "Inter, -apple-system, sans-serif"
+            "Georgia, serif"
+            if template_id == "professional"
+            else "Inter, -apple-system, sans-serif"
         )
         accent_color = doc.design.accentColor or (
-            "#1E293B" if template_id == "professional" else ("#131B2E" if template_id == "technical" else "#0F172A")
+            "#1E293B"
+            if template_id == "professional"
+            else ("#131B2E" if template_id == "technical" else "#0F172A")
         )
 
+        fonts = {
+            "Inter": "Arial, sans-serif",
+            "Arial": "Arial, sans-serif",
+            "Helvetica Neue": "Arial, sans-serif",
+            "Georgia": "Georgia, serif",
+            "Menlo": "monospace",
+        }
+        font_family = fonts.get(font_family, "Arial, sans-serif")
+        if not re.fullmatch(r"#[0-9a-fA-F]{6}", accent_color):
+            accent_color = "#0F172A"
+        font_size = (
+            doc.design.fontSize
+            if re.fullmatch(r"(?:[8-9]|1[0-4])(?:\.5)?pt", doc.design.fontSize)
+            else "10pt"
+        )
+        font_scale = float(font_size.removesuffix("pt")) / 10
+        page_margin = {"compact": "10mm", "normal": "15mm 18mm", "spacious": "20mm"}.get(
+            doc.design.margins, "15mm 18mm"
+        )
+        section_gap = {"compact": "10px", "normal": "14px", "relaxed": "18px"}.get(
+            doc.design.spacing, "14px"
+        )
         full_name = html.escape(
             f"{doc.profile.firstName} {doc.profile.lastName}".strip()
             or ("Ad Soyad" if is_tr else "Curriculum Vitae")
@@ -74,11 +100,35 @@ class HtmlPdfExporter:
 
         # Titles
         titles = {
-            "summary": "ÖZET & ODAK ALANLARI" if (is_tr and template_id == "technical") else ("ÖZET" if is_tr else ("TECHNICAL SUMMARY" if template_id == "technical" else "SUMMARY")),
-            "experience": "İŞ DENEYİMİ & KARİYER GEÇMİŞİ" if (is_tr and template_id == "professional") else ("İŞ DENEYİMİ" if is_tr else ("PROFESSIONAL EXPERIENCE" if template_id == "professional" else "EXPERIENCE")),
+            "summary": "ÖZET & ODAK ALANLARI"
+            if (is_tr and template_id == "technical")
+            else (
+                "ÖZET"
+                if is_tr
+                else ("TECHNICAL SUMMARY" if template_id == "technical" else "SUMMARY")
+            ),
+            "experience": "İŞ DENEYİMİ & KARİYER GEÇMİŞİ"
+            if (is_tr and template_id == "professional")
+            else (
+                "İŞ DENEYİMİ"
+                if is_tr
+                else ("PROFESSIONAL EXPERIENCE" if template_id == "professional" else "EXPERIENCE")
+            ),
             "education": "EĞİTİM" if is_tr else "EDUCATION",
-            "projects": "TEKNİK PROJELER & AÇIK KAYNAK" if (is_tr and template_id == "technical") else ("PROJELER" if is_tr else ("TECHNICAL PROJECTS" if template_id == "technical" else "PROJECTS")),
-            "skills": "TEKNİK YETKİNLİKLER" if (is_tr and template_id == "technical") else ("YETKİNLİKLER" if is_tr else ("TECHNICAL SKILLS" if template_id == "technical" else "SKILLS & COMPETENCIES")),
+            "projects": "TEKNİK PROJELER & AÇIK KAYNAK"
+            if (is_tr and template_id == "technical")
+            else (
+                "PROJELER"
+                if is_tr
+                else ("TECHNICAL PROJECTS" if template_id == "technical" else "PROJECTS")
+            ),
+            "skills": "TEKNİK YETKİNLİKLER"
+            if (is_tr and template_id == "technical")
+            else (
+                "YETKİNLİKLER"
+                if is_tr
+                else ("TECHNICAL SKILLS" if template_id == "technical" else "SKILLS & COMPETENCIES")
+            ),
             "certifications": "SERTİFİKALAR & LİSANSLAR" if is_tr else "CERTIFICATIONS",
             "languages": "YABANCI DİLLER" if is_tr else "LANGUAGES",
             "technologies": "Teknolojiler" if is_tr else "Technologies",
@@ -107,13 +157,15 @@ class HtmlPdfExporter:
             gh_url = html.escape(_normalize_url(doc.profile.github))
             contacts.append(f'<a href="{gh_url}" target="_blank">{gh_disp}</a>')
         if doc.profile.links:
-            for l in doc.profile.links:
-                if l.url:
-                    l_lbl = html.escape(l.label or _display_url(l.url))
-                    l_url = html.escape(_normalize_url(l.url))
+            for link_item in doc.profile.links:
+                if link_item.url:
+                    l_lbl = html.escape(link_item.label or _display_url(link_item.url))
+                    l_url = html.escape(_normalize_url(link_item.url))
                     contacts.append(f'<a href="{l_url}" target="_blank">{l_lbl}</a>')
 
-        separator = " &nbsp;|&nbsp; " if template_id in ["technical", "professional"] else " &nbsp;·&nbsp; "
+        separator = (
+            " &nbsp;|&nbsp; " if template_id in ["technical", "professional"] else " &nbsp;·&nbsp; "
+        )
         contacts_html = separator.join(contacts)
 
         # Summary
@@ -121,7 +173,7 @@ class HtmlPdfExporter:
         if doc.summary and doc.visibility.showSummary:
             summary_html = f"""
             <section class="section">
-                <h2 class="section-title">{titles['summary']}</h2>
+                <h2 class="section-title">{titles["summary"]}</h2>
                 <p class="summary-text">{html.escape(doc.summary)}</p>
             </section>
             """
@@ -133,7 +185,9 @@ class HtmlPdfExporter:
             for exp in doc.experience:
                 pos = html.escape(exp.position)
                 comp = html.escape(exp.company)
-                dates = html.escape(_format_date_range(exp.startDate, exp.endDate, exp.current, is_tr))
+                dates = html.escape(
+                    _format_date_range(exp.startDate, exp.endDate, exp.current, is_tr)
+                )
                 loc = html.escape(exp.location)
                 bullets = "".join(f"<li>{html.escape(b)}</li>" for b in exp.bullets)
                 techs = (
@@ -168,7 +222,7 @@ class HtmlPdfExporter:
                 """)
             exp_html = f"""
             <section class="section">
-                <h2 class="section-title">{titles['experience']}</h2>
+                <h2 class="section-title">{titles["experience"]}</h2>
                 {"".join(exp_items)}
             </section>
             """
@@ -178,10 +232,16 @@ class HtmlPdfExporter:
         if doc.education and doc.visibility.showEducation:
             edu_items = []
             for edu in doc.education:
-                deg = html.escape(f"{edu.degree}{' in ' + edu.fieldOfStudy if edu.fieldOfStudy else ''}")
+                deg = html.escape(
+                    f"{edu.degree}{' in ' + edu.fieldOfStudy if edu.fieldOfStudy else ''}"
+                )
                 inst = html.escape(edu.institution)
-                dates = html.escape(_format_date_range(edu.startDate, edu.endDate, edu.current, is_tr))
+                dates = html.escape(
+                    _format_date_range(edu.startDate, edu.endDate, edu.current, is_tr)
+                )
                 loc = html.escape(edu.location)
+                if edu.grade:
+                    deg += f" ({html.escape(edu.grade)})"
                 highlights = "".join(f"<li>{html.escape(h)}</li>" for h in edu.highlights)
 
                 if template_id == "professional":
@@ -207,7 +267,7 @@ class HtmlPdfExporter:
                     """)
             edu_html = f"""
             <section class="section">
-                <h2 class="section-title">{titles['education']}</h2>
+                <h2 class="section-title">{titles["education"]}</h2>
                 {"".join(edu_items)}
             </section>
             """
@@ -236,6 +296,7 @@ class HtmlPdfExporter:
                     <div class="entry-header">
                         <span class="entry-title">{name}{f" ({role})" if role else ""}</span>
                         {url_str}
+                        <span class="entry-dates">{html.escape(_format_date_range(p.startDate, p.endDate, False, is_tr))}</span>
                     </div>
                     {f'<ul class="bullets">{bullets}</ul>' if bullets else ""}
                     {techs}
@@ -243,7 +304,7 @@ class HtmlPdfExporter:
                 """)
             proj_html = f"""
             <section class="section">
-                <h2 class="section-title">{titles['projects']}</h2>
+                <h2 class="section-title">{titles["projects"]}</h2>
                 {"".join(proj_items)}
             </section>
             """
@@ -260,7 +321,7 @@ class HtmlPdfExporter:
                 )
             skills_html = f"""
             <section class="section">
-                <h2 class="section-title">{titles['skills']}</h2>
+                <h2 class="section-title">{titles["skills"]}</h2>
                 <div class="skills-container">{"".join(skill_badges)}</div>
             </section>
             """
@@ -274,12 +335,14 @@ class HtmlPdfExporter:
                 c_items.append(f"""
                 <div class="entry-header cert-row">
                     <span><strong>{html.escape(c.name)}</strong>{f" — {html.escape(c.issuer)}" if c.issuer else ""}</span>
-                    <span class="entry-dates">{date_fmt}</span>
+                    <span class="entry-dates">{date_fmt}{(" - " + html.escape(_format_date(c.expiryDate, is_tr))) if c.expiryDate else ""}</span>
+                    <span>{html.escape(c.credentialId)}</span>
+                    {f'<a href="{html.escape(_normalize_url(c.credentialUrl))}">{html.escape(_display_url(c.credentialUrl))}</a>' if c.credentialUrl else ""}
                 </div>
                 """)
             certs_html = f"""
             <section class="section">
-                <h2 class="section-title">{titles['certifications']}</h2>
+                <h2 class="section-title">{titles["certifications"]}</h2>
                 {"".join(c_items)}
             </section>
             """
@@ -288,12 +351,12 @@ class HtmlPdfExporter:
         lang_html = ""
         if doc.languages and doc.visibility.showLanguages:
             l_items = [
-                f'<span><strong>{html.escape(l.language)}</strong>{f" ({html.escape(l.proficiency)})" if l.proficiency else ""}</span>'
-                for l in doc.languages
+                f"<span><strong>{html.escape(link_item.language)}</strong>{f' ({html.escape(link_item.proficiency)})' if link_item.proficiency else ''}</span>"
+                for link_item in doc.languages
             ]
             lang_html = f"""
             <section class="section">
-                <h2 class="section-title">{titles['languages']}</h2>
+                <h2 class="section-title">{titles["languages"]}</h2>
                 <div class="languages-row">{" &nbsp;·&nbsp; ".join(l_items)}</div>
             </section>
             """
@@ -301,9 +364,22 @@ class HtmlPdfExporter:
         # Section Ordering based on template:
         # Technical puts skills before experience; minimal and professional put experience before skills
         if template_id == "technical":
-            body_content = f"{summary_html}{skills_html}{exp_html}{proj_html}{edu_html}{certs_html}{lang_html}"
+            body_content = (
+                f"{summary_html}{skills_html}{exp_html}{proj_html}{edu_html}{certs_html}{lang_html}"
+            )
         else:
-            body_content = f"{summary_html}{exp_html}{edu_html}{proj_html}{skills_html}{certs_html}{lang_html}"
+            body_content = (
+                f"{summary_html}{exp_html}{edu_html}{proj_html}{skills_html}{certs_html}{lang_html}"
+            )
+
+        for section in doc.customSections:
+            items = []
+            for item in section.items:
+                bullets = "".join(f"<li>{html.escape(b)}</li>" for b in item.bullets)
+                items.append(
+                    f'<div class="entry"><strong>{html.escape(item.title)}</strong><div>{html.escape(item.subtitle)} {html.escape(item.date)}</div><p>{html.escape(item.description)}</p><ul class="bullets">{bullets}</ul></div>'
+                )
+            body_content += f'<section class="section"><h2 class="section-title">{html.escape(section.title)}</h2>{"".join(items)}</section>'
 
         # CSS template variations
         header_align = "center" if template_id == "professional" else "left"
@@ -315,28 +391,34 @@ class HtmlPdfExporter:
         title_border = (
             f"border-bottom: 1.5px solid {accent_color};"
             if template_id == "professional"
-            else ("border-bottom: 1.5px solid #CBD5E1;" if template_id == "technical" else "border-bottom: 1px solid #F3F4F6;")
+            else (
+                "border-bottom: 1.5px solid #CBD5E1;"
+                if template_id == "technical"
+                else "border-bottom: 1px solid #F3F4F6;"
+            )
         )
         name_transform = "uppercase" if template_id in ["technical", "professional"] else "none"
 
         return f"""<!DOCTYPE html>
-<html lang="{doc.metadata.language or 'en'}">
+<html lang="{"tr" if is_tr else "en"}">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
 <title>{full_name} — CV</title>
 <style>
   @page {{
     size: A4;
-    margin: 15mm 18mm 15mm 18mm;
+    margin: {page_margin};
   }}
   * {{
+    overflow-wrap: anywhere;
     box-sizing: border-box;
     margin: 0;
     padding: 0;
   }}
   body {{
     font-family: {font_family};
-    font-size: 9.5pt;
+    font-size: {font_size};
     line-height: 1.45;
     color: #18181B;
     background-color: #FFFFFF;
@@ -348,6 +430,17 @@ class HtmlPdfExporter:
     margin: 0 auto;
     padding: 0;
   }}
+  @media screen {{
+    html, body {{ width: 210mm; }}
+    .cv-page {{
+      width: 210mm;
+      min-height: 297mm;
+      padding: {page_margin};
+    }}
+  }}
+  @media print {{
+    .cv-page {{ max-width: none; padding: 0; }}
+  }}
   header {{
     text-align: {header_align};
     {header_border}
@@ -355,7 +448,7 @@ class HtmlPdfExporter:
     margin-bottom: 14px;
   }}
   h1.name {{
-    font-size: 20pt;
+    font-size: calc(20pt * {font_scale});
     font-weight: 700;
     color: {accent_color};
     text-transform: {name_transform};
@@ -364,13 +457,13 @@ class HtmlPdfExporter:
     margin-bottom: 3px;
   }}
   .headline {{
-    font-size: 10.5pt;
+    font-size: calc(10.5pt * {font_scale});
     font-weight: 500;
     color: #4B5563;
     margin-bottom: 6px;
   }}
   .contacts {{
-    font-size: 8.5pt;
+    font-size: calc(8.5pt * {font_scale});
     color: #6B7280;
   }}
   .contacts a {{
@@ -381,12 +474,10 @@ class HtmlPdfExporter:
     text-decoration: underline;
   }}
   .section {{
-    margin-bottom: 13px;
-    page-break-inside: avoid;
-    break-inside: avoid;
+    margin-bottom: {section_gap};
   }}
   .section-title {{
-    font-size: 8.5pt;
+    font-size: calc(8.5pt * {font_scale});
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -398,7 +489,7 @@ class HtmlPdfExporter:
     break-after: avoid;
   }}
   .summary-text {{
-    font-size: 9pt;
+    font-size: calc(9pt * {font_scale});
     line-height: 1.5;
     color: #374151;
   }}
@@ -414,18 +505,18 @@ class HtmlPdfExporter:
     gap: 8px;
   }}
   .entry-title {{
-    font-size: 9.5pt;
+    font-size: {font_size};
     font-weight: 600;
     color: #111827;
   }}
   .entry-dates {{
-    font-size: 8pt;
+    font-size: calc(8pt * {font_scale});
     color: #6B7280;
     font-weight: 500;
-    white-space: nowrap;
+    white-space: normal;
   }}
   .entry-subtitle {{
-    font-size: 8.5pt;
+    font-size: calc(8.5pt * {font_scale});
     color: #4B5563;
     margin-bottom: 2px;
   }}
@@ -433,12 +524,12 @@ class HtmlPdfExporter:
     font-style: italic;
   }}
   .entry-desc {{
-    font-size: 8.5pt;
+    font-size: calc(8.5pt * {font_scale});
     color: #4B5563;
     margin-bottom: 3px;
   }}
   .entry-url {{
-    font-size: 8pt;
+    font-size: calc(8pt * {font_scale});
     color: #6B7280;
     text-decoration: none;
   }}
@@ -451,18 +542,18 @@ class HtmlPdfExporter:
     list-style-type: disc;
   }}
   ul.bullets li {{
-    font-size: 8.8pt;
+    font-size: calc(8.8pt * {font_scale});
     line-height: 1.4;
     color: #27272A;
     margin-bottom: 2px;
   }}
   .technologies {{
-    font-size: 8pt;
+    font-size: calc(8pt * {font_scale});
     color: #4B5563;
     margin-top: 3px;
   }}
   .skill-row {{
-    font-size: 8.5pt;
+    font-size: calc(8.5pt * {font_scale});
     margin-bottom: 3px;
   }}
   .skill-category {{
@@ -470,11 +561,11 @@ class HtmlPdfExporter:
     color: #111827;
   }}
   .cert-row {{
-    font-size: 8.5pt;
+    font-size: calc(8.5pt * {font_scale});
     margin-bottom: 3px;
   }}
   .languages-row {{
-    font-size: 8.5pt;
+    font-size: calc(8.5pt * {font_scale});
     color: #374151;
   }}
 </style>

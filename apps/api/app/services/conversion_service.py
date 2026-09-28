@@ -13,9 +13,26 @@ from app.schemas.resume import ResumeDocument
 
 
 def _sanitize_filename(name: str) -> str:
-    tr_map = str.maketrans({"ç": "c", "Ç": "C", "ğ": "g", "Ğ": "G", "ı": "i", "İ": "I", "ö": "o", "Ö": "O", "ş": "s", "Ş": "S", "ü": "u", "Ü": "U"})
+    tr_map = str.maketrans(
+        {
+            "ç": "c",
+            "Ç": "C",
+            "ğ": "g",
+            "Ğ": "G",
+            "ı": "i",
+            "İ": "I",
+            "ö": "o",
+            "Ö": "O",
+            "ş": "s",
+            "Ş": "S",
+            "ü": "u",
+            "Ü": "U",
+        }
+    )
     transliterated = name.translate(tr_map)
-    normalized = unicodedata.normalize("NFKD", transliterated).encode("ascii", "ignore").decode("ascii")
+    normalized = (
+        unicodedata.normalize("NFKD", transliterated).encode("ascii", "ignore").decode("ascii")
+    )
     cleaned = re.sub(r"[^a-zA-Z0-9_\-]+", "_", normalized).strip("_")
     return cleaned or "resume"
 
@@ -49,10 +66,9 @@ class ConversionService:
             return doc, DataFormat.YAML, warnings, errors
 
     @staticmethod
-    def export(doc: ResumeDocument, target_format: DataFormat) -> tuple[str, str, str]:
+    def export(doc: ResumeDocument, target_format: DataFormat) -> tuple[str | bytes, str, str]:
         """Exports ResumeDocument into the target format, returning (content, mime_type, filename)."""
         base_name = _sanitize_filename(doc.metadata.title.lower())
-
 
         if target_format == DataFormat.JSON:
             text = JsonExporter.export(doc)
@@ -64,6 +80,10 @@ class ConversionService:
             text = MarkdownExporter.export(doc)
             return text, "text/markdown", f"{base_name}.md"
         elif target_format == DataFormat.PDF:
+            from app.exporters.pdf_exporter import render_pdf
+
+            return render_pdf(doc), "application/pdf", f"{base_name}.pdf"
+        elif target_format == DataFormat.HTML:
             html_text = HtmlPdfExporter.render_html(doc)
             return html_text, "text/html", f"{base_name}.html"
         else:

@@ -19,7 +19,10 @@ def export_resume(
     doc = ResumeService.get_resume(db, resume_id)
     content, mime_type, filename = ConversionService.export(doc, format)
 
-    headers = {}
+    headers = {
+        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        "X-Content-Type-Options": "nosniff",
+    }
     if download:
         headers["Content-Disposition"] = f'attachment; filename="{filename}"'
     else:

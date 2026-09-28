@@ -83,4 +83,3 @@ def test_html_pdf_exporter_templates_and_i18n():
     doc.metadata.language = "tr"
     res_min_tr = HtmlPdfExporter.render_html(doc)
     assert "İŞ DENEYİMİ" in res_min_tr
-
