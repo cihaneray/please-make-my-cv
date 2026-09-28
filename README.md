@@ -100,3 +100,8 @@ Credentials are stored only on the API host in `data/ai-settings.json` (override
 From `apps/api`, run `uv run playwright install chromium`, then `uv run python scripts/check_pdf.py`. The diagnostic generates a real PDF. The renderer tries bundled Chromium, then installed Edge and Chrome. To choose a browser explicitly, set `PDF_BROWSER_CHANNEL=msedge` or `chrome`, or `PDF_BROWSER_EXECUTABLE` to its executable path in the API environment, and restart the API. Explicit overrides do not fall back silently. Linux deployments can install browser system dependencies with `uv run playwright install --with-deps chromium`.
 
 Browser-start failures and document-rendering failures now have separate messages. No downloads happen during an export request.
+
+
+## Appearance
+
+Choose **Settings → Interface Aesthetic → Color theme** to use Light, Dark, or System. System follows the device appearance. The preference is saved in this browser and synchronized between open tabs. Resume previews, template paper, and exported PDFs retain a white print background.

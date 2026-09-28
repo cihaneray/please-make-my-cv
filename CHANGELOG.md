@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add persistent Light, Dark, and System appearance preferences while preserving white resume paper.
+
 - Configurable OpenAI-compatible/Ollama resume reviews with explained scores and actionable feedback.
 - Chromium launch fallback to installed browsers, explicit overrides, and PDF diagnostics. - reliability and workflow remediation
 

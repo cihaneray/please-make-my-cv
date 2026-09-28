@@ -184,7 +184,7 @@ export function DocumentTools({
     onChange(next);
   }
   return (
-    <details className="workspace-tools bg-white border-b px-4 py-2 no-print shrink-0 max-h-[65vh] overflow-auto">
+    <details className="workspace-tools bg-surface-container-lowest border-b px-4 py-2 no-print shrink-0 max-h-[65vh] overflow-auto">
       <summary> {copy("All fields, history, library and backups")} </summary>
       <fieldset disabled={disabled || busy} className="py-3 space-y-3">
         <div className="flex flex-wrap gap-4">

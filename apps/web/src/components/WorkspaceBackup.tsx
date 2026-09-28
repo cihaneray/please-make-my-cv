@@ -7,7 +7,7 @@ export function WorkspaceBackup() {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   return (
-    <section className="workspace-tools border rounded-xl bg-white p-4 space-y-3">
+    <section className="workspace-tools border rounded-xl bg-surface-container-lowest p-4 space-y-3">
       <h2> {copy("Workspace backup and restore")} </h2>
       <p>
         {" "}

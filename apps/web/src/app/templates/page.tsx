@@ -74,7 +74,7 @@ export default function TemplatesPage() {
                   {/* Real Scaled A4 Preview */}
                   <div className="h-56 w-full rounded-lg bg-surface-container-low border border-surface-container-highest overflow-hidden relative shadow-inner flex justify-center items-start pt-2">
                     <div
-                      className="w-[595px] origin-top bg-white p-7 shadow-sm pointer-events-none select-none"
+                      className="resume-paper text-on-surface w-[595px] origin-top bg-white p-7 shadow-sm pointer-events-none select-none"
                       style={{
                         transform: "scale(0.38)",
                         minHeight: "842px",

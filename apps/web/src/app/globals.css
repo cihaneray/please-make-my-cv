@@ -3,12 +3,91 @@
 @tailwind utilities;
 
 @layer base {
+  :root,
+  .resume-paper {
+    color-scheme: light;
+    --color-surface: 251 248 252;
+    --color-surface-dim: 220 217 221;
+    --color-surface-bright: 251 248 252;
+    --color-surface-container-lowest: 255 255 255;
+    --color-surface-container-low: 246 242 247;
+    --color-surface-container: 240 237 241;
+    --color-surface-container-high: 234 231 235;
+    --color-surface-container-highest: 228 225 230;
+    --color-on-surface: 27 27 30;
+    --color-on-surface-variant: 69 70 77;
+    --color-inverse-surface: 48 48 51;
+    --color-inverse-on-surface: 243 240 244;
+    --color-outline: 118 119 125;
+    --color-outline-variant: 198 198 205;
+    --color-surface-tint: 86 94 116;
+    --color-primary: 15 23 42;
+    --color-on-primary: 255 255 255;
+    --color-primary-container: 19 27 46;
+    --color-on-primary-container: 124 131 155;
+    --color-inverse-primary: 190 198 224;
+    --color-secondary: 93 94 102;
+    --color-on-secondary: 255 255 255;
+    --color-secondary-container: 227 225 236;
+    --color-on-secondary-container: 99 100 108;
+    --color-tertiary: 0 0 0;
+    --color-on-tertiary: 255 255 255;
+    --color-tertiary-container: 0 33 9;
+    --color-on-tertiary-container: 0 152 66;
+    --color-tertiary-fixed: 127 252 151;
+    --color-tertiary-fixed-dim: 98 223 125;
+    --color-error: 186 26 26;
+    --color-on-error: 255 255 255;
+    --color-error-container: 255 218 214;
+    --color-on-error-container: 147 0 10;
+  }
+  html.dark {
+    color-scheme: dark;
+    --color-surface: 20 21 25;
+    --color-surface-dim: 16 17 21;
+    --color-surface-bright: 48 50 56;
+    --color-surface-container-lowest: 24 25 30;
+    --color-surface-container-low: 28 29 35;
+    --color-surface-container: 34 36 43;
+    --color-surface-container-high: 41 43 51;
+    --color-surface-container-highest: 52 55 65;
+    --color-on-surface: 238 237 242;
+    --color-on-surface-variant: 195 196 206;
+    --color-inverse-surface: 203 208 224;
+    --color-inverse-on-surface: 35 37 44;
+    --color-outline: 151 153 167;
+    --color-outline-variant: 80 84 96;
+    --color-surface-tint: 189 202 255;
+    --color-primary: 189 202 255;
+    --color-on-primary: 20 35 72;
+    --color-primary-container: 41 59 99;
+    --color-on-primary-container: 218 226 255;
+    --color-inverse-primary: 64 87 128;
+    --color-secondary: 185 187 201;
+    --color-on-secondary: 40 42 53;
+    --color-secondary-container: 56 60 78;
+    --color-on-secondary-container: 224 226 241;
+    --color-tertiary: 137 223 163;
+    --color-on-tertiary: 9 56 29;
+    --color-tertiary-container: 23 75 44;
+    --color-on-tertiary-container: 163 246 186;
+    --color-tertiary-fixed: 127 252 151;
+    --color-tertiary-fixed-dim: 98 223 125;
+    --color-error: 255 180 171;
+    --color-on-error: 105 0 5;
+    --color-error-container: 107 37 36;
+    --color-on-error-container: 255 218 214;
+  }
+
+  * {
+    border-color: rgb(var(--color-surface-container-highest));
+  }
   html,
   body {
     margin: 0;
     padding: 0;
-    background-color: #fbf8fc;
-    color: #1b1b1e;
+    background-color: rgb(var(--color-surface));
+    color: rgb(var(--color-on-surface));
     font-family:
       "Inter",
       -apple-system,
@@ -28,11 +107,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #dcd9dd;
+  background: rgb(var(--color-outline-variant));
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #76777d;
+  background: rgb(var(--color-outline));
 }
 
 /* Material Symbols Icon helper */
@@ -67,7 +146,7 @@
   }
 }
 :focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid rgb(var(--color-primary));
   outline-offset: 3px;
 }
 button:disabled {
@@ -141,22 +220,22 @@ button:disabled {
 
 .workspace-tools button {
   padding: 0.4rem 0.7rem;
-  border: 1px solid #dcd9dd;
+  border: 1px solid rgb(var(--color-outline-variant));
   border-radius: 0.5rem;
-  background: #fbf8fc;
+  background: rgb(var(--color-surface-container-low));
   font-size: 0.8rem;
   text-align: left;
 }
 .workspace-tools button:hover:not(:disabled) {
-  background: #eeebef;
+  background: rgb(var(--color-surface-container-high));
 }
 .workspace-tools input:not([type="checkbox"]),
 .workspace-tools textarea,
 .workspace-tools select {
-  border: 1px solid #dcd9dd;
+  border: 1px solid rgb(var(--color-outline-variant));
   border-radius: 0.4rem;
   padding: 0.4rem;
-  background: white;
+  background: rgb(var(--color-surface-container-lowest));
   max-width: 100%;
 }
 .workspace-tools textarea {

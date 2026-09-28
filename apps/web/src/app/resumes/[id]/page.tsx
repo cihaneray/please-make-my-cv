@@ -450,7 +450,10 @@ export default function ResumeStudioPage() {
           </button>
         </div>
       </div>
-      <div role="status" className="px-4 py-2 text-sm bg-white no-print">
+      <div
+        role="status"
+        className="px-4 py-2 text-sm bg-surface-container-lowest no-print"
+      >
         {dirty ? "Unsaved draft" : "Saved"} ·{" "}
         {sourcePending
           ? "Apply source changes before switching tabs or saving."

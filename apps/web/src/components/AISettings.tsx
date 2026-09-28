@@ -16,7 +16,7 @@ export function AISettings() {
   }, []);
   return (
     <section
-      className="workspace-tools bg-white rounded-xl border p-6 mb-6 space-y-4"
+      className="workspace-tools bg-surface-container-lowest rounded-xl border p-6 mb-6 space-y-4"
       aria-label="LLM connection settings"
     >
       <h2 className="text-lg font-semibold">LLM connection</h2>

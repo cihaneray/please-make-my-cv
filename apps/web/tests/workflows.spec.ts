@@ -367,3 +367,73 @@ test("live preview keeps A4 geometry and print margins while fitting the panel",
     await sheet.evaluate((element) => element.getBoundingClientRect().width),
   ).toBeCloseTo(793.7, 0);
 });
+
+test("dark mode persists and keeps resume paper white", async ({
+  page,
+  request,
+}) => {
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("/settings");
+  await page.getByRole("radio", { name: "Dark", exact: true }).check();
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  await expect(page.locator("body")).toHaveCSS(
+    "background-color",
+    "rgb(20, 21, 25)",
+  );
+  await page.screenshot({
+    path: "test-results/dark-settings.png",
+    fullPage: true,
+  });
+  await page.reload();
+  await expect(
+    page.getByRole("radio", { name: "Dark", exact: true }),
+  ).toBeChecked();
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  const doc = await create(request);
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await expect(page.frameLocator("iframe").locator(".cv-page")).toBeVisible();
+  await expect(page.frameLocator("iframe").locator("body")).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
+  );
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  await page.screenshot({
+    path: "test-results/dark-studio.png",
+    fullPage: true,
+  });
+  await page.goto("/templates");
+  await expect(page.locator(".resume-paper").first()).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
+  );
+  await expect(page.locator(".resume-paper").first()).toHaveCSS(
+    "color",
+    "rgb(27, 27, 30)",
+  );
+});
+
+test("system theme tracks the OS while manual preferences override it", async ({
+  page,
+  context,
+}) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto("/settings");
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  await page.getByRole("radio", { name: "Light", exact: true }).check();
+  await expect(page.locator("html")).not.toHaveClass(/dark/);
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(page.locator("html")).not.toHaveClass(/dark/);
+  await page.getByRole("radio", { name: "System", exact: true }).check();
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(page.locator("html")).not.toHaveClass(/dark/);
+  const other = await context.newPage();
+  await other.goto("/settings");
+  await other.getByRole("radio", { name: "Dark", exact: true }).check();
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  await expect(
+    page.getByRole("radio", { name: "Dark", exact: true }),
+  ).toBeChecked();
+  await other.close();
+});

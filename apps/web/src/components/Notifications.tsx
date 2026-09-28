@@ -17,7 +17,7 @@ export function Notifications() {
   return message ? (
     <div
       role="status"
-      className="fixed bottom-4 right-4 z-[100] max-w-md bg-white border shadow-lg rounded p-4"
+      className="fixed bottom-4 right-4 z-[100] max-w-md bg-surface-container-lowest border shadow-lg rounded p-4"
     >
       <p>{message}</p>
       {/failed|could not|unavailable/i.test(message) && (

@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { ThemePicker } from "@/components/ThemeProvider";
 import { AISettings } from "@/components/AISettings";
 import { WorkspaceBackup } from "@/components/WorkspaceBackup";
 import { Icons } from "@/components/Icons";
@@ -218,39 +219,8 @@ export default function SettingsPage() {
                   {t("themeSectionDesc")}
                 </span>
               </div>
-              {/* Refined Theme Pill Badge */}
-              <div className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium bg-surface-container text-on-surface border border-surface-container-highest shadow-xs self-start sm:self-center whitespace-nowrap">
-                <Icons.Sparkles size={13} className="text-primary" />
-                <span className="font-semibold">{t("currentTheme")}</span>
-              </div>
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-              <div className="flex items-center gap-2.5">
-                <div
-                  className="w-6 h-6 rounded-full bg-[#1B1B1E] border border-white shadow-xs"
-                  title="Deep Ink / Black (#1B1B1E)"
-                />
-                <div
-                  className="w-6 h-6 rounded-full bg-[#5D5E66] border border-white shadow-xs"
-                  title="Slate Neutral (#5D5E66)"
-                />
-                <div
-                  className="w-6 h-6 rounded-full bg-[#3B82F6] border border-white shadow-xs"
-                  title="Accent Blue (#3B82F6)"
-                />
-                <div
-                  className="w-6 h-6 rounded-full bg-[#059669] border border-white shadow-xs"
-                  title="Emerald Accent (#059669)"
-                />
-                <div
-                  className="w-6 h-6 rounded-full bg-[#FBF8FC] border border-surface-container-highest shadow-xs"
-                  title="Paper Canvas (#FBF8FC)"
-                />
-              </div>
-              <span className="text-[12px] text-secondary font-medium">
-                {t("paletteLabel")}
-              </span>
-            </div>
+            <ThemePicker />
           </div>
         </div>
       </div>

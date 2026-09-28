@@ -1,0 +1,2 @@
+// Runs before paint to avoid flashing a light UI for a saved dark preference.
+export const themeScript = `(function(){try{var t=localStorage.getItem('cv_workspace_theme');var d=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);}catch(e){document.documentElement.classList.toggle('dark',matchMedia('(prefers-color-scheme: dark)').matches);}})();`;

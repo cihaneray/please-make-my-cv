@@ -25,7 +25,7 @@ export function Sidebar() {
         {/* Brand header */}
         <div className="h-14 px-space-lg flex items-center gap-space-sm border-b border-surface-container-high">
           <div className="w-6 h-6 rounded bg-primary text-on-primary flex items-center justify-center">
-            <Icons.Document size={14} className="text-white" />
+            <Icons.Document size={14} className="text-on-primary" />
           </div>
           <span className="font-headline-md text-headline-md tracking-tight text-on-surface">
             CV Workspace
@@ -103,7 +103,7 @@ export function Sidebar() {
           <div className="flex items-center justify-between px-space-md py-space-xs rounded hover:bg-surface-container transition-colors cursor-pointer">
             <div className="flex items-center gap-space-sm min-w-0">
               <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                <Icons.User size={15} className="text-white" />
+                <Icons.User size={15} className="text-on-primary" />
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="font-label-md text-label-md text-on-surface truncate">
