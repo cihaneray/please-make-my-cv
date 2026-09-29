@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add native Google Gemini API support for connection testing, resume scores, and actionable review suggestions, with backend-only credentials and blocked/incomplete response handling.
+
 - Review and apply individual AI field suggestions with before/after comparison, conflict protection, and undo.
 - Create job-specific copies from the current draft with original lineage and persistent job context.
 

@@ -87,11 +87,13 @@ GitHub Actions checks lint, generated contracts, tests, production-browser workf
 
 ## LLM resume reviews
 
-Open **Settings → LLM connection**. Choose **OpenAI-compatible** (base URL ending in `/v1`, model ID, and API key if required) or **Ollama** (`http://localhost:11434`, with an already downloaded model). Enable AI, save, then use **Test saved connection**. The test makes a small model request without resume content and may incur a provider charge.
+Open **Settings → LLM connection**. Choose **OpenAI-compatible** (base URL ending in `/v1`, model ID, and API key if required), **Google Gemini** (Gemini Developer API key and model ID from [Google AI Studio](https://aistudio.google.com/)), or **Ollama** (`http://localhost:11434`, with an already downloaded model). Enable AI, save, then use **Test saved connection**. The test makes a small model request without resume content and may incur a provider charge.
 
 Open a resume, select **Review**, and click **Review current draft with AI**. Optionally add a target job and choose English/Turkish feedback. The report explains clarity, evidence, completeness, and job relevance scores, gives prioritized recommendations and factual follow-up questions, and never edits the resume automatically. Scores are subjective editorial estimates, not ATS or hiring predictions. Without a job, relevance is excluded. Feedback is marked outdated after input changes.
 
-The connection supports JSON-mode Chat Completions as documented by [OpenAI](https://developers.openai.com/api/docs/guides/structured-outputs) and [Ollama](https://docs.ollama.com/api/openai-compatibility). The selected model must support JSON output. No real provider is enabled automatically. Basic summary/bullet cleanup remains local.
+Gemini uses the native [generateContent API](https://ai.google.dev/api/generate-content), with the default base URL `https://generativelanguage.googleapis.com/v1beta`. Enter a model ID available to your account, optionally prefixed with `models/`. An API key is required when enabling Gemini. Blocked, incomplete, or invalid JSON responses display an error without applying suggestions.
+
+OpenAI-compatible and Ollama connections support JSON-mode Chat Completions as documented by [OpenAI](https://developers.openai.com/api/docs/guides/structured-outputs) and [Ollama](https://docs.ollama.com/api/openai-compatibility). The selected model must support JSON output. No real provider is enabled automatically. Basic summary/bullet cleanup remains local.
 
 Credentials are stored only on the API host in `data/ai-settings.json` (override `AI_CONFIG_PATH`), excluded from backups and source control. Protect this file: it is not encrypted by the application. For Docker, settings persist in the `ai_settings` volume; host Ollama is reachable using `http://host.docker.internal:11434` if Ollama accepts the connection. Remote APIs require HTTPS. These settings endpoints are for the local single-user deployment only.
 

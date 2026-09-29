@@ -380,7 +380,7 @@ export const api = {
 
 export interface AIConnection {
   enabled: boolean;
-  provider: "openai-compatible" | "ollama";
+  provider: "openai-compatible" | "ollama" | "gemini";
   baseUrl: string;
   model: string;
   hasApiKey: boolean;

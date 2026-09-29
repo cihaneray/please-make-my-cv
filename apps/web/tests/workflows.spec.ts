@@ -704,3 +704,65 @@ test("AI edits follow stable entry IDs and reject changed or missing fields", as
     }),
   ).toBe(doc);
 });
+
+test("Gemini can be configured and tested without exposing the stored key", async ({
+  page,
+}) => {
+  let config: any = {
+    enabled: false,
+    provider: "openai-compatible",
+    baseUrl: "https://api.openai.com/v1",
+    model: "",
+    hasApiKey: true,
+  };
+  await page.route("**/api/ai/settings", async (route) => {
+    if (route.request().method() === "PUT") {
+      const body = route.request().postDataJSON();
+      expect(body.provider).toBe("gemini");
+      expect(body.baseUrl).toBe(
+        "https://generativelanguage.googleapis.com/v1beta",
+      );
+      expect(body.apiKey).toBe("gemini-test-key");
+      config = {
+        enabled: body.enabled,
+        provider: body.provider,
+        baseUrl: body.baseUrl,
+        model: body.model,
+        hasApiKey: true,
+      };
+    }
+    await route.fulfill({ json: config });
+  });
+  await page.route("**/api/ai/test", (route) =>
+    route.fulfill({
+      json: {
+        ok: true,
+        message: "Connection succeeded and the model returned JSON.",
+      },
+    }),
+  );
+  await page.goto("/settings");
+  await page.getByLabel("Provider", { exact: true }).selectOption("gemini");
+  await expect(page.getByLabel("API base URL")).toHaveValue(
+    "https://generativelanguage.googleapis.com/v1beta",
+  );
+  await expect(page.getByLabel("Gemini API key")).toHaveValue("");
+  await page.getByLabel("Enable AI reviews").check();
+  await page.getByLabel("Model ID").fill("gemini-test-model");
+  await page.getByLabel("Gemini API key").fill("gemini-test-key");
+  await page
+    .getByRole("button", { name: "Save connection", exact: true })
+    .click();
+  await expect(page.getByLabel("Gemini API key")).toHaveValue("");
+  await page.getByRole("button", { name: "Test saved connection" }).click();
+  await expect(
+    page.getByText("Connection succeeded and the model returned JSON.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel("Provider", { exact: true })).toHaveValue(
+    "gemini",
+  );
+  await expect(page.getByLabel("Gemini API key")).toHaveValue("");
+});

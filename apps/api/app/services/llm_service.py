@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import tempfile
 from pathlib import Path
 from threading import RLock
@@ -9,7 +10,7 @@ from typing import Literal
 from urllib.parse import urlsplit
 
 import httpx
-from pydantic import BaseModel, Field, SecretStr, ValidationError, field_validator
+from pydantic import BaseModel, Field, SecretStr, ValidationError, field_validator, model_validator
 
 from app.core.config import settings
 from app.core.exceptions import AppException
@@ -19,10 +20,17 @@ from app.schemas.resume import ResumeDocument
 
 class Connection(BaseModel):
     enabled: bool = False
-    provider: Literal["openai-compatible", "ollama"] = "openai-compatible"
+    provider: Literal["openai-compatible", "ollama", "gemini"] = "openai-compatible"
     baseUrl: str = "https://api.openai.com/v1"
     model: str = Field(default="", max_length=200)
     apiKey: SecretStr | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def provider_defaults(cls, value):
+        if isinstance(value, dict) and value.get("provider") == "gemini" and "baseUrl" not in value:
+            return {**value, "baseUrl": "https://generativelanguage.googleapis.com/v1beta"}
+        return value
 
     @field_validator("baseUrl")
     @classmethod
@@ -94,6 +102,7 @@ def save_connection(update: ConnectionUpdate) -> dict:
         config = Connection(**update.model_dump(exclude={"clearApiKey", "apiKey"}), apiKey=key)
         if config.enabled and not config.model.strip():
             raise AppException("AI_MODEL_REQUIRED", "Enter a model ID before enabling AI.", 422)
+        validate_gemini_connection(config)
         path = Path(settings.ai_config_path)
         path.parent.mkdir(parents=True, exist_ok=True)
         payload = config.model_dump(exclude={"apiKey"})
@@ -110,37 +119,106 @@ def save_connection(update: ConnectionUpdate) -> dict:
         return public_connection(config)
 
 
+def validate_gemini_connection(config: Connection) -> None:
+    if config.provider != "gemini" or not config.enabled:
+        return
+    if not config.apiKey or not config.apiKey.get_secret_value().strip():
+        raise AppException("AI_KEY_REQUIRED", "Enter a Gemini API key from Google AI Studio.", 422)
+    model = config.model.strip().removeprefix("models/")
+    if not re.fullmatch(r"[A-Za-z0-9._-]+", model):
+        raise AppException(
+            "AI_MODEL_INVALID", "Enter a Gemini model ID, optionally prefixed with models/.", 422
+        )
+
+
+def gemini_request(system: str, payload: dict, config: Connection) -> tuple[str, dict, dict]:
+    validate_gemini_connection(config)
+    model = config.model.strip().removeprefix("models/")
+    return (
+        f"{config.baseUrl}/models/{model}:generateContent",
+        {"x-goog-api-key": config.apiKey.get_secret_value()},
+        {
+            "systemInstruction": {"parts": [{"text": system}]},
+            "contents": [
+                {"role": "user", "parts": [{"text": json.dumps(payload, ensure_ascii=False)}]}
+            ],
+            "generationConfig": {"responseMimeType": "application/json", "maxOutputTokens": 8192},
+        },
+    )
+
+
+def gemini_text(data: dict) -> str:
+    if not isinstance(data, dict):
+        raise ValueError("Expected Gemini response object")
+    feedback = data.get("promptFeedback", {})
+    if isinstance(feedback, dict) and feedback.get("blockReason") not in {
+        None,
+        "BLOCK_REASON_UNSPECIFIED",
+    }:
+        raise AppException(
+            "AI_RESPONSE_BLOCKED",
+            "Gemini blocked this review request. Review the submitted text before trying again.",
+            502,
+        )
+    candidate = data["candidates"][0]
+    if not isinstance(candidate, dict):
+        raise ValueError("Invalid Gemini candidate")
+    reason = candidate.get("finishReason")
+    if reason in {"SAFETY", "RECITATION", "BLOCKLIST", "PROHIBITED_CONTENT", "SPII"}:
+        raise AppException(
+            "AI_RESPONSE_BLOCKED",
+            "Gemini blocked the generated feedback. Review the submitted text before trying again.",
+            502,
+        )
+    if reason != "STOP":
+        raise ValueError("Incomplete Gemini response")
+    parts = candidate["content"]["parts"]
+    if not isinstance(parts, list) or any(not isinstance(part, dict) for part in parts):
+        raise ValueError("Invalid Gemini content parts")
+    text = "".join(
+        part["text"] for part in parts if "text" in part and not part.get("thought", False)
+    )
+    if not text:
+        raise ValueError("Empty Gemini response")
+    return text
+
+
 def completion(system: str, payload: dict, config: Connection | None = None) -> dict:
     config = config or load_connection()
     if not config.enabled or not config.model.strip():
         raise AppException("AI_DISABLED", "Configure and enable an LLM in Settings first.", 409)
-    base = config.baseUrl
-    if config.provider == "ollama" and not base.endswith("/v1"):
-        base += "/v1"
-    headers = {}
-    if config.apiKey and config.apiKey.get_secret_value():
-        headers["Authorization"] = "Bearer " + config.apiKey.get_secret_value()
+    if config.provider == "gemini":
+        url, headers, body = gemini_request(system, payload, config)
+    else:
+        base = config.baseUrl
+        if config.provider == "ollama" and not base.endswith("/v1"):
+            base += "/v1"
+        url = base + "/chat/completions"
+        headers = {}
+        if config.apiKey and config.apiKey.get_secret_value():
+            headers["Authorization"] = "Bearer " + config.apiKey.get_secret_value()
+        body = {
+            "model": config.model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
+            ],
+            "response_format": {"type": "json_object"},
+            "max_completion_tokens": 4000,
+            "stream": False,
+        }
     try:
         with httpx.Client(timeout=httpx.Timeout(90, connect=10), follow_redirects=False) as client:
-            response = client.post(
-                base + "/chat/completions",
-                headers=headers,
-                json={
-                    "model": config.model,
-                    "messages": [
-                        {"role": "system", "content": system},
-                        {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
-                    ],
-                    "response_format": {"type": "json_object"},
-                    "max_completion_tokens": 4000,
-                    "stream": False,
-                },
-            )
+            response = client.post(url, headers=headers, json=body)
             response.raise_for_status()
-            message = response.json()["choices"][0]
-            if message.get("finish_reason") == "length":
-                raise ValueError("Truncated model response")
-            result = json.loads(message["message"]["content"])
+            if config.provider == "gemini":
+                text = gemini_text(response.json())
+            else:
+                message = response.json()["choices"][0]
+                if message.get("finish_reason") == "length":
+                    raise ValueError("Truncated model response")
+                text = message["message"]["content"]
+            result = json.loads(text)
             if not isinstance(result, dict):
                 raise ValueError("Expected JSON object")
             return result
@@ -157,6 +235,8 @@ def completion(system: str, payload: dict, config: Connection | None = None) -> 
             if status in {401, 403}
             else "Check the model, endpoint, quota, and JSON-mode support."
         )
+        if config.provider == "gemini" and status == 400:
+            hint = "Check the Gemini API key, model ID, and request support."
         raise AppException(
             "AI_PROVIDER_ERROR", f"Model server returned HTTP {status}. {hint}", 502
         ) from exc

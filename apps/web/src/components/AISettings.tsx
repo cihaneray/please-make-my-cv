@@ -21,10 +21,10 @@ export function AISettings() {
     >
       <h2 className="text-lg font-semibold">LLM connection</h2>
       <p className="text-sm">
-        Connect an OpenAI-compatible API or local Ollama. Resume reviews run
-        only when you request them in Review. The selected server receives
-        resume content and optional job text; cloud providers may charge for
-        requests.
+        Connect Gemini, an OpenAI-compatible API, or local Ollama. Resume
+        reviews run only when you request them in Review. The selected server
+        receives resume content and optional job text; cloud providers may
+        charge for requests.
       </p>
       {config && (
         <>
@@ -53,7 +53,9 @@ export function AISettings() {
                   baseUrl:
                     provider === "ollama"
                       ? "http://localhost:11434"
-                      : "https://api.openai.com/v1",
+                      : provider === "gemini"
+                        ? "https://generativelanguage.googleapis.com/v1beta"
+                        : "https://api.openai.com/v1",
                   model: "",
                   hasApiKey: false,
                 });
@@ -64,6 +66,7 @@ export function AISettings() {
             >
               <option value="openai-compatible">OpenAI-compatible</option>
               <option value="ollama">Ollama</option>
+              <option value="gemini">Google Gemini</option>
             </select>
           </label>
           <label className="block">
@@ -81,7 +84,11 @@ export function AISettings() {
             Model ID
             <input
               className="block w-full"
-              placeholder="Enter an available model ID"
+              placeholder={
+                config.provider === "gemini"
+                  ? "Enter your Gemini model ID"
+                  : "Enter an available model ID"
+              }
               value={config.model}
               onChange={(e) => {
                 setConfig({ ...config, model: e.target.value });
@@ -90,7 +97,9 @@ export function AISettings() {
             />
           </label>
           <label className="block">
-            API key (optional for local servers)
+            {config.provider === "gemini"
+              ? "Gemini API key"
+              : "API key (optional for local servers)"}
             <input
               className="block w-full"
               type="password"
@@ -107,6 +116,12 @@ export function AISettings() {
               }}
             />
           </label>
+          {config.provider === "gemini" && (
+            <p className="text-sm">
+              Use a Gemini API key and model ID from Google AI Studio. The
+              default URL connects to the Gemini Developer API.
+            </p>
+          )}
           <label className="flex gap-2">
             <input
               type="checkbox"

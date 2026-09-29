@@ -1,0 +1,182 @@
+import json
+
+import httpx
+import pytest
+from test_llm import feedback
+
+from app.core.exceptions import AppException
+from app.services import llm_service as llm
+
+
+def configure_gemini(**kwargs):
+    return llm.save_connection(
+        llm.ConnectionUpdate(
+            provider="gemini",
+            enabled=True,
+            model="models/gemini-test",
+            apiKey="gemini-secret",
+            **kwargs,
+        )
+    )
+
+
+def mock_transport(monkeypatch, handler):
+    original = httpx.Client
+    monkeypatch.setattr(
+        llm.httpx,
+        "Client",
+        lambda **kwargs: original(transport=httpx.MockTransport(handler), **kwargs),
+    )
+
+
+def test_native_gemini_review_and_connection_test(client, monkeypatch):
+    public = configure_gemini()
+    assert public["baseUrl"] == "https://generativelanguage.googleapis.com/v1beta"
+    assert public["hasApiKey"] is True
+    assert "gemini-secret" not in json.dumps(public)
+    calls = []
+
+    def handle(request):
+        assert (
+            str(request.url)
+            == "https://generativelanguage.googleapis.com/v1beta/models/gemini-test:generateContent"
+        )
+        assert request.headers["x-goog-api-key"] == "gemini-secret"
+        assert "Authorization" not in request.headers
+        assert not request.url.query
+        body = json.loads(request.content)
+        assert body["generationConfig"]["responseMimeType"] == "application/json"
+        assert body["generationConfig"]["maxOutputTokens"] == 8192
+        assert body["systemInstruction"]["parts"][0]["text"]
+        content = json.loads(body["contents"][0]["parts"][0]["text"])
+        assert body["contents"][0]["role"] == "user"
+        calls.append(content)
+        result = {"ok": True}
+        if "resume" in content:
+            assert "private@example.com" not in json.dumps(content)
+            assert "PrivateName" not in json.dumps(content)
+            result = feedback()
+            result["recommendations"][0].update(
+                fieldId="field-0", suggestedText="Developed reliable services."
+            )
+        text = json.dumps(result)
+        return httpx.Response(
+            200,
+            json={
+                "candidates": [
+                    {
+                        "finishReason": "STOP",
+                        "content": {
+                            "parts": [
+                                {"thought": True, "text": "Internal thought not for the user"},
+                                {"text": text[: len(text) // 2]},
+                                {"text": text[len(text) // 2 :]},
+                            ]
+                        },
+                    }
+                ]
+            },
+        )
+
+    mock_transport(monkeypatch, handle)
+    assert client.post("/api/ai/test").json()["ok"] is True
+    assert "resume" not in calls[0]
+    doc = client.post("/api/resumes", json={}).json()
+    doc["summary"] = "Built reliable services."
+    doc["profile"].update(firstName="PrivateName", email="private@example.com")
+    response = client.post(
+        "/api/ai/review", json={"document": doc, "jobDescription": "Engineer", "language": "en"}
+    )
+    assert response.status_code == 200, response.text
+    result = response.json()
+    assert result["provider"] == "gemini"
+    assert result["score"] == 70
+    assert result["recommendations"][0]["edit"]["before"] == doc["summary"]
+    assert "Internal thought" not in response.text
+    assert "gemini-secret" not in response.text
+    assert "gemini-secret" not in client.get("/api/ai/settings").text
+
+
+def test_gemini_requires_a_key_and_a_valid_model(client):
+    payload = {"provider": "gemini", "enabled": True, "model": "gemini-test"}
+    assert client.put("/api/ai/settings", json=payload).json()["error"]["code"] == "AI_KEY_REQUIRED"
+    for model in ("../other", "gemini-test?key=leak", "models/models/test"):
+        response = client.put(
+            "/api/ai/settings", json={**payload, "apiKey": "secret", "model": model}
+        )
+        assert response.status_code == 422
+        assert response.json()["error"]["code"] == "AI_MODEL_INVALID"
+    assert (
+        client.put("/api/ai/settings", json={"provider": "gemini", "enabled": False}).status_code
+        == 200
+    )
+
+
+@pytest.mark.parametrize(
+    "response,code",
+    [
+        ({"promptFeedback": {"blockReason": "SAFETY"}}, "AI_RESPONSE_BLOCKED"),
+        ({"candidates": [{"finishReason": "SAFETY"}]}, "AI_RESPONSE_BLOCKED"),
+        ({"candidates": [{"finishReason": "RECITATION"}]}, "AI_RESPONSE_BLOCKED"),
+        (
+            {
+                "candidates": [
+                    {"finishReason": "MAX_TOKENS", "content": {"parts": [{"text": "{}"}]}}
+                ]
+            },
+            "AI_INVALID_RESPONSE",
+        ),
+        ({"candidates": []}, "AI_INVALID_RESPONSE"),
+        (
+            {"candidates": [{"finishReason": "STOP", "content": {"parts": []}}]},
+            "AI_INVALID_RESPONSE",
+        ),
+        (
+            {
+                "candidates": [
+                    {"finishReason": "STOP", "content": {"parts": [{"text": "not json"}]}}
+                ]
+            },
+            "AI_INVALID_RESPONSE",
+        ),
+        (
+            {"candidates": [{"finishReason": "STOP", "content": {"parts": [{"text": "[]"}]}}]},
+            "AI_INVALID_RESPONSE",
+        ),
+    ],
+)
+def test_gemini_rejects_blocked_incomplete_and_malformed_output(monkeypatch, response, code):
+    configure_gemini()
+    mock_transport(monkeypatch, lambda request: httpx.Response(200, json=response))
+    with pytest.raises(AppException) as error:
+        llm.completion("Return JSON", {})
+    assert error.value.code == code
+    assert error.value.status_code == 502
+
+
+@pytest.mark.parametrize("status", [400, 403, 429])
+def test_gemini_errors_do_not_leak_response_body(monkeypatch, status):
+    configure_gemini()
+    mock_transport(
+        monkeypatch,
+        lambda request: httpx.Response(status, text="gemini-secret private-provider-details"),
+    )
+    with pytest.raises(AppException) as error:
+        llm.completion("Return JSON", {})
+    assert error.value.status_code == 502
+    assert "gemini-secret" not in error.value.message
+    assert "private-provider-details" not in error.value.message
+
+
+def test_switching_to_gemini_never_reuses_other_provider_key(client):
+    client.put(
+        "/api/ai/settings",
+        json={"enabled": True, "model": "test", "apiKey": "other-provider-secret"},
+    )
+    response = client.put(
+        "/api/ai/settings", json={"provider": "gemini", "model": "gemini-test", "enabled": True}
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "AI_KEY_REQUIRED"
+    # Failed validation must not replace the previous connection.
+    assert llm.load_connection().provider == "openai-compatible"

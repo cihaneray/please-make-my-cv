@@ -46,9 +46,11 @@ These routes are for a trusted local single-user installation. There is no multi
 ## Optional LLM review
 
 - `GET /api/ai/settings`: public connection details and `hasApiKey`; never returns the secret.
-- `PUT /api/ai/settings`: `enabled`, `provider` (`openai-compatible` or `ollama`), `baseUrl`, `model`, optional `apiKey`, optional `clearApiKey`. A missing key preserves the current one only when endpoint and provider are unchanged.
+- `PUT /api/ai/settings`: `enabled`, `provider` (`openai-compatible`, `ollama`, or `gemini`), `baseUrl`, `model`, optional `apiKey`, optional `clearApiKey`. A missing key preserves the current one only when endpoint and provider are unchanged.
 - `POST /api/ai/test`: test saved connection using a small JSON generation, no resume payload.
 - `POST /api/ai/review`: `{document, jobDescription?, language: "en" | "tr"}`. Returns explained 0–25 dimensions, normalized score, strengths, recommendations, questions, provider/model, and limitations. No persistence or document mutation.
+
+Gemini defaults to `https://generativelanguage.googleapis.com/v1beta` when `baseUrl` is omitted. Enabled Gemini requires an API key and a model ID (optionally prefixed with `models/`); invalid settings return 422. Requests use native `models/{model}:generateContent`, an `x-goog-api-key` header, and JSON response mode. Blocked responses return `AI_RESPONSE_BLOCKED` (502); incomplete or malformed responses return `AI_INVALID_RESPONSE` (502).
 
 Disabled or unconfigured AI returns 409. Provider/network/format errors return 502; timeouts return 504. Provider error bodies and credentials are not forwarded. Requests use a 90-second read timeout; the web proxy allows 120 seconds. Test and review calls can incur provider charges. Browser cancellation stops waiting but an already-running provider request may finish.
 
