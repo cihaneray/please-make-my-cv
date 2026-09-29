@@ -8,6 +8,7 @@ import { AIResumeReview } from "@/components/AIResumeReview";
 import { DocumentTools } from "@/components/DocumentTools";
 import { SourceEditor } from "@/components/SourceEditor";
 import { api } from "@/lib/api";
+import { applyAIEdit } from "@/lib/ai-edits";
 import { useI18n } from "@/lib/i18n";
 import {
   AnalysisIssue,
@@ -102,6 +103,7 @@ export default function ResumeStudioPage() {
         if (cancelled) return;
         console.log("RESUME LOADED SUCCESSFULLY:", data?.metadata?.id);
         setDoc(data);
+        setActiveTab(data.metadata.targetJob ? "review" : "content");
         setSavedSnapshot(JSON.stringify(data));
         try {
           const raw = localStorage.getItem(`cv-draft-${resumeId}`);
@@ -1295,7 +1297,16 @@ export default function ResumeStudioPage() {
               <span className="font-headline-md text-headline-md text-on-surface font-semibold">
                 {t("atsReview")}
               </span>
-              <AIResumeReview document={doc} />
+              <AIResumeReview
+                key={doc.metadata.id}
+                document={doc}
+                disabled={sourcePending || saving}
+                onApply={(edit) =>
+                  setDoc((current) =>
+                    current ? applyAIEdit(current, edit) : current,
+                  )
+                }
+              />
               {analyzing ? (
                 <div className="text-secondary text-sm">
                   {t("evaluatingRules")}

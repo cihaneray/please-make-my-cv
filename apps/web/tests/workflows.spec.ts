@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { applyAIEdit } from "../src/lib/ai-edits";
 async function create(request: any) {
   const response = await request.post("http://127.0.0.1:8101/api/resumes", {
     data: { title: "Browser regression", templateId: "technical" },
@@ -436,4 +437,270 @@ test("system theme tracks the OS while manual preferences override it", async ({
     page.getByRole("radio", { name: "Dark", exact: true }),
   ).toBeChecked();
   await other.close();
+});
+
+function coachingResult(documentId: string) {
+  return {
+    score: 60,
+    summary: "Clarify your summary.",
+    model: "test-model",
+    provider: "ollama",
+    notice: "Subjective score.",
+    clarity: { score: 20, rationale: "Clear" },
+    evidence: { score: 10, rationale: "Needs evidence" },
+    completeness: { score: 15, rationale: "Needs dates" },
+    relevance: null,
+    strengths: [],
+    questions: [],
+    recommendations: [
+      {
+        section: "summary",
+        priority: "high",
+        evidence: "Built services",
+        advice: "Use clear wording.",
+        suggestedText: "Developed reliable services.",
+        edit: {
+          documentId,
+          target: {
+            section: "summary",
+            field: "summary",
+            entryId: null,
+            index: null,
+          },
+          before: "Built reliable services.",
+          after: "Developed reliable services.",
+        },
+      },
+    ],
+  };
+}
+async function mockCoach(page: any, documentId: string) {
+  await page.route("**/api/ai/settings", (route: any) =>
+    route.fulfill({
+      json: {
+        enabled: true,
+        provider: "ollama",
+        baseUrl: "http://localhost:11434",
+        model: "test-model",
+        hasApiKey: false,
+      },
+    }),
+  );
+  await page.route("**/api/ai/review", (route: any) =>
+    route.fulfill({ json: coachingResult(documentId) }),
+  );
+}
+
+test("AI suggestions apply to draft individually and can be undone and saved", async ({
+  page,
+  request,
+}) => {
+  let doc = await create(request);
+  doc.summary = "Built reliable services.";
+  doc = await (
+    await request.put(`http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`, {
+      data: { revision: doc.metadata.revision, document: doc },
+    })
+  ).json();
+  await mockCoach(page, doc.metadata.id);
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page.getByRole("button", { name: "Review", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Review current draft with AI" })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Before", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "After", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Apply suggestion", exact: true })
+    .click();
+  await expect(
+    page.getByText("Applied to draft.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.frameLocator("iframe").locator(".summary-text")).toHaveText(
+    "Developed reliable services.",
+  );
+  expect(
+    (
+      await (
+        await request.get(
+          `http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`,
+        )
+      ).json()
+    ).summary,
+  ).toBe("Built reliable services.");
+  await page
+    .getByRole("button", { name: "Undo this suggestion", exact: true })
+    .click();
+  await expect(page.frameLocator("iframe").locator(".summary-text")).toHaveText(
+    "Built reliable services.",
+  );
+  await page
+    .getByRole("button", { name: "Apply suggestion", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Save Draft", exact: true }).click();
+  await expect
+    .poll(
+      async () =>
+        (
+          await (
+            await request.get(
+              `http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`,
+            )
+          ).json()
+        ).summary,
+    )
+    .toBe("Developed reliable services.");
+  await page.screenshot({
+    path: "test-results/apply-suggestion.png",
+    fullPage: true,
+  });
+});
+
+test("AI suggestion cannot overwrite a field edited after review", async ({
+  page,
+  request,
+}) => {
+  let doc = await create(request);
+  doc.summary = "Built reliable services.";
+  doc = await (
+    await request.put(`http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`, {
+      data: { revision: doc.metadata.revision, document: doc },
+    })
+  ).json();
+  await mockCoach(page, doc.metadata.id);
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page.getByRole("button", { name: "Review", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Review current draft with AI" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Apply suggestion", exact: true }),
+  ).toBeEnabled();
+  await page
+    .getByText("All fields, history, library and backups", { exact: true })
+    .click();
+  await page
+    .locator("summary")
+    .filter({ hasText: /^Summary$/ })
+    .click();
+  await page
+    .getByLabel("Summary", { exact: true })
+    .fill("My manually revised summary.");
+  await expect(
+    page.getByRole("button", { name: "Apply suggestion", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page.getByText("This field changed since the review.", { exact: false }),
+  ).toBeVisible();
+});
+
+test("job-specific copy preserves the original and restores target context", async ({
+  page,
+  request,
+}) => {
+  const doc = await create(request);
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page
+    .getByRole("textbox", { name: "firstName", exact: true })
+    .fill("DraftName");
+  await page.getByRole("button", { name: "Review", exact: true }).click();
+  await page.getByText("Job-specific resume copy", { exact: true }).click();
+  await page.getByLabel("Target company", { exact: true }).fill("Acme");
+  await page
+    .getByLabel("Target role", { exact: true })
+    .fill("Platform Engineer");
+  await page
+    .getByLabel("Target job description (optional)", { exact: true })
+    .fill("Build reliable cloud services.");
+  await page
+    .getByRole("button", { name: "Create job-specific copy", exact: true })
+    .click();
+  const link = page.getByRole("link", {
+    name: "Open job-specific copy",
+    exact: true,
+  });
+  await expect(link).toBeVisible();
+  const href = await link.getAttribute("href");
+  const original = await (
+    await request.get(`http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`)
+  ).json();
+  expect(original.profile.firstName).toBe("");
+  const variantId = href!.split("/").at(-1);
+  const variant = await (
+    await request.get(`http://127.0.0.1:8101/api/resumes/${variantId}`)
+  ).json();
+  expect(variant.profile.firstName).toBe("DraftName");
+  expect(variant.metadata.parentResumeId).toBe(doc.metadata.id);
+  page.on("dialog", (dialog) => dialog.accept());
+  await link.click();
+  await expect(page.getByLabel("Target role", { exact: true })).toHaveValue(
+    "Platform Engineer",
+  );
+  await expect(
+    page.getByLabel("Target job description (optional)", { exact: true }),
+  ).toHaveValue("Build reliable cloud services.");
+  await page.reload();
+  await expect(page.getByLabel("Target company", { exact: true })).toHaveValue(
+    "Acme",
+  );
+});
+
+test("AI edits follow stable entry IDs and reject changed or missing fields", async ({
+  request,
+}) => {
+  const doc = await create(request);
+  doc.experience = [
+    {
+      id: "first",
+      company: "A",
+      position: "Engineer",
+      location: "",
+      startDate: "",
+      endDate: "",
+      current: false,
+      summary: "",
+      bullets: ["First fact"],
+      technologies: [],
+    },
+    {
+      id: "second",
+      company: "B",
+      position: "Engineer",
+      location: "",
+      startDate: "",
+      endDate: "",
+      current: false,
+      summary: "",
+      bullets: ["Second fact"],
+      technologies: [],
+    },
+  ];
+  const edit = {
+    documentId: doc.metadata.id,
+    target: {
+      section: "experience" as const,
+      field: "bullets" as const,
+      entryId: "first",
+      index: 0,
+    },
+    before: "First fact",
+    after: "Clarified first fact",
+  };
+  doc.experience.reverse();
+  const changed = applyAIEdit(doc, edit);
+  expect(changed.experience[1].bullets[0]).toBe("Clarified first fact");
+  expect(changed.experience[0].bullets[0]).toBe("Second fact");
+  expect(doc.experience[1].bullets[0]).toBe("First fact");
+  expect(applyAIEdit(changed, edit)).toBe(changed);
+  expect(applyAIEdit(doc, { ...edit, documentId: "wrong" })).toBe(doc);
+  expect(
+    applyAIEdit(doc, {
+      ...edit,
+      target: { ...edit.target, entryId: "deleted" },
+    }),
+  ).toBe(doc);
 });

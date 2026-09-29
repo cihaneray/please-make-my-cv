@@ -1,18 +1,39 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { aiApi, AIConnection, AIReview } from "@/lib/api";
+import { AISuggestion } from "./AISuggestion";
+import { JobVariantBuilder } from "./JobVariantBuilder";
+import { aiApi, AIConnection, AIReview, AIEdit } from "@/lib/api";
 import { ResumeDocument } from "@/lib/types";
-export function AIResumeReview({ document }: { document: ResumeDocument }) {
+export function AIResumeReview({
+  document,
+  onApply,
+  disabled = false,
+}: {
+  document: ResumeDocument;
+  onApply: (edit: AIEdit) => void;
+  disabled?: boolean;
+}) {
   const [config, setConfig] = useState<AIConnection | null>(null);
-  const [job, setJob] = useState("");
-  const [language, setLanguage] = useState<"en" | "tr">("en");
+  const [target, setTarget] = useState(
+    document.metadata.targetJob || {
+      company: "",
+      position: document.metadata.targetRole,
+      description: "",
+    },
+  );
+  const job = target.description;
+  const [language, setLanguage] = useState<"en" | "tr">(
+    document.metadata.language === "tr" ? "tr" : "en",
+  );
   const [result, setResult] = useState<AIReview | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [reviewedInput, setReviewedInput] = useState("");
+  const [reviewContext, setReviewContext] = useState("");
+  const [reviewNumber, setReviewNumber] = useState(0);
   const controller = useRef<AbortController | null>(null);
-  const input = JSON.stringify({ document, job, language });
+  const input = JSON.stringify({ document, target, language });
   useEffect(() => {
     aiApi
       .settings()
@@ -45,18 +66,28 @@ export function AIResumeReview({ document }: { document: ResumeDocument }) {
           .
         </p>
       )}
+      <JobVariantBuilder
+        document={document}
+        target={target}
+        onTarget={setTarget}
+        disabled={disabled || busy}
+      />
       <label className="block text-sm">
         Target job description (optional)
         <textarea
+          aria-label="Target job description (optional)"
           className="block w-full min-h-24"
           maxLength={20000}
           value={job}
-          onChange={(e) => setJob(e.target.value)}
+          onChange={(e) =>
+            setTarget({ ...target, description: e.target.value })
+          }
         />
       </label>
       <label className="block text-sm">
         Feedback language
         <select
+          aria-label="Feedback language"
           className="block"
           value={language}
           onChange={(e) => setLanguage(e.target.value as "en" | "tr")}
@@ -76,13 +107,17 @@ export function AIResumeReview({ document }: { document: ResumeDocument }) {
           try {
             const value = await aiApi.review(
               document,
-              job,
+              job.trim()
+                ? `Target role: ${target.position}\nCompany: ${target.company}\n${job}`
+                : "",
               language,
               pending.signal,
             );
             if (!pending.signal.aborted) {
               setResult(value);
               setReviewedInput(input);
+              setReviewContext(JSON.stringify({ target, language }));
+              setReviewNumber((value) => value + 1);
             }
           } catch (e) {
             if (!pending.signal.aborted) setError((e as Error).message);
@@ -143,18 +178,17 @@ export function AIResumeReview({ document }: { document: ResumeDocument }) {
           </ul>
           <h3 className="font-semibold">Recommended improvements</h3>
           {result.recommendations.map((item, i) => (
-            <article key={i} className="border-t pt-3 space-y-2">
-              <h4 className="font-semibold">
-                {item.section} · {item.priority} priority
-              </h4>
-              <p className="text-sm">Evidence: {item.evidence}</p>
-              <p>{item.advice}</p>
-              {item.suggestedText && (
-                <blockquote className="border-l-2 pl-3 whitespace-pre-wrap">
-                  {item.suggestedText}
-                </blockquote>
-              )}
-            </article>
+            <AISuggestion
+              key={`${reviewNumber}-${i}`}
+              item={item}
+              document={document}
+              onApply={onApply}
+              disabled={
+                disabled ||
+                busy ||
+                reviewContext !== JSON.stringify({ target, language })
+              }
+            />
           ))}
           <h3 className="font-semibold">Details to add or verify</h3>
           <ul className="list-disc pl-5">

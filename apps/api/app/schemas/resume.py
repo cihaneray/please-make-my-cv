@@ -127,6 +127,21 @@ class VisibilitySettings(BaseModel):
     showLanguages: bool = True
 
 
+class TargetJob(BaseModel):
+    company: str = Field(default="", max_length=255)
+    position: str = Field(min_length=1, max_length=255)
+    description: str = Field(min_length=1, max_length=20000)
+
+    @model_validator(mode="after")
+    def meaningful_target(self):
+        self.position = self.position.strip()
+        self.description = self.description.strip()
+        self.company = self.company.strip()
+        if not self.position or not self.description:
+            raise ValueError("A target role and job description are required")
+        return self
+
+
 class ResumeMetadata(BaseModel):
     id: str = Field(default_factory=default_uuid)
     schemaVersion: int = 1
@@ -140,6 +155,7 @@ class ResumeMetadata(BaseModel):
     createdAt: str = Field(default_factory=now_iso)
     updatedAt: str = Field(default_factory=now_iso)
     parentResumeId: str | None = None
+    targetJob: TargetJob | None = None
     isArchived: bool = False
 
     @model_validator(mode="before")
@@ -250,3 +266,8 @@ class ResumeSummaryResponse(BaseModel):
             if "target_market" in data and "targetMarket" not in data:
                 data["targetMarket"] = data["target_market"]
         return data
+
+
+class CreateVariantRequest(BaseModel):
+    document: ResumeDocument
+    targetJob: TargetJob

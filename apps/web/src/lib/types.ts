@@ -55,6 +55,10 @@ export interface CreateResumeRequest {
   targetMarket: string;
   initialData: ResumeDocument | null;
 }
+export interface CreateVariantRequest {
+  document: ResumeDocument;
+  targetJob: TargetJob;
+}
 export interface CustomSection {
   id: string;
   title: string;
@@ -232,6 +236,7 @@ export interface ResumeMetadata {
   createdAt: string;
   updatedAt: string;
   parentResumeId: string | null;
+  targetJob: TargetJob | null;
   isArchived: boolean;
 }
 export interface ResumeSummaryResponse {
@@ -252,6 +257,11 @@ export interface SkillGroup {
   id: string;
   category: string;
   skills: Array<string>;
+}
+export interface TargetJob {
+  company: string;
+  position: string;
+  description: string;
 }
 export interface UpdateJobRequest {
   company: string | null;

@@ -66,6 +66,7 @@ export const SAMPLE_PREVIEW_RESUME: ResumeDocument = {
     updatedAt: "2025-01-01T00:00:00Z",
     isArchived: false,
     parentResumeId: null,
+    targetJob: null,
   },
   profile: {
     firstName: "Alex",

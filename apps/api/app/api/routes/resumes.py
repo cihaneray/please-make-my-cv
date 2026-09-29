@@ -6,6 +6,7 @@ from app.db.session import get_db
 from app.schemas.analysis import ResumeAnalysisReport, ResumeComparisonReport
 from app.schemas.resume import (
     CreateResumeRequest,
+    CreateVariantRequest,
     PatchResumeMetadataRequest,
     ResumeDocument,
     ResumeSummaryResponse,
@@ -166,3 +167,8 @@ def restore(resume_id: str, revision: int, expected_revision: int, db: Session =
             document=ResumeDocument.model_validate_json(row.document_json),
         ),
     )
+
+
+@router.post("/{resume_id}/variants", response_model=ResumeDocument, status_code=201)
+def create_variant(resume_id: str, request: CreateVariantRequest, db: Session = Depends(get_db)):
+    return ResumeService.create_variant(db, resume_id, request)

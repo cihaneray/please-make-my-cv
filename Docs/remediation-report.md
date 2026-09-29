@@ -2,7 +2,7 @@
 
 Date: 2026-09-28
 
-The review has been addressed through implementation, regression coverage, and explicit product boundaries below. Changes are in the working tree; they have not been committed or deployed.
+The review has been addressed through implementation, regression coverage, and explicit product boundaries below. The remediation was committed in separate API, PDF, AI, editor, build, and documentation commits. Later feature work is recorded in Git and the changelog; no deployment was performed.
 
 ## Data integrity and editor
 
@@ -61,3 +61,8 @@ The review has been addressed through implementation, regression coverage, and e
 - Added on-demand AI reviews of the current draft: explained scores, prioritized recommendations, strengths, missing information, suggested wording, and optional target-job relevance. English and Turkish feedback are supported. Stale results are flagged; suggestions are not automatically applied.
 - Added provider timeouts, safe error messages, response validation, direct-contact omission, key clearing on endpoint changes, and isolated tests. Basic bullet/summary cleanup remains local.
 - Backend suite now has 64 passing tests and all 11 browser workflows pass against a production build. PDF diagnostic, lint, and generated contract checks pass. Real LLM responses require a user-configured model/server and have not been exercised with paid credentials; provider protocol and failure paths use mocked transports.
+
+
+## Follow-up: actionable suggestions and job-specific copies
+
+The Review tab now supports before/after comparisons, individual Apply/Skip controls, and per-suggestion Undo. Changes remain in the draft until saved. Backend-generated targets and current-value checks protect unrelated fields and edits made since the review. Job-specific copies preserve the original and capture target role/company/description for later reviews. Current validation: 68 backend tests and 18 browser/interaction checks pass, including stale suggestions, stable entry IDs, undo/save, and reopening copies with job context. Model responses are mocked in automated tests; live quality depends on the configured provider.

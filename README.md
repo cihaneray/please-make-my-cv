@@ -105,3 +105,10 @@ Browser-start failures and document-rendering failures now have separate message
 ## Appearance
 
 Choose **Settings → Interface Aesthetic → Color theme** to use Light, Dark, or System. System follows the device appearance. The preference is saved in this browser and synchronized between open tabs. Resume previews, template paper, and exported PDFs retain a white print background.
+
+
+## Apply coaching and create job-specific copies
+
+In a resume's **Review** tab, run an AI review. Suggestions with a verified field target show **Before** and **After**, **Apply suggestion**, **Skip suggestion**, and **Undo this suggestion**. Applying updates only the draft; **Save Draft** persists it as a new revision. Summary text, experience summaries/bullets, and project bullets support direct replacement. Other advice stays manual. If a targeted field changed after review, Apply is disabled to preserve your edits. A changed draft also marks the score outdated. Model wording still requires your factual review.
+
+Expand **Job-specific resume copy**, choose a saved job or enter its company/role and description, then click **Create job-specific copy**. This saves a new copy of the current draft without saving over the original, with parent lineage and a snapshot of the target job. Open the copy to get job-specific coaching and accept changes individually. Job tracker links stay unchanged; link the copy from Target Jobs when ready. Creating a copy does not need an LLM connection.

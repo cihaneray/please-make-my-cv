@@ -185,6 +185,7 @@ class Recommendation(BaseModel):
     evidence: str = Field(max_length=2000)
     advice: str = Field(min_length=1, max_length=3000)
     suggestedText: str = Field(default="", max_length=3000)
+    fieldId: str = Field(default="", max_length=80)
 
 
 class ReviewContent(BaseModel):
@@ -221,15 +222,62 @@ def sanitized_document(document: ResumeDocument) -> dict:
     return clean(data)
 
 
+def editable_fields(document: ResumeDocument) -> dict:
+    fields = {}
+
+    def add(section, field, before, entry_id=None, index=None, context=""):
+        # Redacted text cannot safely replace a complete original field.
+        if KVKKDataMinimizer.redact_personal_data(before) != before:
+            return
+        token = f"field-{len(fields)}"
+        fields[token] = {
+            "target": {"section": section, "field": field, "entryId": entry_id, "index": index},
+            "before": before,
+            "context": context or section,
+        }
+
+    add("summary", "summary", document.summary)
+    for section in ("experience", "projects"):
+        for entry_index, entry in enumerate(getattr(document, section)):
+            if section == "experience":
+                add(
+                    section,
+                    "summary",
+                    entry.summary,
+                    entry.id,
+                    context=f"{section}[{entry_index}].summary",
+                )
+            for index, bullet in enumerate(entry.bullets):
+                add(
+                    section,
+                    "bullets",
+                    bullet,
+                    entry.id,
+                    index,
+                    f"{section}[{entry_index}].bullets[{index}]",
+                )
+    return fields
+
+
 def review_resume(document: ResumeDocument, job_description: str, language: str) -> dict:
     config = load_connection()
+    fields = editable_fields(document)
     prompt = (
         SYSTEM
-        + """ Score each dimension from 0 to 25 (0 absent, 10 weak, 18 solid, 25 excellent): clarity of wording/structure; evidence supporting impact; completeness appropriate to career stage; relevance to the supplied target job. If no job is supplied, relevance MUST be null. Each dimension has score and rationale. Include summary, strengths (strings), recommendations (section, priority high/medium/low, evidence quoted from input or explicit missing field, advice, suggestedText), questions (strings). Follow this JSON schema: """
+        + """ Score each dimension from 0 to 25 (0 absent, 10 weak, 18 solid, 25 excellent): clarity of wording/structure; evidence supporting impact; completeness appropriate to career stage; relevance to the supplied target job. If no job is supplied, relevance MUST be null. Each dimension has score and rationale. Include summary, strengths (strings), recommendations (section, priority high/medium/low, evidence quoted from input or explicit missing field, advice, suggestedText), questions (strings). For a direct replacement of one supplied editableFields value, return its fieldId and suggestedText containing the COMPLETE replacement field. Use an empty fieldId for general advice, new entries, or uncertain targets. Never combine multiple bullets in one replacement. Follow this JSON schema: """
         + json.dumps(ReviewContent.model_json_schema())
     )
     payload = {
         "resume": sanitized_document(document),
+        "editableFields": [
+            {
+                "fieldId": token,
+                "section": item["target"]["section"],
+                "context": item["context"],
+                "text": item["before"],
+            }
+            for token, item in fields.items()
+        ],
         "jobDescription": KVKKDataMinimizer.redact_personal_data(job_description),
         "language": language,
     }
@@ -254,8 +302,17 @@ def review_resume(document: ResumeDocument, job_description: str, language: str)
     if result.relevance:
         dimensions.append(result.relevance)
     score = round(sum(item.score for item in dimensions) / (25 * len(dimensions)) * 100)
+    output = result.model_dump()
+    for recommendation in output["recommendations"]:
+        field = fields.get(recommendation.pop("fieldId"))
+        after = recommendation["suggestedText"]
+        recommendation["edit"] = (
+            {**field, "after": after, "documentId": document.metadata.id}
+            if field and after.strip() and after != field["before"]
+            else None
+        )
     return {
-        **result.model_dump(),
+        **output,
         "score": score,
         "model": config.model,
         "provider": config.provider,

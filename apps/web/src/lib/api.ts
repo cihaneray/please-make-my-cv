@@ -5,6 +5,7 @@ import {
   ResumeAnalysisReport,
   ResumeDocument,
   ResumeSummary,
+  TargetJob,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
@@ -40,6 +41,15 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  async createVariant(
+    document: ResumeDocument,
+    targetJob: TargetJob,
+  ): Promise<ResumeDocument> {
+    return fetchJson(`${API_BASE}/resumes/${document.metadata.id}/variants`, {
+      method: "POST",
+      body: JSON.stringify({ document, targetJob }),
+    });
+  },
   async history(
     id: string,
   ): Promise<
@@ -379,6 +389,17 @@ export interface AIDimension {
   score: number;
   rationale: string;
 }
+export interface AIEdit {
+  documentId: string;
+  target: {
+    section: "summary" | "experience" | "projects";
+    field: "summary" | "bullets";
+    entryId: string | null;
+    index: number | null;
+  };
+  before: string;
+  after: string;
+}
 export interface AIReview {
   score: number;
   summary: string;
@@ -396,6 +417,7 @@ export interface AIReview {
     evidence: string;
     advice: string;
     suggestedText: string;
+    edit?: AIEdit | null;
   }>;
   questions: string[];
 }

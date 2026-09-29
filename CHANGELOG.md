@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Review and apply individual AI field suggestions with before/after comparison, conflict protection, and undo.
+- Create job-specific copies from the current draft with original lineage and persistent job context.
+
 - Add persistent Light, Dark, and System appearance preferences while preserving white resume paper.
 
 - Configurable OpenAI-compatible/Ollama resume reviews with explained scores and actionable feedback.

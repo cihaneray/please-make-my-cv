@@ -5,10 +5,15 @@ from datetime import UTC, datetime
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import ConcurrencyConflictException, EntityNotFoundException
+from app.core.exceptions import (
+    ConcurrencyConflictException,
+    EntityNotFoundException,
+    ValidationException,
+)
 from app.db.models import ResumeModel, ResumeRevisionModel
 from app.schemas.resume import (
     CreateResumeRequest,
+    CreateVariantRequest,
     PatchResumeMetadataRequest,
     ResumeDocument,
     ResumeSummaryResponse,
@@ -193,6 +198,32 @@ class ResumeService:
         db.commit()
         db.refresh(model)
         return new_doc
+
+    @staticmethod
+    def create_variant(
+        db: Session, resume_id: str, request: CreateVariantRequest
+    ) -> ResumeDocument:
+        source = ResumeService.get_resume(db, resume_id)
+        if request.document.metadata.id != resume_id:
+            raise ValidationException("Draft ID does not match the source resume")
+        if request.document.metadata.revision != source.metadata.revision:
+            raise ConcurrencyConflictException(
+                source.metadata.revision, request.document.metadata.revision
+            )
+        draft = request.document.model_copy(deep=True)
+        draft.metadata.parentResumeId = resume_id
+        draft.metadata.targetJob = request.targetJob.model_copy(deep=True)
+        label = request.targetJob.position
+        if request.targetJob.company:
+            label += f" at {request.targetJob.company}"
+        return ResumeService.create_resume(
+            db,
+            CreateResumeRequest(
+                title=f"{source.metadata.title} — {label}"[:255],
+                targetRole=request.targetJob.position,
+                initialData=draft,
+            ),
+        )
 
     @staticmethod
     def patch_metadata(

@@ -38,7 +38,7 @@ def improve_summary(request: ImproveSummaryRequest):
 
 class ReviewRequest(BaseModel):
     document: ResumeDocument
-    jobDescription: str = Field(default="", max_length=20000)
+    jobDescription: str = Field(default="", max_length=21000)
     language: Literal["en", "tr"] = "en"
 
 

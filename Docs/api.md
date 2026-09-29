@@ -51,3 +51,10 @@ These routes are for a trusted local single-user installation. There is no multi
 - `POST /api/ai/review`: `{document, jobDescription?, language: "en" | "tr"}`. Returns explained 0–25 dimensions, normalized score, strengths, recommendations, questions, provider/model, and limitations. No persistence or document mutation.
 
 Disabled or unconfigured AI returns 409. Provider/network/format errors return 502; timeouts return 504. Provider error bodies and credentials are not forwarded. Requests use a 90-second read timeout; the web proxy allows 120 seconds. Test and review calls can incur provider charges. Browser cancellation stops waiting but an already-running provider request may finish.
+
+
+## Job-specific copies and actionable coaching
+
+`POST /api/resumes/{id}/variants` accepts `{document, targetJob: {company?, position, description}}` and returns a new `ResumeDocument` (201). The document ID/revision must match the source (422/409 on mismatch). It copies the supplied draft, sets `metadata.parentResumeId`, `metadata.targetRole`, and `metadata.targetJob`, and leaves the source and job links unchanged. Target metadata is stored within document JSON, so existing databases need no additional table migration.
+
+AI review recommendations can contain `edit: {documentId, target: {section, field, entryId, index}, before, after}` or null. Targets are resolved from a backend allowlist, never arbitrary model-provided object paths. Fields containing redacted personal-data patterns are excluded from actionable replacements. The UI compares current field text and stable entry IDs before applying. Non-actionable recommendations remain advice. Review job text accepts up to 21,000 characters, allowing a 20,000-character description plus role/company labels.
