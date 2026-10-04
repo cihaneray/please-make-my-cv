@@ -8,6 +8,32 @@ class ComparisonService:
         changes = []
         for section in ResumeDocument.model_fields:
             if section == "metadata":
+                for field in [
+                    "title",
+                    "targetRole",
+                    "language",
+                    "targetMarket",
+                    "tags",
+                    "targetJob",
+                ]:
+                    before, after = getattr(source.metadata, field), getattr(target.metadata, field)
+                    if before != after:
+                        changes.append(
+                            ComparisonChange(
+                                category="metadata",
+                                changeType="modified",
+                                description=f"metadata · {field}",
+                                details={
+                                    "field": field,
+                                    "from": before.model_dump()
+                                    if hasattr(before, "model_dump")
+                                    else before,
+                                    "to": after.model_dump()
+                                    if hasattr(after, "model_dump")
+                                    else after,
+                                },
+                            )
+                        )
                 continue
             before, after = getattr(source, section), getattr(target, section)
             if before == after:
@@ -24,6 +50,23 @@ class ComparisonService:
                             if key not in right
                             else "modified"
                         )
+                        if kind == "modified":
+                            for field in left[key]:
+                                if field != "id" and left[key][field] != right[key].get(field):
+                                    changes.append(
+                                        ComparisonChange(
+                                            category=section,
+                                            changeType=kind,
+                                            description=f"{section} · {key} · {field}",
+                                            details={
+                                                "field": field,
+                                                "entryId": key,
+                                                "from": left[key][field],
+                                                "to": right[key].get(field),
+                                            },
+                                        )
+                                    )
+                            continue
                         changes.append(
                             ComparisonChange(
                                 category=section,
@@ -41,6 +84,23 @@ class ComparisonService:
                         )
                     )
             else:
+                if hasattr(before, "model_dump"):
+                    left, right = before.model_dump(), after.model_dump()
+                    for field in left:
+                        if left[field] != right.get(field):
+                            changes.append(
+                                ComparisonChange(
+                                    category=section,
+                                    changeType="modified",
+                                    description=f"{section} · {field}",
+                                    details={
+                                        "field": field,
+                                        "from": left[field],
+                                        "to": right.get(field),
+                                    },
+                                )
+                            )
+                    continue
                 changes.append(
                     ComparisonChange(
                         category=section,

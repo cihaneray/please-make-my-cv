@@ -5,7 +5,10 @@ import React, { useEffect, useState, useRef } from "react";
 import { A4ResumePreview } from "@/components/A4ResumePreview";
 import { Icons } from "@/components/Icons";
 import { AIResumeReview } from "@/components/AIResumeReview";
-import { DocumentTools } from "@/components/DocumentTools";
+import { DateFields } from "@/components/DateFields";
+import { ResumeChanges } from "@/components/ResumeChanges";
+import { useCopy } from "@/lib/copy";
+import { DocumentTools, Fields } from "@/components/DocumentTools";
 import { SourceEditor } from "@/components/SourceEditor";
 import { api } from "@/lib/api";
 import { applyAIEdit } from "@/lib/ai-edits";
@@ -23,6 +26,8 @@ export default function ResumeStudioPage() {
   const routeParams = useParams();
   const resumeId = (routeParams?.id as string) || "";
   const { t } = useI18n();
+  const copy = useCopy();
+  const [mobileView, setMobileView] = useState("edit");
   const [doc, setDoc] = useState<ResumeDocument | null>(null);
   const [savedSnapshot, setSavedSnapshot] = useState("");
   const [notice, setNotice] = useState("");
@@ -88,6 +93,21 @@ export default function ResumeStudioPage() {
     "content" | "source" | "design" | "review"
   >("content");
   const [activeSection, setActiveSection] = useState<string>("profile");
+  useEffect(() => {
+    const section = new URLSearchParams(window.location.search).get("section");
+    if (
+      section &&
+      ["summary", "experience", "projects", "skills"].includes(section)
+    )
+      setActiveSection(section);
+  }, [resumeId]);
+  useEffect(() => {
+    const entry = new URLSearchParams(window.location.search).get("entry");
+    if (entry)
+      window.document
+        .getElementById(`entry-${entry}`)
+        ?.scrollIntoView({ block: "center" });
+  }, [activeSection, doc]);
   const [analysisReport, setAnalysisReport] =
     useState<ResumeAnalysisReport | null>(null);
   const [analyzing, setAnalyzing] = useState<boolean>(false);
@@ -515,8 +535,28 @@ export default function ResumeStudioPage() {
           setSavedSnapshot(JSON.stringify(updated));
         }}
       />
+      <ResumeChanges document={doc} disabled={sourcePending || saving} />
+      {activeTab === "content" && (
+        <div className="mobile-studio-switch workspace-tools p-2">
+          <button
+            aria-pressed={mobileView === "edit"}
+            onClick={() => setMobileView("edit")}
+          >
+            {copy("Edit content")}
+          </button>
+          <button
+            aria-pressed={mobileView === "preview"}
+            onClick={() => setMobileView("preview")}
+          >
+            {copy("Preview")}
+          </button>
+        </div>
+      )}
       {/* Main Studio Body */}
-      <div className="studio-body flex flex-1 w-full overflow-hidden">
+      <div
+        data-mobile-view={activeTab === "content" ? mobileView : "both"}
+        className="studio-body flex flex-1 w-full overflow-hidden"
+      >
         {/* 1. CONTENT VISUAL EDITOR MODE */}
         {activeTab === "content" && (
           <>
@@ -557,6 +597,24 @@ export default function ResumeStudioPage() {
                     icon: Icons.Zap,
                     count: doc.skills.length,
                   },
+                  {
+                    id: "certifications",
+                    label: copy("Certifications"),
+                    icon: Icons.Document,
+                    count: doc.certifications.length,
+                  },
+                  {
+                    id: "languages",
+                    label: copy("Languages"),
+                    icon: Icons.Language,
+                    count: doc.languages.length,
+                  },
+                  {
+                    id: "customSections",
+                    label: copy("Custom sections"),
+                    icon: Icons.Document,
+                    count: doc.customSections.length,
+                  },
                 ].map((s) => {
                   const IconComp = s.icon;
                   return (
@@ -586,6 +644,23 @@ export default function ResumeStudioPage() {
             </aside>
             {/* Focused Form Stage (~490px) */}
             <div className="w-[500px] bg-surface-container-lowest overflow-y-auto px-space-xl py-space-lg flex flex-col gap-space-xl shrink-0 shadow-sm border-r border-surface-container-high no-print select-text">
+              {(["certifications", "languages", "customSections"] as const).map(
+                (section) =>
+                  activeSection === section && (
+                    <div className="workspace-tools" key={section}>
+                      <Fields
+                        name={section}
+                        value={doc[section]}
+                        change={(value) =>
+                          setDoc({
+                            ...doc,
+                            [section]: value as ResumeDocument[typeof section],
+                          })
+                        }
+                      />
+                    </div>
+                  ),
+              )}
               {/* Profile Section */}
               {activeSection === "profile" && (
                 <div className="flex flex-col gap-space-md">
@@ -604,7 +679,7 @@ export default function ResumeStudioPage() {
                       </label>
                       <input
                         type="text"
-                        aria-label="firstName"
+                        aria-label={t("firstName")}
                         value={doc.profile.firstName}
                         onChange={(e) =>
                           updateProfileField("firstName", e.target.value)
@@ -618,7 +693,7 @@ export default function ResumeStudioPage() {
                       </label>
                       <input
                         type="text"
-                        aria-label="lastName"
+                        aria-label={t("lastName")}
                         value={doc.profile.lastName}
                         onChange={(e) =>
                           updateProfileField("lastName", e.target.value)
@@ -632,7 +707,7 @@ export default function ResumeStudioPage() {
                       </label>
                       <input
                         type="text"
-                        aria-label="headline"
+                        aria-label={t("professionalTitle")}
                         value={doc.profile.headline}
                         onChange={(e) =>
                           updateProfileField("headline", e.target.value)
@@ -647,7 +722,7 @@ export default function ResumeStudioPage() {
                       </label>
                       <input
                         type="email"
-                        aria-label="email"
+                        aria-label={t("email")}
                         value={doc.profile.email}
                         onChange={(e) =>
                           updateProfileField("email", e.target.value)
@@ -661,7 +736,7 @@ export default function ResumeStudioPage() {
                       </label>
                       <input
                         type="text"
-                        aria-label="phone"
+                        aria-label={t("phone")}
                         value={doc.profile.phone}
                         onChange={(e) =>
                           updateProfileField("phone", e.target.value)
@@ -675,7 +750,7 @@ export default function ResumeStudioPage() {
                       </label>
                       <input
                         type="text"
-                        aria-label="location"
+                        aria-label={t("location")}
                         value={doc.profile.location}
                         onChange={(e) =>
                           updateProfileField("location", e.target.value)
@@ -689,7 +764,7 @@ export default function ResumeStudioPage() {
                       </label>
                       <input
                         type="text"
-                        aria-label="website"
+                        aria-label={t("website")}
                         value={doc.profile.website}
                         onChange={(e) =>
                           updateProfileField("website", e.target.value)
@@ -703,7 +778,7 @@ export default function ResumeStudioPage() {
                       </label>
                       <input
                         type="text"
-                        aria-label="linkedin"
+                        aria-label={t("linkedin")}
                         value={doc.profile.linkedin}
                         onChange={(e) =>
                           updateProfileField("linkedin", e.target.value)
@@ -733,6 +808,7 @@ export default function ResumeStudioPage() {
                   </div>
                   <textarea
                     rows={6}
+                    aria-label={t("summary")}
                     value={doc.summary}
                     onChange={(e) => updateField("summary", e.target.value)}
                     className="w-full p-3 rounded-lg bg-surface-container-low text-on-surface text-body-md leading-relaxed resize-none focus:bg-surface-container-lowest outline-none focus:ring-1 focus:ring-primary"
@@ -759,6 +835,7 @@ export default function ResumeStudioPage() {
                   <div className="flex flex-col gap-space-md">
                     {doc.experience.map((exp, expIdx) => (
                       <div
+                        id={`entry-${exp.id}`}
                         key={exp.id}
                         className="flex flex-col rounded-xl bg-surface-container-low p-space-md gap-space-sm border border-surface-container-highest"
                       >
@@ -797,18 +874,17 @@ export default function ResumeStudioPage() {
                             className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none"
                             placeholder={t("company")}
                           />
-                          <input
-                            type="text"
-                            value={exp.startDate}
-                            onChange={(e) =>
-                              updateExperienceItem(expIdx, {
-                                ...exp,
-                                startDate: e.target.value,
-                              })
-                            }
-                            className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none"
-                            placeholder={t("dates")}
-                          />
+                          <div className="col-span-2">
+                            <DateFields
+                              value={exp}
+                              onChange={(dates) =>
+                                updateExperienceItem(expIdx, {
+                                  ...exp,
+                                  ...dates,
+                                })
+                              }
+                            />
+                          </div>
                         </div>
                         {/* Bullet achievements */}
                         <div className="flex flex-col gap-2 pt-2">
@@ -821,6 +897,7 @@ export default function ResumeStudioPage() {
                               className="flex items-start gap-1 group"
                             >
                               <textarea
+                                aria-label={`${t("achievements")} ${bIdx + 1}`}
                                 rows={2}
                                 value={b}
                                 onChange={(e) =>
@@ -830,7 +907,7 @@ export default function ResumeStudioPage() {
                               />
                               <div className="flex flex-col gap-1">
                                 <button
-                                  aria-label="Sparkles"
+                                  aria-label={t("aiPolish")}
                                   type="button"
                                   onClick={() =>
                                     handleAiRewriteBullet(
@@ -939,32 +1016,12 @@ export default function ResumeStudioPage() {
                             placeholder={t("fieldOfStudy")}
                           />
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <input
-                            type="text"
-                            value={edu.startDate}
-                            onChange={(e) =>
-                              updateEducationItem(eduIdx, {
-                                ...edu,
-                                startDate: e.target.value,
-                              })
-                            }
-                            className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none"
-                            placeholder={t("dates")}
-                          />
-                          <input
-                            type="text"
-                            value={edu.endDate}
-                            onChange={(e) =>
-                              updateEducationItem(eduIdx, {
-                                ...edu,
-                                endDate: e.target.value,
-                              })
-                            }
-                            className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none"
-                            placeholder="End Date"
-                          />
-                        </div>
+                        <DateFields
+                          value={edu}
+                          onChange={(dates) =>
+                            updateEducationItem(eduIdx, { ...edu, ...dates })
+                          }
+                        />
                       </div>
                     ))}
                   </div>
@@ -989,6 +1046,7 @@ export default function ResumeStudioPage() {
                   <div className="flex flex-col gap-space-md">
                     {doc.projects.map((proj, projIdx) => (
                       <div
+                        id={`entry-${proj.id}`}
                         key={proj.id}
                         className="flex flex-col rounded-xl bg-surface-container-low p-space-md gap-space-sm border border-surface-container-highest"
                       >
@@ -1071,6 +1129,7 @@ export default function ResumeStudioPage() {
                   <div className="flex flex-col gap-3">
                     {doc.skills.map((grp, idx) => (
                       <div
+                        id={`entry-${grp.id}`}
                         key={grp.id}
                         className="p-3 rounded-lg bg-surface-container-low flex flex-col gap-2"
                       >
@@ -1173,6 +1232,7 @@ export default function ResumeStudioPage() {
                     {t("targetMarketLabel")}
                   </label>
                   <select
+                    aria-label={t("targetMarketLabel")}
                     value={doc.metadata.targetMarket || "TR"}
                     onChange={(e) => {
                       setDoc({
@@ -1239,6 +1299,8 @@ export default function ResumeStudioPage() {
                   ].map((col) => (
                     <button
                       key={col}
+                      aria-label={`${t("accentColor")} ${col}`}
+                      aria-pressed={doc.design.accentColor === col}
                       type="button"
                       onClick={() =>
                         updateField("design", {
@@ -1262,6 +1324,7 @@ export default function ResumeStudioPage() {
                   {t("fontFamily")}
                 </label>
                 <select
+                  aria-label={t("fontFamily")}
                   value={doc.design.fontFamily}
                   onChange={(e) =>
                     updateField("design", {

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Preserve job drafts across status changes and reloads; store application status timelines.
+- Fix date range editing, Turkish education text, accessible labels and mobile preview navigation.
+- Preserve timestamps in backward-compatible v2 workspace backups; detach live links when permanently deleting a CV.
+- Calculate the library ATS heuristic average from active saved CV analyses; support actual tags, categories and editable tone variants.
+- Add field-level revision/variant comparisons, matching evidence links and checks on the actual PDF output.
+- Add API and browser regression coverage for these workflows.
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

@@ -5,8 +5,10 @@ import { AISettings } from "@/components/AISettings";
 import { WorkspaceBackup } from "@/components/WorkspaceBackup";
 import { Icons } from "@/components/Icons";
 import { useI18n } from "@/lib/i18n";
+import { useCopy } from "@/lib/copy";
 export default function SettingsPage() {
   const { language, setLanguage, t } = useI18n();
+  const copy = useCopy();
   return (
     <div className="flex flex-col w-full max-w-5xl mx-auto px-space-lg py-margin-desktop space-y-space-xl">
       {/* Settings Header */}
@@ -191,7 +193,9 @@ export default function SettingsPage() {
                       className="text-emerald-600 shrink-0"
                     />
                     <span>
-                      Local processing · no legal compliance certification
+                      {copy(
+                        "Local processing · no legal compliance certification",
+                      )}
                     </span>
                   </span>
                   <span className="flex items-center gap-1.5">
@@ -199,7 +203,7 @@ export default function SettingsPage() {
                       size={13}
                       className="text-emerald-600 shrink-0"
                     />
-                    <span>Storage configured by your local API</span>
+                    <span>{copy("Storage configured by your local API")}</span>
                   </span>
                 </div>
               </div>

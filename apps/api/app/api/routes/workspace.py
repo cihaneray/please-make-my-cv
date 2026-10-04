@@ -2,6 +2,7 @@
 
 import json
 import uuid
+from datetime import datetime
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
@@ -25,19 +26,45 @@ from app.services.resume_service import ResumeService
 router = APIRouter(prefix="/workspace", tags=["Workspace"])
 
 
+def backup_timestamp(value: str) -> datetime:
+    from app.core.exceptions import ValidationException
+
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError as exc:
+        raise ValidationException("Backup contains an invalid timestamp.") from exc
+
+
+@router.get("/metrics")
+def workspace_metrics(db: Session = Depends(get_db)):
+    from app.analyzers.analyzer_service import AnalysisService
+
+    scores = [
+        AnalysisService.analyze(ResumeService.get_resume(db, row.id)).atsCompatibilityScore
+        for row in ResumeService.list_resumes(db)
+    ]
+    return {
+        "atsAverage": round(sum(scores) / len(scores), 1) if scores else None,
+        "resumeCount": len(scores),
+        "notice": "Internal ATS heuristic; not an external ATS endorsement.",
+    }
+
+
 class HistoryEntry(BaseModel):
+    createdAt: datetime | None = None
     resumeId: str
     revision: int
     document: ResumeDocument
 
 
 class SnapshotEntry(BaseModel):
+    createdAt: datetime | None = None
     jobId: str
     document: ResumeDocument
 
 
 class Backup(BaseModel):
-    version: int = Field(default=1, ge=1, le=1)
+    version: int = Field(default=2, ge=1, le=2)
     resumes: list[ResumeDocument] = Field(default_factory=list)
     jobs: list[JobApplication] = Field(default_factory=list)
     library: list[LibrarySnippet] = Field(default_factory=list)
@@ -73,13 +100,16 @@ def backup(db: Session = Depends(get_db)):
             HistoryEntry(
                 resumeId=r.resume_id,
                 revision=r.revision,
+                createdAt=r.created_at,
                 document=ResumeDocument.model_validate_json(r.document_json),
             )
             for r in db.query(ResumeRevisionModel).all()
         ],
         snapshots=[
             SnapshotEntry(
-                jobId=r.job_id, document=ResumeDocument.model_validate_json(r.document_json)
+                jobId=r.job_id,
+                createdAt=r.created_at,
+                document=ResumeDocument.model_validate_json(r.document_json),
             )
             for r in snapshots
         ],
@@ -111,6 +141,8 @@ def restore(data: Backup, db: Session = Depends(get_db)):
                 is_archived=doc.metadata.isArchived,
                 parent_resume_id=doc.metadata.parentResumeId,
                 document_json=doc.model_dump_json(),
+                created_at=backup_timestamp(doc.metadata.createdAt),
+                updated_at=backup_timestamp(doc.metadata.updatedAt),
             )
         )
     for job in data.jobs:
@@ -124,6 +156,9 @@ def restore(data: Backup, db: Session = Depends(get_db)):
                 description=job.description,
                 notes=job.notes,
                 requirements_json=json.dumps(job.requirements),
+                timeline_json=json.dumps([event.model_dump() for event in job.timeline]),
+                created_at=backup_timestamp(job.createdAt),
+                updated_at=backup_timestamp(job.updatedAt),
                 status=job.status.value,
                 linked_resume_id=ids.get(job.linkedResumeId),
             )
@@ -140,6 +175,8 @@ def restore(data: Backup, db: Session = Depends(get_db)):
                 variants_json=json.dumps([v.model_dump() for v in item.variants]),
                 target_roles_json=json.dumps(item.targetRoles),
                 metrics=item.metrics,
+                created_at=backup_timestamp(item.createdAt),
+                updated_at=backup_timestamp(item.updatedAt),
             )
         )
     seen = set()
@@ -157,6 +194,7 @@ def restore(data: Backup, db: Session = Depends(get_db)):
                 resume_id=ids[row.resumeId],
                 revision=row.revision,
                 document_json=row.document.model_dump_json(),
+                created_at=row.createdAt or backup_timestamp(row.document.metadata.updatedAt),
             )
         )
     for row in data.snapshots:
@@ -167,6 +205,7 @@ def restore(data: Backup, db: Session = Depends(get_db)):
                 id=str(uuid.uuid4()),
                 job_id=jobs[row.jobId],
                 document_json=row.document.model_dump_json(),
+                created_at=row.createdAt or backup_timestamp(row.document.metadata.updatedAt),
             )
         )
     db.commit()

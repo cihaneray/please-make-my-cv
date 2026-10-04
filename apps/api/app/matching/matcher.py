@@ -1,5 +1,5 @@
 from app.matching.normalizer import extract_keywords_from_text, normalize_keyword
-from app.schemas.job import JobMatchAnalysis
+from app.schemas.job import JobMatchAnalysis, RequirementEvidence
 from app.schemas.resume import ResumeDocument
 
 
@@ -17,61 +17,49 @@ class MatchingService:
             else extract_keywords_from_text(job_description)
         )
 
-        # Extract all resume terms
-        resume_terms: set[str] = set()
+        # Attach the actual visible CV text supporting each matched requirement.
+        import re
 
-        # From skills
-        for group in resume.skills:
-            for s in group.skills:
-                resume_terms.add(normalize_keyword(s))
-
-        # From experience technologies and bullets
-        for exp in resume.experience:
-            for t in exp.technologies:
-                resume_terms.add(normalize_keyword(t))
-            for b in exp.bullets:
-                resume_terms.update(extract_keywords_from_text(b))
-
-        # From projects
-        for p in resume.projects:
-            for t in p.technologies:
-                resume_terms.add(normalize_keyword(t))
-            for b in p.bullets:
-                resume_terms.update(extract_keywords_from_text(b))
-
-        # From summary & headline
-        if resume.summary:
-            resume_terms.update(extract_keywords_from_text(resume.summary))
-        if resume.profile.headline:
-            resume_terms.update(extract_keywords_from_text(resume.profile.headline))
-
-        if requirements is not None:
-            import re
-
-            content = " ".join(
-                [resume.summary, resume.profile.headline]
-                + [
-                    f"{entry.position} {entry.summary} {' '.join(entry.bullets)}"
-                    for entry in resume.experience
-                ]
-                + [" ".join(entry.bullets) for entry in resume.projects]
-            ).lower()
-            for term in job_keywords:
-                if re.search(r"(?<!\w)" + re.escape(term) + r"(?!\w)", content):
-                    resume_terms.add(term)
-        # Intersect
-        if not job_keywords:
-            matched: list[str] = []
-            missing: list[str] = []
-            score = None
-        else:
-            matched_set = job_keywords.intersection(resume_terms)
-            missing_set = job_keywords.difference(resume_terms)
-
-            matched = sorted(list(matched_set))
-            missing = sorted(list(missing_set))
-            score = round((len(matched_set) / max(1, len(job_keywords))) * 100, 1)
-
+        candidates = [("profile", None, resume.profile.headline)]
+        if resume.visibility.showSummary:
+            candidates.append(("summary", None, resume.summary))
+        for section, entries, visible in [
+            ("skills", resume.skills, resume.visibility.showSkills),
+            ("experience", resume.experience, resume.visibility.showExperience),
+            ("projects", resume.projects, resume.visibility.showProjects),
+        ]:
+            if not visible:
+                continue
+            for entry in entries:
+                texts = (
+                    entry.skills
+                    if section == "skills"
+                    else [
+                        *entry.technologies,
+                        *entry.bullets,
+                        *(
+                            [entry.position, entry.summary]
+                            if section == "experience"
+                            else [entry.name]
+                        ),
+                    ]
+                )
+                candidates.extend((section, entry.id, text) for text in texts if text)
+        evidence = []
+        for term in sorted(job_keywords):
+            for section, entry_id, text in candidates:
+                terms = extract_keywords_from_text(text) | {normalize_keyword(text)}
+                if term in terms or re.search(
+                    r"(?<!\w)" + re.escape(term) + r"(?!\w)", text.lower()
+                ):
+                    evidence.append(
+                        RequirementEvidence(
+                            requirement=term, section=section, entryId=entry_id, text=text
+                        )
+                    )
+        matched = sorted({item.requirement for item in evidence})
+        missing = sorted(job_keywords - set(matched))
+        score = round(len(matched) / len(job_keywords) * 100, 1) if job_keywords else None
         section_feedback: list[dict[str, str]] = []
         if missing:
             section_feedback.append(
@@ -106,4 +94,5 @@ class MatchingService:
             recommendedKeywords=missing[:6],
             sectionFeedback=section_feedback,
             summary=summary,
+            evidence=evidence,
         )

@@ -52,7 +52,7 @@ const defaults: Record<string, object> = {
 };
 const label = (key: string) =>
   key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase());
-function Fields({
+export function Fields({
   value,
   name,
   change,

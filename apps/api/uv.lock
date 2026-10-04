@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.12"
 
 [[package]]
@@ -87,6 +87,7 @@ dependencies = [
     { name = "psycopg2-binary" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
+    { name = "pypdf" },
     { name = "python-multipart" },
     { name = "pyyaml" },
     { name = "sqlalchemy" },
@@ -95,7 +96,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "pypdf" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "ruff" },
@@ -111,6 +111,7 @@ requires-dist = [
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
     { name = "pydantic", specifier = ">=2.8.0" },
     { name = "pydantic-settings", specifier = ">=2.4.0" },
+    { name = "pypdf", specifier = ">=5.0.0" },
     { name = "python-multipart", specifier = ">=0.0.9" },
     { name = "pyyaml", specifier = ">=6.0.1" },
     { name = "sqlalchemy", specifier = ">=2.0.30" },
@@ -119,7 +120,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "pypdf", specifier = ">=5.0.0" },
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pytest-asyncio", specifier = ">=0.24.0" },
     { name = "ruff", specifier = ">=0.6.0" },

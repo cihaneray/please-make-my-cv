@@ -2,7 +2,7 @@
 import { useCopy } from "@/lib/copy";
 import React, { useEffect, useState, useRef } from "react";
 import { api } from "@/lib/api";
-import { ResumeDocument } from "@/lib/types";
+import { PdfCheckReport, ResumeDocument } from "@/lib/types";
 export function A4ResumePreview({ document }: { document: ResumeDocument }) {
   const copy = useCopy();
 
@@ -40,6 +40,11 @@ export function A4ResumePreview({ document }: { document: ResumeDocument }) {
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [check, setCheck] = useState<PdfCheckReport | null>(null);
+  const [checking, setChecking] = useState(false);
+  useEffect(() => {
+    setCheck(null);
+  }, [document]);
   useEffect(() => {
     const controller = new AbortController();
     const timer = setTimeout(() => {
@@ -104,6 +109,44 @@ export function A4ResumePreview({ document }: { document: ResumeDocument }) {
         >
           {busy ? "Generating…" : "Download PDF"}
         </button>
+      </div>
+      <div className="workspace-tools mb-3 no-print">
+        <button
+          disabled={checking}
+          onClick={async () => {
+            setChecking(true);
+            try {
+              const result = await api.checkPdf(document);
+              if (latest.current === document) setCheck(result);
+              setError("");
+            } catch (e) {
+              setError((e as Error).message);
+            } finally {
+              setChecking(false);
+            }
+          }}
+        >
+          {copy(checking ? "Checking PDF…" : "Check PDF output")}
+        </button>
+        {check && (
+          <div role="status">
+            <p>
+              {copy("Pages")}: {check.pageCount}
+            </p>
+            {!check.issues.length && (
+              <p>{copy("No automated PDF issues found.")}</p>
+            )}
+            <ul>
+              {check.issues.map((issue, i) => (
+                <li key={i}>
+                  {issue.page ? `${copy("Page")} ${issue.page}: ` : ""}
+                  {copy(issue.message)}
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs">{copy(check.notice)}</p>
+          </div>
+        )}
       </div>
       {error && (
         <div role="alert">

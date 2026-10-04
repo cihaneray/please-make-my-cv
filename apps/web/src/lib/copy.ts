@@ -101,6 +101,110 @@ export const copyTranslations: Record<string, string> = {
   "Accent Color": "Vurgu rengi",
   Visibility: "Görünürlük",
 };
+Object.assign(copyTranslations, {
+  "LLM connection settings": "LLM bağlantı ayarları",
+  "Enter your Gemini model ID": "Gemini model kimliğinizi girin",
+  "Enter an available model ID": "Kullanılabilir bir model kimliği girin",
+  "Stored on backend; leave blank to keep":
+    "API'de kayıtlı; korumak için boş bırakın",
+  "No key stored": "Kayıtlı anahtar yok",
+  "Local processing · no legal compliance certification":
+    "Yerel işleme · yasal uyumluluk sertifikası değildir",
+  "Storage configured by your local API":
+    "Depolama yerel API'nizde yapılandırılır",
+  "Content extends beyond the A4 layout. Inspect the exact PDF pages.":
+    "İçerik A4 düzeninin dışına taşıyor. Gerçek PDF sayfalarını inceleyin.",
+  profile: "Profil",
+  experience: "Deneyim",
+  projects: "Projeler",
+  skills: "Beceriler",
+  metadata: "Belge bilgileri",
+  summary: "Özet",
+  education: "Eğitim",
+  design: "Tasarım",
+  visibility: "Görünürlük",
+  "Start date": "Başlangıç tarihi",
+  "End date": "Bitiş tarihi",
+  Present: "Devam ediyor",
+  "Custom sections": "Özel bölümler",
+  "Edit content": "İçeriği düzenle",
+  Preview: "Önizleme",
+  "Compare revisions and variants": "Sürümleri ve varyantları karşılaştır",
+  "Load comparison choices": "Karşılaştırma seçeneklerini yükle",
+  "Compare current draft with": "Mevcut taslağı şununla karşılaştır",
+  "Select a revision or resume": "Bir sürüm veya özgeçmiş seçin",
+  Revision: "Sürüm",
+  "Show differences": "Farkları göster",
+  Differences: "Farklar",
+  Before: "Önce",
+  "Current draft": "Mevcut taslak",
+  "Before → current draft": "Önce → mevcut taslak",
+  "Comparison does not change your document.":
+    "Karşılaştırma belgenizi değiştirmez.",
+  "Check PDF output": "PDF çıktısını kontrol et",
+  "Checking PDF…": "PDF kontrol ediliyor…",
+  Pages: "Sayfa sayısı",
+  Page: "Sayfa",
+  "No automated PDF issues found.": "Otomatik kontrolde PDF sorunu bulunmadı.",
+  "Automated checks are advisory. Inspect Exact PDF pages before sending.":
+    "Otomatik kontroller öneri niteliğindedir. Göndermeden önce gerçek PDF sayfalarını inceleyin.",
+  "Page contains no extractable text.": "Sayfada okunabilir metin bulunamadı.",
+  "Last page has very little content; consider spacing or margin changes.":
+    "Son sayfada çok az içerik var; aralıkları veya kenar boşluklarını gözden geçirin.",
+  "A section heading appears at the end of the page.":
+    "Bir bölüm başlığı sayfanın sonunda yalnız kalmış.",
+  "Document exceeds two pages. Check whether every section is needed.":
+    "Belge iki sayfayı aşıyor. Her bölümün gerekli olup olmadığını kontrol edin.",
+  "Body font is below 9 pt and may be difficult to read.":
+    "Metin boyutu 9 punto altında; okumak zor olabilir.",
+  "Unsaved job draft · stored in this browser":
+    "Kaydedilmemiş ilan taslağı · bu tarayıcıda saklanıyor",
+  Saved: "Kaydedildi",
+  "Application timeline": "Başvuru zaman çizelgesi",
+  "No recorded status history for this older application.":
+    "Bu eski başvuru için kayıtlı durum geçmişi yok.",
+  Company: "Şirket",
+  Position: "Pozisyon",
+  Location: "Konum",
+  Url: "Bağlantı",
+  Notes: "Notlar",
+  saved: "Kaydedildi",
+  applied: "Başvuruldu",
+  interview: "Görüşme",
+  offer: "Teklif",
+  rejected: "Reddedildi",
+  archived: "Arşivlendi",
+  "ATS heuristic average": "ATS sezgisel puan ortalaması",
+  "active resumes": "aktif özgeçmiş",
+  "Analysis unavailable": "Analiz kullanılamıyor",
+  "Not assessed": "Değerlendirilmedi",
+  "Internal ATS heuristic; not an external ATS endorsement.":
+    "Uygulama içi ATS sezgisel puanıdır; harici ATS onayı değildir.",
+  "Technical variant (optional)": "Teknik varyant (isteğe bağlı)",
+  "Concise variant (optional)": "Kısa varyant (isteğe bağlı)",
+  "Snippet title": "Madde başlığı",
+  Achievement: "Başarı maddesi",
+  "Edit snippet": "Maddeyi düzenle",
+  "LLM connection": "LLM bağlantısı",
+  "Enable AI reviews": "Yapay zeka incelemelerini etkinleştir",
+  Provider: "Sağlayıcı",
+  "API base URL": "API adresi",
+  "Model ID": "Model kimliği",
+  "API key (optional for local servers)":
+    "API anahtarı (yerel sunucular için isteğe bağlı)",
+  "Remove stored key": "Kayıtlı anahtarı kaldır",
+  "Save connection": "Bağlantıyı kaydet",
+  "Test saved connection": "Kayıtlı bağlantıyı test et",
+  "Save changes before testing.": "Testten önce değişiklikleri kaydedin.",
+  "Working…": "İşlem sürüyor…",
+  "Connection settings saved.": "Bağlantı ayarları kaydedildi.",
+  "Connect Gemini, an OpenAI-compatible API, or local Ollama. Resume reviews run only when you request them in Review. The selected server receives resume content and optional job text; cloud providers may charge for requests.":
+    "Gemini, OpenAI uyumlu API veya yerel Ollama bağlayın. CV incelemeleri yalnızca İnceleme ekranında istediğinizde çalışır. Seçilen sunucu CV içeriğini ve isteğe bağlı ilan metnini alır; bulut sağlayıcıları ücret talep edebilir.",
+  "Keys are stored in the backend settings file, excluded from workspace backups, and never returned to this page. Protect that file with your OS account permissions. Changing provider or URL clears the old key unless you enter a replacement. In Docker, use http://host.docker.internal:11434 for host Ollama.":
+    "Anahtarlar API ayar dosyasında saklanır, yedeklere eklenmez ve bu sayfaya geri gönderilmez. Dosyayı işletim sistemi izinleriyle koruyun. Sağlayıcı veya adres değiştiğinde yeni bir anahtar girmediyseniz eski anahtar silinir. Docker'da bilgisayarınızdaki Ollama için http://host.docker.internal:11434 kullanın.",
+  "Use a Gemini API key and model ID from Google AI Studio. The default URL connects to the Gemini Developer API.":
+    "Google AI Studio'dan Gemini API anahtarı ve model kimliği kullanın. Varsayılan adres Gemini Developer API'ye bağlanır.",
+});
 export function useCopy() {
   const { language } = useI18n();
   return (text: string) =>

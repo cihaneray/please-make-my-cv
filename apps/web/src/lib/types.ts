@@ -108,6 +108,7 @@ export interface ExperienceItem {
 export const IssueSeverity = {INFO: "info", WARNING: "warning", IMPORTANT: "important", CRITICAL: "critical"} as const;
 export type IssueSeverity = typeof IssueSeverity[keyof typeof IssueSeverity];
 export interface JobApplication {
+  timeline: Array<JobEvent>;
   requirements: Array<string>;
   id: string;
   company: string;
@@ -121,7 +122,13 @@ export interface JobApplication {
   createdAt: string;
   updatedAt: string;
 }
+export interface JobEvent {
+  id: string;
+  status: JobStatus;
+  createdAt: string;
+}
 export interface JobMatchAnalysis {
+  evidence: Array<RequirementEvidence>;
   jobId: string;
   resumeId: string;
   matchScore: number | null;
@@ -163,6 +170,16 @@ export interface PatchResumeMetadataRequest {
   tags: Array<string> | null;
   isArchived: boolean | null;
 }
+export interface PdfCheckIssue {
+  code: string;
+  page: number | null;
+  message: string;
+}
+export interface PdfCheckReport {
+  pageCount: number;
+  issues: Array<PdfCheckIssue>;
+  notice: string;
+}
 export interface Profile {
   firstName: string;
   lastName: string;
@@ -189,6 +206,12 @@ export interface ProjectItem {
   endDate: string;
   bullets: Array<string>;
   technologies: Array<string>;
+}
+export interface RequirementEvidence {
+  requirement: string;
+  section: string;
+  entryId: string | null;
+  text: string;
 }
 export interface ResumeAnalysisReport {
   resumeId: string;

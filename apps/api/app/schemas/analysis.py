@@ -50,3 +50,15 @@ class ResumeComparisonReport(BaseModel):
     targetTitle: str
     changes: list[ComparisonChange] = Field(default_factory=list)
     summary: str = ""
+
+
+class PdfCheckIssue(BaseModel):
+    code: str
+    page: int | None = None
+    message: str
+
+
+class PdfCheckReport(BaseModel):
+    pageCount: int
+    issues: list[PdfCheckIssue]
+    notice: str = "Automated checks are advisory. Inspect Exact PDF pages before sending."

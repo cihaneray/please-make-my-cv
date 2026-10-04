@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, Query, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.analyzers.analyzer_service import AnalysisService
 from app.db.session import get_db
-from app.schemas.analysis import ResumeAnalysisReport, ResumeComparisonReport
+from app.schemas.analysis import PdfCheckReport, ResumeAnalysisReport, ResumeComparisonReport
 from app.schemas.resume import (
     CreateResumeRequest,
     CreateVariantRequest,
@@ -16,6 +17,23 @@ from app.services.comparison_service import ComparisonService
 from app.services.resume_service import ResumeService
 
 router = APIRouter(prefix="/resumes", tags=["Resumes"])
+
+
+class CompareDraftRequest(BaseModel):
+    source: ResumeDocument
+    target: ResumeDocument
+
+
+@router.post("/compare-drafts", response_model=ResumeComparisonReport)
+def compare_drafts(request: CompareDraftRequest):
+    return ComparisonService.compare(request.source, request.target)
+
+
+@router.post("/{resume_id}/pdf-check", response_model=PdfCheckReport)
+def pdf_check(resume_id: str, document: ResumeDocument):
+    from app.services.pdf_check_service import check_pdf
+
+    return check_pdf(document)
 
 
 @router.get("", response_model=list[ResumeSummaryResponse])

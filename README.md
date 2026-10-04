@@ -2,6 +2,28 @@
 
 A single-user, local CV workspace with a Next.js 16 / React 19 interface and a Python 3.12+ FastAPI API. SQLite is the default; Docker Compose uses PostgreSQL.
 
+## Editing and application tools
+
+- Content includes certifications, languages, and custom sections. Experience
+  and education have separate start/end dates and a Present toggle.
+- **Compare revisions and variants** shows field-level differences between a
+  previous revision or another resume and the current draft, without saving it.
+- **Check PDF output** renders the current draft and checks the actual page
+  count, empty/sparse pages, orphan headings, small fonts, and horizontal layout
+  overflow. Checks are advisory; inspect **Exact PDF pages** before sending.
+- Job matches include supporting CV text with links to the relevant section.
+  Hidden sections are excluded. Application status transitions appear in the
+  job's timeline; older applications have no invented historical transitions.
+- Unsaved job edits survive status changes and are stored in the current
+  browser until saved. Saving edits does not revert the application status.
+- The library's **ATS heuristic average** is computed from all active saved
+  resumes, with the number of resumes shown. It is not an external ATS score
+  or a job-specific match. Categories, tags and optional tone variants can be
+  edited; variants are not fabricated automatically.
+- Workspace backup v2 preserves timestamps and job timelines. Restore still
+  accepts v1 backups; missing historical timestamps use document timestamps.
+  Restores add new records, and submitted CV copies remain immutable.
+
 ## Start locally
 
 In `apps/api`:

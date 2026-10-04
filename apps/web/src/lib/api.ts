@@ -1,4 +1,6 @@
 import {
+  ResumeComparisonReport,
+  PdfCheckReport,
   JobApplication,
   JobMatchAnalysis,
   LibrarySnippet,
@@ -41,6 +43,27 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  workspaceMetrics: () =>
+    fetchJson<{
+      atsAverage: number | null;
+      resumeCount: number;
+      notice: string;
+    }>(`${API_BASE}/workspace/metrics`),
+  compareDrafts: (source: ResumeDocument, target: ResumeDocument) =>
+    fetchJson<ResumeComparisonReport>(`${API_BASE}/resumes/compare-drafts`, {
+      method: "POST",
+      body: JSON.stringify({ source, target }),
+    }),
+  checkPdf: (document: ResumeDocument) =>
+    fetchJson<PdfCheckReport>(
+      `${API_BASE}/resumes/${document.metadata.id}/pdf-check`,
+      { method: "POST", body: JSON.stringify(document) },
+    ),
+  updateSnippet: (id: string, payload: Partial<LibrarySnippet>) =>
+    fetchJson<LibrarySnippet>(`${API_BASE}/library/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
   async createVariant(
     document: ResumeDocument,
     targetJob: TargetJob,

@@ -33,15 +33,25 @@ def launch_browser(playwright):
     )
 
 
-def render_pdf(doc: ResumeDocument) -> bytes:
+def render_pdf(doc: ResumeDocument, layout_checks: list[str] | None = None) -> bytes:
     try:
         with sync_playwright() as playwright:
             browser = launch_browser(playwright)
             try:
-                page = browser.new_page(java_script_enabled=False)
+                page = browser.new_page(
+                    java_script_enabled=False, viewport={"width": 794, "height": 1123}
+                )
                 page.set_default_timeout(15000)
                 page.route("**/*", lambda route: route.abort())
                 page.set_content(HtmlPdfExporter.render_html(doc), wait_until="load")
+                if layout_checks is not None:
+                    overflow = page.evaluate("""() => [...document.querySelectorAll('.cv-page *')].some(el => {
+                        const rect = el.getBoundingClientRect();
+                        const sheet = document.querySelector('.cv-page').getBoundingClientRect();
+                        return el.scrollWidth > el.clientWidth + 2 && el.clientWidth > 0 || rect.right > sheet.right + 2 || rect.left < sheet.left - 2;
+                    })""")
+                    if overflow:
+                        layout_checks.append("horizontal-overflow")
                 return page.pdf(format="A4", print_background=True, prefer_css_page_size=True)
             finally:
                 browser.close()

@@ -1,4 +1,5 @@
 "use client";
+import { useCopy } from "@/lib/copy";
 import { notify } from "@/components/Notifications";
 
 import React, { useEffect, useState } from "react";
@@ -9,6 +10,15 @@ import { BulletVariant, LibraryItemType, LibrarySnippet } from "@/lib/types";
 
 export default function LibraryPage() {
   const { t } = useI18n();
+  const copy = useCopy();
+  const [metrics, setMetrics] = useState<{
+    atsAverage: number | null;
+    resumeCount: number;
+  } | null>(null);
+  const [metricsError, setMetricsError] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [technical, setTechnical] = useState("");
+  const [concise, setConcise] = useState("");
   const [snippets, setSnippets] = useState<LibrarySnippet[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<LibraryItemType | "all">("all");
@@ -19,8 +29,8 @@ export default function LibraryPage() {
   // New snippet state
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
-  const [newCategory, setNewCategory] = useState("Design Systems");
-  const [newTags, setNewTags] = useState("Architecture, Metrics (+20%)");
+  const [newCategory, setNewCategory] = useState("General");
+  const [newTags, setNewTags] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -37,6 +47,10 @@ export default function LibraryPage() {
       }
     }
     load();
+    api
+      .workspaceMetrics()
+      .then(setMetrics)
+      .catch(() => setMetricsError(true));
   }, []);
 
   async function handleCreateSnippet(e: React.FormEvent) {
@@ -47,18 +61,51 @@ export default function LibraryPage() {
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean);
-      const created = await api.createSnippet({
+      const payload = {
         title: newTitle || "Career Achievement",
         content: newContent,
         category: newCategory,
         tags: tagsList,
         type: LibraryItemType.BULLET,
         variants: [
-          { id: `var-1`, type: "technical", text: newContent },
-          { id: `var-2`, type: "concise", text: newContent },
+          ...(editingId
+            ? (
+                snippets.find((item) => item.id === editingId)?.variants || []
+              ).filter((v) => !["technical", "concise"].includes(v.type))
+            : []),
+          ...(technical.trim()
+            ? [
+                {
+                  id: crypto.randomUUID(),
+                  type: "technical",
+                  text: technical.trim(),
+                },
+              ]
+            : []),
+          ...(concise.trim()
+            ? [
+                {
+                  id: crypto.randomUUID(),
+                  type: "concise",
+                  text: concise.trim(),
+                },
+              ]
+            : []),
         ],
-      });
-      setSnippets([created, ...snippets]);
+      };
+      const created = editingId
+        ? await api.updateSnippet(editingId, payload)
+        : await api.createSnippet(payload);
+      setSnippets(
+        editingId
+          ? snippets.map((item) => (item.id === editingId ? created : item))
+          : [created, ...snippets],
+      );
+      setEditingId(null);
+      setTechnical("");
+      setConcise("");
+      setNewCategory("General");
+      setNewTags("");
       setShowAddBox(false);
       setNewTitle("");
       setNewContent("");
@@ -128,13 +175,23 @@ export default function LibraryPage() {
               <div className="w-px h-6 bg-surface-container-highest" />
               <div className="flex flex-col">
                 <span className="font-label-sm text-label-sm text-secondary uppercase">
-                  {t("atsMatchAvg")}
+                  {copy("ATS heuristic average")}
                 </span>
                 <span className="font-headline-lg text-headline-lg text-on-tertiary-container">
-                  94.2%
+                  {metricsError
+                    ? copy("Analysis unavailable")
+                    : metrics?.atsAverage == null
+                      ? copy("Not assessed")
+                      : `${metrics.atsAverage}%`}
                 </span>
               </div>
             </div>
+            <p className="text-xs">
+              {metrics
+                ? `${metrics.resumeCount} ${copy("active resumes")}. `
+                : ""}
+              {copy("Internal ATS heuristic; not an external ATS endorsement.")}
+            </p>
           </div>
         </div>
       </div>
@@ -158,7 +215,16 @@ export default function LibraryPage() {
 
               <button
                 type="button"
-                onClick={() => setShowAddBox(!showAddBox)}
+                onClick={() => {
+                  setEditingId(null);
+                  setNewTitle("");
+                  setNewContent("");
+                  setNewCategory("General");
+                  setNewTags("");
+                  setTechnical("");
+                  setConcise("");
+                  setShowAddBox(!showAddBox);
+                }}
                 className="h-8 px-space-md flex items-center gap-space-xs rounded bg-primary text-on-primary font-label-sm text-label-sm hover:bg-inverse-surface transition-colors flex-shrink-0 shadow-sm"
               >
                 <Icons.Add size={14} />
@@ -170,10 +236,9 @@ export default function LibraryPage() {
             <div className="flex items-center gap-space-xs flex-wrap select-none">
               {[
                 "all",
-                "Design Systems",
-                "Architecture",
-                "Metrics (+20%)",
-                "Management",
+                ...Array.from(
+                  new Set(snippets.flatMap((item) => item.tags)),
+                ).sort(),
               ].map((tag) => (
                 <button
                   key={tag}
@@ -214,12 +279,35 @@ export default function LibraryPage() {
               <input
                 type="text"
                 placeholder="Snippet title (e.g. Distributed Database Scaled to 10k QPS)"
+                aria-label={copy("Snippet title")}
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 className="h-8 px-3 rounded bg-surface-container-lowest text-body-sm outline-none border border-surface-container-highest"
               />
 
+              <label>
+                {copy("Category")}
+                <input
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                />
+              </label>
+              <label>
+                {copy("Technical variant (optional)")}
+                <textarea
+                  value={technical}
+                  onChange={(e) => setTechnical(e.target.value)}
+                />
+              </label>
+              <label>
+                {copy("Concise variant (optional)")}
+                <textarea
+                  value={concise}
+                  onChange={(e) => setConcise(e.target.value)}
+                />
+              </label>
               <textarea
+                aria-label={copy("Achievement")}
                 rows={3}
                 required
                 placeholder="Core accomplishment text..."
@@ -232,6 +320,7 @@ export default function LibraryPage() {
                 <input
                   type="text"
                   placeholder="Tags (comma-separated, e.g. Architecture, Python)"
+                  aria-label={copy("Tags")}
                   value={newTags}
                   onChange={(e) => setNewTags(e.target.value)}
                   className="h-8 px-3 rounded bg-surface-container-lowest text-body-sm outline-none border border-surface-container-highest w-80"
@@ -274,6 +363,26 @@ export default function LibraryPage() {
                       </span>
                     </div>
 
+                    <button
+                      onClick={() => {
+                        setEditingId(snip.id);
+                        setNewTitle(snip.title);
+                        setNewContent(snip.content);
+                        setNewTags(snip.tags.join(", "));
+                        setNewCategory(snip.category);
+                        setTechnical(
+                          snip.variants.find((v) => v.type === "technical")
+                            ?.text || "",
+                        );
+                        setConcise(
+                          snip.variants.find((v) => v.type === "concise")
+                            ?.text || "",
+                        );
+                        setShowAddBox(true);
+                      }}
+                    >
+                      {copy("Edit snippet")}
+                    </button>
                     <button
                       aria-label="Delete snippet"
                       type="button"

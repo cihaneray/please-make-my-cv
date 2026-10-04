@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from app.matching.normalizer import extract_keywords_from_text
 from app.rules.base import (
     BaseRule,
     IssueSeverity,
@@ -55,10 +56,8 @@ class JobKeywordMatchRule(BaseRule):
         context = context or {}
         job_keywords: list[str] = context.get("keywords", [])
         if not job_keywords and resume.metadata.targetRole:
-            # Derive basic target role keywords
-            job_keywords = [
-                w for w in re.split(r"[\s/,]+", resume.metadata.targetRole) if len(w) > 2
-            ]
+            # A job title is not a list of skill requirements (e.g. "Engineer").
+            job_keywords = sorted(extract_keywords_from_text(resume.metadata.targetRole))
 
         if not job_keywords:
             return RuleResult(

@@ -10,7 +10,7 @@ from app.core.exceptions import (
     EntityNotFoundException,
     ValidationException,
 )
-from app.db.models import ResumeModel, ResumeRevisionModel
+from app.db.models import JobModel, ResumeModel, ResumeRevisionModel
 from app.schemas.resume import (
     CreateResumeRequest,
     CreateVariantRequest,
@@ -252,6 +252,15 @@ class ResumeService:
             raise EntityNotFoundException("Resume", resume_id)
 
         if permanent:
+            db.query(JobModel).filter_by(linked_resume_id=resume_id).update(
+                {"linked_resume_id": None}
+            )
+            for child in db.query(ResumeModel).filter_by(parent_resume_id=resume_id).all():
+                child_doc = ResumeDocument.model_validate_json(child.document_json)
+                child_doc.metadata.parentResumeId = None
+                child.parent_resume_id = None
+                child.document_json = child_doc.model_dump_json()
+            # Historical copies stay immutable; only live relationships are detached.
             db.query(ResumeRevisionModel).filter_by(resume_id=resume_id).delete()
             db.delete(model)
         else:

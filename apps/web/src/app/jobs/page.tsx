@@ -2,6 +2,7 @@
 import { notify } from "@/components/Notifications";
 
 import { JobTools } from "@/components/JobTools";
+import { useCopy } from "@/lib/copy";
 import React, { useEffect, useState } from "react";
 import { Icons } from "@/components/Icons";
 import { api } from "@/lib/api";
@@ -14,6 +15,7 @@ import {
 } from "@/lib/types";
 
 export default function JobsPage() {
+  const copy = useCopy();
   const { language, t, getJobStatusLabel } = useI18n();
   const [jobs, setJobs] = useState<JobApplication[]>([]);
   const [resumes, setResumes] = useState<ResumeSummary[]>([]);
@@ -228,6 +230,11 @@ export default function JobsPage() {
 
                   {/* Status Dropdown */}
                   <select
+                    aria-label={
+                      language === "tr"
+                        ? "Başvuru durumu"
+                        : "Application status"
+                    }
                     value={selectedJob.status}
                     onChange={(e) => handleStatusChange(e.target.value)}
                     className="h-8 px-2.5 rounded bg-surface-container text-body-sm capitalize font-medium outline-none border border-surface-container-highest"
@@ -241,7 +248,7 @@ export default function JobsPage() {
                 </div>
 
                 <JobTools
-                  key={`${selectedJob.id}-${selectedJob.updatedAt}`}
+                  key={selectedJob.id}
                   job={selectedJob}
                   resumes={resumes}
                   onSaved={(updated) => {
@@ -255,6 +262,51 @@ export default function JobsPage() {
                   onMatch={setMatchResult}
                 />
                 {/* Match Analysis Gauge & Summary */}
+                {!!matchResult?.evidence?.length && (
+                  <section
+                    className="workspace-tools border rounded p-3"
+                    aria-label={
+                      language === "tr"
+                        ? "Gereksinim kanıtları"
+                        : "Requirement evidence"
+                    }
+                  >
+                    <h3>
+                      {language === "tr"
+                        ? "CV'deki kanıtlar"
+                        : "Evidence in your CV"}
+                    </h3>
+                    {matchResult.matchedSkills.map((requirement) => (
+                      <details
+                        key={requirement}
+                        className="border-b py-2 text-sm"
+                      >
+                        <summary>
+                          {requirement} ·{" "}
+                          {
+                            matchResult.evidence.filter(
+                              (e) => e.requirement === requirement,
+                            ).length
+                          }{" "}
+                          {language === "tr" ? "kaynak" : "sources"}
+                        </summary>
+                        {matchResult.evidence
+                          .filter((e) => e.requirement === requirement)
+                          .map((evidence, i) => (
+                            <div key={i} className="py-2">
+                              <a
+                                className="underline"
+                                href={`/resumes/${matchResult.resumeId}?section=${encodeURIComponent(evidence.section)}${evidence.entryId ? `&entry=${encodeURIComponent(evidence.entryId)}` : ""}`}
+                              >
+                                {copy(evidence.section)}
+                              </a>
+                              <p>{evidence.text}</p>
+                            </div>
+                          ))}
+                      </details>
+                    ))}
+                  </section>
+                )}
                 <div className="p-4 rounded-xl bg-surface-container-low flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <span className="font-label-sm text-secondary uppercase font-semibold">

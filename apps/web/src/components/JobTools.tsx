@@ -1,6 +1,6 @@
 "use client";
 import { useCopy } from "@/lib/copy";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import {
   JobApplication,
@@ -21,8 +21,63 @@ export function JobTools({
 }) {
   const copy = useCopy();
 
-  const [draft, setDraft] = useState(job);
-  const [requirements, setRequirements] = useState(job.requirements.join("\n"));
+  const [draft, setDraft] = useState<JobApplication>(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem(`job-draft-${job.id}`) || "null",
+      );
+      return saved?.id === job.id && Array.isArray(saved.requirements)
+        ? { ...job, ...saved }
+        : job;
+    } catch {
+      return job;
+    }
+  });
+  const [requirements, setRequirements] = useState(
+    draft.requirements.join("\n"),
+  );
+  const editable = (value: JobApplication) =>
+    JSON.stringify([
+      value.company,
+      value.position,
+      value.location,
+      value.url,
+      value.description,
+      value.notes,
+      value.linkedResumeId,
+      value.requirements,
+    ]);
+  const draftWithRequirements = useMemo(
+    () => ({
+      ...draft,
+      requirements: requirements
+        .split("\n")
+        .map((v) => v.trim())
+        .filter(Boolean),
+    }),
+    [draft, requirements],
+  );
+  const dirty = editable(draftWithRequirements) !== editable(job);
+  useEffect(() => {
+    setDraft((previous) => ({
+      ...previous,
+      status: job.status,
+      timeline: job.timeline,
+      updatedAt: job.updatedAt,
+    }));
+  }, [job.status, job.timeline, job.updatedAt]);
+  useEffect(() => {
+    try {
+      if (dirty)
+        localStorage.setItem(
+          `job-draft-${job.id}`,
+          JSON.stringify(draftWithRequirements),
+        );
+      else localStorage.removeItem(`job-draft-${job.id}`);
+    } catch {
+      /* Editing still works when browser storage is unavailable. */
+    }
+  }, [dirty, job.id, draftWithRequirements]);
   const [snapshots, setSnapshots] = useState<
     Array<{ id: string; createdAt: string; document: ResumeDocument }>
   >([]);
@@ -42,6 +97,11 @@ export function JobTools({
   return (
     <details className="workspace-tools border rounded p-3">
       <summary> {copy("Edit job, requirements and submitted copies")} </summary>
+      <p role="status">
+        {dirty
+          ? copy("Unsaved job draft · stored in this browser")
+          : copy("Saved")}
+      </p>
       <fieldset disabled={busy} className="grid gap-3 py-3">
         {(
           [
@@ -54,7 +114,7 @@ export function JobTools({
           ] as const
         ).map((key) => (
           <label key={key} className="grid">
-            {key}
+            {copy(key.charAt(0).toUpperCase() + key.slice(1))}
             <textarea
               value={draft[key]}
               onChange={(e) => setDraft({ ...draft, [key]: e.target.value })}
@@ -83,7 +143,13 @@ export function JobTools({
             run(async () =>
               onSaved(
                 await api.updateJob(job.id, {
-                  ...draft,
+                  company: draft.company,
+                  position: draft.position,
+                  location: draft.location,
+                  url: draft.url,
+                  description: draft.description,
+                  notes: draft.notes,
+                  linkedResumeId: draft.linkedResumeId,
                   requirements: requirements
                     .split("\n")
                     .map((value) => value.trim())
@@ -151,6 +217,24 @@ export function JobTools({
           </button>
         ))}
         <p role="status">{message}</p>
+        <section aria-label={copy("Application timeline")}>
+          <h3>{copy("Application timeline")}</h3>
+          {!job.timeline.length && (
+            <p>
+              {copy("No recorded status history for this older application.")}
+            </p>
+          )}
+          <ol>
+            {job.timeline.map((event) => (
+              <li key={event.id}>
+                <time dateTime={event.createdAt}>
+                  {new Date(event.createdAt).toLocaleString()}
+                </time>{" "}
+                · {copy(event.status)}
+              </li>
+            ))}
+          </ol>
+        </section>
       </fieldset>
     </details>
   );

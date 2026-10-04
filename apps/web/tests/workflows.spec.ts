@@ -1,6 +1,198 @@
 import { test, expect } from "@playwright/test";
 import { applyAIEdit } from "../src/lib/ai-edits";
 
+test("job draft survives status changes and reload without reverting status on save", async ({
+  page,
+  request,
+}) => {
+  const response = await request.post("http://127.0.0.1:8101/api/jobs", {
+    data: { company: "Draft preservation test", position: "Developer" },
+  });
+  const job = await response.json();
+  await page.goto("/jobs");
+  await page
+    .getByText("Draft preservation test", { exact: true })
+    .first()
+    .click();
+  await page
+    .getByText("Edit job, requirements and submitted copies", { exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "Notes", exact: true })
+    .fill("Unsaved meeting note");
+  await page
+    .getByRole("combobox", { name: "Application status" })
+    .selectOption("interview");
+  await expect(
+    page.getByRole("textbox", { name: "Notes", exact: true }),
+  ).toHaveValue("Unsaved meeting note");
+  await page.reload();
+  await page
+    .getByText("Edit job, requirements and submitted copies", { exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "Notes", exact: true }),
+  ).toHaveValue("Unsaved meeting note");
+  await page.getByRole("button", { name: "Save job", exact: true }).click();
+  await expect
+    .poll(async () =>
+      (await request.get(`http://127.0.0.1:8101/api/jobs/${job.id}`)).json(),
+    )
+    .toMatchObject({ status: "interview", notes: "Unsaved meeting note" });
+  await expect(
+    page.getByRole("region", { name: "Application timeline" }),
+  ).toContainText("interview");
+});
+
+test("dates store separate fields and additional CV sections are discoverable", async ({
+  page,
+  request,
+}) => {
+  const doc = await create(request);
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page.getByRole("button", { name: "Work Experience 0" }).click();
+  await page.getByRole("button", { name: "Add Role" }).click();
+  await page
+    .getByRole("textbox", { name: "Start date", exact: true })
+    .fill("2022-03");
+  await page.getByRole("checkbox", { name: "Present", exact: true }).check();
+  await expect(
+    page.getByRole("textbox", { name: "End date", exact: true }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "Save Draft", exact: true }).click();
+  await expect
+    .poll(async () =>
+      (
+        await request.get(
+          `http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`,
+        )
+      ).json(),
+    )
+    .toMatchObject({
+      experience: [{ startDate: "2022-03", endDate: "", current: true }],
+    });
+  await page.getByRole("button", { name: "Certifications 0" }).click();
+  await expect(
+    page.getByRole("button", { name: "Add Certifications", exact: true }),
+  ).toBeVisible();
+});
+
+test("revision comparison and PDF checks use the current draft", async ({
+  page,
+  request,
+}) => {
+  const doc = await create(request);
+  doc.summary = "Baseline summary";
+  await request.put(`http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`, {
+    data: { revision: 1, document: doc },
+  });
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page
+    .getByRole("textbox", { name: "First Name", exact: true })
+    .fill("Draft difference");
+  await page
+    .getByText("Compare revisions and variants", { exact: true })
+    .click();
+  await page.getByRole("button", { name: "Load comparison choices" }).click();
+  await page
+    .getByLabel("Compare current draft with")
+    .selectOption("revision:1");
+  await page.getByRole("button", { name: "Show differences" }).click();
+  await expect(
+    page.getByText("Draft difference", { exact: true }).last(),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Comparison does not change your document.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Check PDF output", exact: true })
+    .click();
+  await expect(
+    page.getByRole("region", { name: "Resume preview" }),
+  ).toContainText("Pages: 1");
+  await page.screenshot({
+    path: "test-results/new-features.png",
+    fullPage: true,
+  });
+  expect(
+    (
+      await (
+        await request.get(
+          `http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`,
+        )
+      ).json()
+    ).profile.firstName,
+  ).toBe("");
+});
+
+test("library metric is calculated and new snippets do not invent variants", async ({
+  page,
+  request,
+}) => {
+  const metrics = await (
+    await request.get("http://127.0.0.1:8101/api/workspace/metrics")
+  ).json();
+  await page.goto("/library");
+  await expect(
+    page.getByText("ATS heuristic average", { exact: true }),
+  ).toBeVisible();
+  if (metrics.atsAverage !== null)
+    await expect(
+      page.getByText(`${metrics.atsAverage}%`, { exact: true }),
+    ).toBeVisible();
+  await page.getByRole("button", { name: "Add Snippet", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "Snippet title", exact: true })
+    .fill("Real library entry");
+  await page
+    .getByRole("textbox", { name: "Achievement", exact: true })
+    .fill("Reduced latency 35%");
+  await page
+    .getByRole("textbox", { name: "Tags", exact: true })
+    .fill("CustomTag");
+  await page.getByRole("button", { name: "Save Snippet", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "CustomTag", exact: true }),
+  ).toBeVisible();
+  const snippets = await (
+    await request.get("http://127.0.0.1:8101/api/library")
+  ).json();
+  expect(
+    snippets.find((s: any) => s.title === "Real library entry"),
+  ).toMatchObject({ category: "General", variants: [] });
+});
+
+test("mobile editor separates content and preview without horizontal overflow", async ({
+  page,
+  request,
+}) => {
+  const doc = await create(request);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await expect(
+    page.getByRole("textbox", { name: "First Name", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Resume preview" }),
+  ).toBeHidden();
+  await page.getByRole("button", { name: "Preview", exact: true }).click();
+  await expect(
+    page.getByRole("region", { name: "Resume preview" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("textbox", { name: "First Name", exact: true }),
+  ).toBeHidden();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(390);
+  await page.screenshot({
+    path: "test-results/mobile-preview.png",
+    fullPage: true,
+  });
+});
+
 test("saved job requirements survive reload", async ({ page, request }) => {
   const response = await request.post("http://127.0.0.1:8101/api/jobs", {
     data: { company: "Requirements regression", position: "Chef" },
@@ -48,7 +240,7 @@ test("visual draft is preserved in source and invalid source blocks switching", 
   const doc = await create(request);
   await page.goto(`/resumes/${doc.metadata.id}`);
   await page
-    .getByRole("textbox", { name: "firstName", exact: true })
+    .getByRole("textbox", { name: "First Name", exact: true })
     .fill("UnsavedName");
   await expect(
     page.frameLocator("iframe").getByRole("heading", { name: /UnsavedName/i }),
@@ -69,7 +261,7 @@ test("typing during save survives acknowledgment", async ({
 }) => {
   const doc = await create(request);
   await page.goto(`/resumes/${doc.metadata.id}`);
-  const name = page.getByRole("textbox", { name: "firstName", exact: true });
+  const name = page.getByRole("textbox", { name: "First Name", exact: true });
   await name.fill("First");
   let release!: () => void;
   const gate = new Promise<void>((resolve) => (release = resolve));
@@ -98,7 +290,7 @@ test("draft survives reload and can be explicitly recovered", async ({
   const doc = await create(request);
   await page.goto(`/resumes/${doc.metadata.id}`);
   await page
-    .getByRole("textbox", { name: "firstName", exact: true })
+    .getByRole("textbox", { name: "First Name", exact: true })
     .fill("RecoveredName");
   await expect
     .poll(() =>
@@ -112,7 +304,7 @@ test("draft survives reload and can be explicitly recovered", async ({
   await page.reload();
   await page.getByRole("button", { name: "Recover", exact: true }).click();
   await expect(
-    page.getByRole("textbox", { name: "firstName", exact: true }),
+    page.getByRole("textbox", { name: "First Name", exact: true }),
   ).toHaveValue("RecoveredName");
 });
 test("source apply changes the draft and PDF contains it", async ({
@@ -130,7 +322,7 @@ test("source apply changes the draft and PDF contains it", async ({
     .click();
   await page.getByRole("button", { name: "Content", exact: true }).click();
   await expect(
-    page.getByRole("textbox", { name: "firstName", exact: true }),
+    page.getByRole("textbox", { name: "First Name", exact: true }),
   ).toHaveValue("SourceName");
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export PDF", exact: true }).click();
@@ -243,7 +435,7 @@ test("revision history restores content as a new draft", async ({
     .getByRole("button", { name: "Restore revision 1", exact: true })
     .click();
   await expect(
-    page.getByRole("textbox", { name: "firstName", exact: true }),
+    page.getByRole("textbox", { name: "First Name", exact: true }),
   ).toHaveValue("");
   await page.getByRole("button", { name: "Save Draft", exact: true }).click();
   await expect
@@ -395,6 +587,7 @@ test("live preview keeps A4 geometry and print margins while fitting the panel",
   );
   await page.getByLabel("Preview zoom").selectOption("fit");
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Preview", exact: true }).click();
   await expect
     .poll(async () => (await page.locator("iframe").boundingBox())!.width)
     .toBeLessThan(390);
@@ -639,7 +832,7 @@ test("job-specific copy preserves the original and restores target context", asy
   const doc = await create(request);
   await page.goto(`/resumes/${doc.metadata.id}`);
   await page
-    .getByRole("textbox", { name: "firstName", exact: true })
+    .getByRole("textbox", { name: "First Name", exact: true })
     .fill("DraftName");
   await page.getByRole("button", { name: "Review", exact: true }).click();
   await page.getByText("Job-specific resume copy", { exact: true }).click();

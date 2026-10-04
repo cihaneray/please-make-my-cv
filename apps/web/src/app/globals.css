@@ -181,6 +181,33 @@ button:disabled {
 .mobile-navigation {
   display: none;
 }
+.mobile-studio-switch {
+  display: none;
+}
+@media (max-width: 900px) {
+  .mobile-studio-switch {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .studio-body[data-mobile-view="edit"] > section {
+    display: none;
+  }
+  .studio-body[data-mobile-view="preview"] > aside,
+  .studio-body[data-mobile-view="preview"] > div {
+    display: none;
+  }
+  .studio-body > aside {
+    max-height: none !important;
+    overflow: visible;
+  }
+  .studio-body > aside > div {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .studio-body > div {
+    overflow: visible;
+  }
+}
 @media (max-width: 900px) {
   .mobile-navigation {
     display: block;

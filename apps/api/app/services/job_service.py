@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import EntityNotFoundException
 from app.db.models import ApplicationSnapshotModel, JobModel
-from app.schemas.job import CreateJobRequest, JobApplication, JobStatus, UpdateJobRequest
+from app.schemas.job import CreateJobRequest, JobApplication, JobEvent, JobStatus, UpdateJobRequest
 from app.services.resume_service import ResumeService
 
 
@@ -32,6 +32,7 @@ class JobService:
                 description=m.description,
                 notes=m.notes,
                 requirements=json.loads(m.requirements_json),
+                timeline=json.loads(m.timeline_json),
                 status=JobStatus(m.status),
                 linkedResumeId=m.linked_resume_id,
                 createdAt=m.created_at.isoformat(),
@@ -54,6 +55,7 @@ class JobService:
             description=m.description,
             notes=m.notes,
             requirements=json.loads(m.requirements_json),
+            timeline=json.loads(m.timeline_json),
             status=JobStatus(m.status),
             linkedResumeId=m.linked_resume_id,
             createdAt=m.created_at.isoformat(),
@@ -72,6 +74,7 @@ class JobService:
             description=request.description,
             notes=request.notes,
             requirements_json=json.dumps(request.requirements),
+            timeline_json=json.dumps([JobEvent(status=request.status).model_dump()]),
             status=request.status.value,
             linked_resume_id=request.linkedResumeId,
         )
@@ -95,6 +98,7 @@ class JobService:
             raise EntityNotFoundException("Job", job_id)
 
         was_applied = m.status == JobStatus.APPLIED.value
+        previous_status = m.status
         if request.company is not None:
             m.company = request.company
         if request.position is not None:
@@ -111,6 +115,10 @@ class JobService:
             m.requirements_json = json.dumps(request.requirements)
         if request.status is not None:
             m.status = request.status.value
+        if previous_status != m.status:
+            events = json.loads(m.timeline_json)
+            events.append(JobEvent(status=JobStatus(m.status)).model_dump())
+            m.timeline_json = json.dumps(events)
         if "linkedResumeId" in request.model_fields_set:
             m.linked_resume_id = request.linkedResumeId
 

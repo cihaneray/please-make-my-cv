@@ -233,7 +233,7 @@ class HtmlPdfExporter:
             edu_items = []
             for edu in doc.education:
                 deg = html.escape(
-                    f"{edu.degree}{' in ' + edu.fieldOfStudy if edu.fieldOfStudy else ''}"
+                    f"{edu.degree}{(' — ' if is_tr else ' in ') + edu.fieldOfStudy if edu.fieldOfStudy else ''}"
                 )
                 inst = html.escape(edu.institution)
                 dates = html.escape(

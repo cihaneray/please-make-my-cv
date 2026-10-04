@@ -1,7 +1,9 @@
 "use client";
+import { useCopy } from "@/lib/copy";
 import { useEffect, useState } from "react";
 import { aiApi, AIConnection } from "@/lib/api";
 export function AISettings() {
+  const copy = useCopy();
   const [config, setConfig] = useState<AIConnection | null>(null);
   const [key, setKey] = useState("");
   const [clear, setClear] = useState(false);
@@ -17,14 +19,13 @@ export function AISettings() {
   return (
     <section
       className="workspace-tools bg-surface-container-lowest rounded-xl border p-6 mb-6 space-y-4"
-      aria-label="LLM connection settings"
+      aria-label={copy("LLM connection settings")}
     >
-      <h2 className="text-lg font-semibold">LLM connection</h2>
+      <h2 className="text-lg font-semibold">{copy("LLM connection")}</h2>
       <p className="text-sm">
-        Connect Gemini, an OpenAI-compatible API, or local Ollama. Resume
-        reviews run only when you request them in Review. The selected server
-        receives resume content and optional job text; cloud providers may
-        charge for requests.
+        {copy(
+          "Connect Gemini, an OpenAI-compatible API, or local Ollama. Resume reviews run only when you request them in Review. The selected server receives resume content and optional job text; cloud providers may charge for requests.",
+        )}
       </p>
       {config && (
         <>
@@ -37,10 +38,10 @@ export function AISettings() {
                 setDirty(true);
               }}
             />
-            Enable AI reviews
+            {copy("Enable AI reviews")}
           </label>
           <label className="block">
-            Provider
+            {copy("Provider")}
             <select
               aria-label="Provider"
               className="block w-full"
@@ -70,7 +71,7 @@ export function AISettings() {
             </select>
           </label>
           <label className="block">
-            API base URL
+            {copy("API base URL")}
             <input
               className="block w-full"
               value={config.baseUrl}
@@ -81,14 +82,14 @@ export function AISettings() {
             />
           </label>
           <label className="block">
-            Model ID
+            {copy("Model ID")}
             <input
               className="block w-full"
-              placeholder={
+              placeholder={copy(
                 config.provider === "gemini"
                   ? "Enter your Gemini model ID"
-                  : "Enter an available model ID"
-              }
+                  : "Enter an available model ID",
+              )}
               value={config.model}
               onChange={(e) => {
                 setConfig({ ...config, model: e.target.value });
@@ -97,19 +98,21 @@ export function AISettings() {
             />
           </label>
           <label className="block">
-            {config.provider === "gemini"
-              ? "Gemini API key"
-              : "API key (optional for local servers)"}
+            {copy(
+              config.provider === "gemini"
+                ? "Gemini API key"
+                : "API key (optional for local servers)",
+            )}
             <input
               className="block w-full"
               type="password"
               autoComplete="new-password"
               value={key}
-              placeholder={
+              placeholder={copy(
                 config.hasApiKey
                   ? "Stored on backend; leave blank to keep"
-                  : "No key stored"
-              }
+                  : "No key stored",
+              )}
               onChange={(e) => {
                 setKey(e.target.value);
                 setDirty(true);
@@ -118,8 +121,9 @@ export function AISettings() {
           </label>
           {config.provider === "gemini" && (
             <p className="text-sm">
-              Use a Gemini API key and model ID from Google AI Studio. The
-              default URL connects to the Gemini Developer API.
+              {copy(
+                "Use a Gemini API key and model ID from Google AI Studio. The default URL connects to the Gemini Developer API.",
+              )}
             </p>
           )}
           <label className="flex gap-2">
@@ -131,14 +135,12 @@ export function AISettings() {
                 setDirty(true);
               }}
             />
-            Remove stored key
+            {copy("Remove stored key")}
           </label>
           <p className="text-xs">
-            Keys are stored in the backend settings file, excluded from
-            workspace backups, and never returned to this page. Protect that
-            file with your OS account permissions. Changing provider or URL
-            clears the old key unless you enter a replacement. In Docker, use
-            http://host.docker.internal:11434 for host Ollama.
+            {copy(
+              "Keys are stored in the backend settings file, excluded from workspace backups, and never returned to this page. Protect that file with your OS account permissions. Changing provider or URL clears the old key unless you enter a replacement. In Docker, use http://host.docker.internal:11434 for host Ollama.",
+            )}
           </p>
           <div className="flex flex-wrap gap-3">
             <button
@@ -166,7 +168,7 @@ export function AISettings() {
                 }
               }}
             >
-              Save connection
+              {copy("Save connection")}
             </button>
             <button
               disabled={busy || dirty || !config.enabled}
@@ -182,13 +184,15 @@ export function AISettings() {
                 }
               }}
             >
-              Test saved connection
+              {copy("Test saved connection")}
             </button>
           </div>
-          {dirty && <p className="text-xs">Save changes before testing.</p>}
+          {dirty && (
+            <p className="text-xs">{copy("Save changes before testing.")}</p>
+          )}
         </>
       )}
-      <p role="status">{busy ? "Working…" : message}</p>
+      <p role="status">{copy(busy ? "Working…" : message)}</p>
     </section>
   );
 }

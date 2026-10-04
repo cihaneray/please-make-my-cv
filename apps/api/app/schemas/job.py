@@ -24,7 +24,14 @@ class JobStatus(str, Enum):
     ARCHIVED = "archived"
 
 
+class JobEvent(BaseModel):
+    id: str = Field(default_factory=default_uuid)
+    status: JobStatus
+    createdAt: str = Field(default_factory=now_iso)
+
+
 class JobApplication(BaseModel):
+    timeline: list[JobEvent] = Field(default_factory=list)
     requirements: list[str] = Field(default_factory=list, max_length=100)
     id: str = Field(default_factory=default_uuid)
     company: str
@@ -63,7 +70,15 @@ class UpdateJobRequest(BaseModel):
     linkedResumeId: str | None = None
 
 
+class RequirementEvidence(BaseModel):
+    requirement: str
+    section: str
+    entryId: str | None = None
+    text: str
+
+
 class JobMatchAnalysis(BaseModel):
+    evidence: list[RequirementEvidence] = Field(default_factory=list)
     jobId: str
     resumeId: str
     matchScore: float | None  # 0 to 100
