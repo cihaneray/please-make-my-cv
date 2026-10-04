@@ -9,8 +9,7 @@ provider connection.
 
 ## Recommended setup
 
-For a Windows Dev Drive repository with Python in WSL, use the
-[Docker Compose development setup](#windows-dev-drive--docker-development).
+Use the [Docker Compose development setup](#docker-development).
 It installs Python, Node.js, and PDF browser dependencies in containers and
 persists workspace data across restarts.
 
@@ -82,12 +81,11 @@ Database migrations run at API startup. Existing databases are adopted without d
 
 ## Docker
 
-### Windows Dev Drive + Docker development
+### Docker development
 
-Start Docker Desktop with its Linux engine and Docker Compose 2.17 or newer.
-No host Python, Node.js, npm, or
-WSL virtual environment is needed. Keep the repository on the Dev Drive.
-From the repository root in PowerShell or WSL:
+Use Docker with Linux containers and Docker Compose 2.17 or newer.
+Python, Node.js, and npm are installed inside the containers.
+Run these commands from the repository root:
 
 ```sh
 # First setup only; preserve an existing .env.
@@ -99,7 +97,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build --wait
 Open http://localhost:3000. Python and Node dependencies are installed inside
 the images, Chromium and its Linux libraries are included, and database/AI
 settings persist in named volumes. The development overlay mounts source
-directories, enables polling for Windows file changes, and keeps Next.js cache
+directories, enables polling for source file changes, and keeps Next.js cache
 in a Linux volume. Web development uses Webpack for reliable polling.
 Rebuild after dependency or Dockerfile changes; restart the API after migration
 changes. Regular application source edits reload automatically.
@@ -224,6 +222,11 @@ npm test
 Browser tests build production assets and run isolated services on ports 3101 and 8101, using `apps/api/e2e.db`, not the normal workspace database. Backend tests disable normal startup initialization and use isolated databases. Frontend response types are generated from Pydantic schemas: after schema changes run `uv run python scripts/generate_types.py` from `apps/api`.
 
 GitHub Actions checks lint, generated contracts, tests, production-browser workflows, and Docker startup. See [implementation notes](Docs/remediation-report.md) for changes and remaining boundaries.
+
+Include `[SKIP]` in the latest commit message to skip CI verification jobs on
+push and pull request events. On pull requests, a lightweight job reads the
+head commit message first. GitHub may still show a skipped workflow run;
+use its native `[skip ci]` marker to prevent the workflow run entirely.
 
 
 ## LLM resume reviews

@@ -3,7 +3,27 @@ on: [push, pull_request]
 permissions:
   contents: read
 jobs:
+  commit-policy:
+    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[SKIP]') }}
+    runs-on: ubuntu-latest
+    outputs:
+      run-ci: ${{ steps.policy.outputs.run-ci }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Check latest commit message
+        id: policy
+        shell: bash
+        run: |
+          if git log -1 --format=%B | grep -Fqi '[SKIP]'; then
+            echo 'run-ci=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'run-ci=true' >> "$GITHUB_OUTPUT"
+          fi
   quality:
+    needs: commit-policy
+    if: ${{ needs.commit-policy.outputs.run-ci == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,6 +47,8 @@ jobs:
       - run: npm run lint && npm test
         working-directory: apps/web
   containers:
+    needs: commit-policy
+    if: ${{ needs.commit-policy.outputs.run-ci == 'true' }}
     runs-on: ubuntu-latest
     env:
       POSTGRES_PASSWORD: disposable-ci-password
