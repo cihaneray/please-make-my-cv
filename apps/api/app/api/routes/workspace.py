@@ -15,7 +15,7 @@ from app.db.models import (
     ResumeRevisionModel,
 )
 from app.db.session import get_db
-from app.schemas.job import JobApplication
+from app.schemas.job import JobApplication, JobStatus
 from app.schemas.library import LibrarySnippet
 from app.schemas.resume import ResumeDocument
 from app.services.job_service import JobService
@@ -47,11 +47,27 @@ class Backup(BaseModel):
 
 @router.get("/backup", response_model=Backup)
 def backup(db: Session = Depends(get_db)):
+    jobs = JobService.list_jobs(db)
+    snapshots = db.query(ApplicationSnapshotModel).all()
+    known_jobs = {job.id for job in jobs}
+    # Earlier versions left submitted copies behind when deleting their job.
+    # Preserve those copies under an archived placeholder in portable backups.
+    for snapshot in snapshots:
+        if snapshot.job_id not in known_jobs:
+            jobs.append(
+                JobApplication(
+                    id=snapshot.job_id,
+                    company="Deleted job",
+                    position="Recovered submitted copy",
+                    status=JobStatus.ARCHIVED,
+                )
+            )
+            known_jobs.add(snapshot.job_id)
     return Backup(
         resumes=[
             ResumeService.get_resume(db, row.id) for row in ResumeService.list_resumes(db, True)
         ],
-        jobs=JobService.list_jobs(db),
+        jobs=jobs,
         library=LibraryService.list_snippets(db),
         history=[
             HistoryEntry(
@@ -65,7 +81,7 @@ def backup(db: Session = Depends(get_db)):
             SnapshotEntry(
                 jobId=r.job_id, document=ResumeDocument.model_validate_json(r.document_json)
             )
-            for r in db.query(ApplicationSnapshotModel).all()
+            for r in snapshots
         ],
     )
 
@@ -107,6 +123,7 @@ def restore(data: Backup, db: Session = Depends(get_db)):
                 url=job.url,
                 description=job.description,
                 notes=job.notes,
+                requirements_json=json.dumps(job.requirements),
                 status=job.status.value,
                 linked_resume_id=ids.get(job.linkedResumeId),
             )

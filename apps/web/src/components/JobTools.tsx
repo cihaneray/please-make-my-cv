@@ -22,7 +22,7 @@ export function JobTools({
   const copy = useCopy();
 
   const [draft, setDraft] = useState(job);
-  const [requirements, setRequirements] = useState("");
+  const [requirements, setRequirements] = useState(job.requirements.join("\n"));
   const [snapshots, setSnapshots] = useState<
     Array<{ id: string; createdAt: string; document: ResumeDocument }>
   >([]);
@@ -80,7 +80,17 @@ export function JobTools({
         </label>
         <button
           onClick={() =>
-            run(async () => onSaved(await api.updateJob(job.id, draft)))
+            run(async () =>
+              onSaved(
+                await api.updateJob(job.id, {
+                  ...draft,
+                  requirements: requirements
+                    .split("\n")
+                    .map((value) => value.trim())
+                    .filter(Boolean),
+                }),
+              ),
+            )
           }
         >
           {" "}

@@ -25,6 +25,7 @@ class JobStatus(str, Enum):
 
 
 class JobApplication(BaseModel):
+    requirements: list[str] = Field(default_factory=list, max_length=100)
     id: str = Field(default_factory=default_uuid)
     company: str
     position: str
@@ -39,6 +40,7 @@ class JobApplication(BaseModel):
 
 
 class CreateJobRequest(BaseModel):
+    requirements: list[str] = Field(default_factory=list, max_length=100)
     company: str
     position: str
     location: str = ""
@@ -50,6 +52,7 @@ class CreateJobRequest(BaseModel):
 
 
 class UpdateJobRequest(BaseModel):
+    requirements: list[str] | None = Field(default=None, max_length=100)
     company: str | None = None
     position: str | None = None
     location: str | None = None

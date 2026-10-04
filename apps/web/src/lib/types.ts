@@ -28,6 +28,7 @@ export interface ComparisonChange {
   details: Record<string, unknown>;
 }
 export interface CreateJobRequest {
+  requirements: Array<string>;
   company: string;
   position: string;
   location: string;
@@ -107,6 +108,7 @@ export interface ExperienceItem {
 export const IssueSeverity = {INFO: "info", WARNING: "warning", IMPORTANT: "important", CRITICAL: "critical"} as const;
 export type IssueSeverity = typeof IssueSeverity[keyof typeof IssueSeverity];
 export interface JobApplication {
+  requirements: Array<string>;
   id: string;
   company: string;
   position: string;
@@ -264,6 +266,7 @@ export interface TargetJob {
   description: string;
 }
 export interface UpdateJobRequest {
+  requirements: Array<string> | null;
   company: string | null;
   position: string | null;
   location: string | null;

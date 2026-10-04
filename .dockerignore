@@ -1,0 +1,15 @@
+**/node_modules
+**/.venv
+**/.next
+**/.next-e2e
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/.env*
+**/*.db*
+**/data
+**/ai-settings.json
+**/test-results
+**/playwright-report
+.git
+*.log

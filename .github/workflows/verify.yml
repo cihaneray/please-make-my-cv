@@ -33,7 +33,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker compose config --quiet
+      - run: docker compose -f docker-compose.yml -f docker-compose.dev.yml config --quiet
+      - run: docker compose -f docker-compose.test.yml config --quiet
       - run: docker compose up --build --wait --wait-timeout 240
       - run: curl --fail http://127.0.0.1:8000/api/health && curl --fail http://127.0.0.1:3000/api/health
+      - run: |
+          docker compose down
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build --wait --wait-timeout 240
+          curl --fail http://127.0.0.1:8000/api/health
+          curl --fail http://127.0.0.1:3000/api/health
       - if: always()
-        run: docker compose logs && docker compose down --volumes
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml logs
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml down --volumes

@@ -185,6 +185,76 @@ def test_backup_restore_additive_and_validated(client):
     assert len(client.get("/api/resumes").json()) == 2
 
 
+def test_deleted_job_does_not_break_workspace_backup(client):
+    doc = client.post("/api/resumes", json={}).json()
+    job = client.post(
+        "/api/jobs",
+        json={
+            "company": "Company",
+            "position": "Role",
+            "status": "applied",
+            "linkedResumeId": doc["metadata"]["id"],
+        },
+    ).json()
+    assert len(client.get(f"/api/jobs/{job['id']}/snapshots").json()) == 1
+    assert client.delete(f"/api/jobs/{job['id']}").status_code == 204
+    backup = client.get("/api/workspace/backup").json()
+    assert backup["jobs"] == [] and backup["snapshots"] == []
+    assert client.post("/api/workspace/restore", json=backup).status_code == 200
+
+
+def test_backup_recovers_legacy_orphan_snapshot(client, db_session):
+    from app.db.models import ApplicationSnapshotModel
+
+    db_session.add(
+        ApplicationSnapshotModel(
+            id="orphan-copy",
+            job_id="deleted-job",
+            document_json=ResumeDocument().model_dump_json(),
+        )
+    )
+    db_session.commit()
+    backup = client.get("/api/workspace/backup").json()
+    assert backup["jobs"][0]["id"] == "deleted-job"
+    assert backup["jobs"][0]["status"] == "archived"
+    assert client.post("/api/workspace/restore", json=backup).status_code == 200
+
+
+def test_job_requirements_persist_and_round_trip_backup(client):
+    job = client.post(
+        "/api/jobs",
+        json={
+            "company": "Bakery",
+            "position": "Chef",
+            "requirements": ["food safety"],
+        },
+    ).json()
+    assert client.get(f"/api/jobs/{job['id']}").json()["requirements"] == ["food safety"]
+    assert (
+        client.put(
+            f"/api/jobs/{job['id']}",
+            json={
+                "requirements": ["cake decorating", "food safety"],
+            },
+        ).status_code
+        == 200
+    )
+    backup = client.get("/api/workspace/backup").json()
+    assert client.post("/api/workspace/restore", json=backup).status_code == 200
+    assert all(
+        job["requirements"] == ["cake decorating", "food safety"]
+        for job in client.get("/api/jobs").json()
+    )
+    doc = client.post(
+        "/api/resumes",
+        json={
+            "initialData": {"summary": "Experienced in cake decorating"},
+        },
+    ).json()
+    match = client.post(f"/api/jobs/{job['id']}/match/{doc['metadata']['id']}").json()
+    assert match["matchScore"] == 50
+
+
 def test_markdown_source_cannot_replace_document(client):
     doc = client.post("/api/resumes", json={}).json()
     response = client.put(
@@ -219,9 +289,10 @@ def test_unlink_and_application_snapshot(client):
 def test_repository_fixture_accepts_yaml_dates():
     from pathlib import Path
 
-    fixture = (
-        Path(__file__).resolve().parents[3]
-        / "packages/shared/fixtures/software_engineer_resume.yaml"
+    fixture = next(
+        parent / "packages/shared/fixtures/software_engineer_resume.yaml"
+        for parent in Path(__file__).resolve().parents
+        if (parent / "packages/shared/fixtures/software_engineer_resume.yaml").is_file()
     )
     doc, _, errors = YamlParser.parse(fixture.read_text(encoding="utf8"))
     assert not errors
@@ -260,6 +331,35 @@ def test_migrations_adopt_existing_database(tmp_path):
         command.upgrade(config, "head")
     with Session(engine) as db:
         assert ResumeService.get_resume(db, doc.metadata.id).metadata.title == "Preserve"
+    engine.dispose()
+
+
+def test_job_requirements_migration_preserves_old_jobs(tmp_path):
+    from pathlib import Path
+
+    from alembic import command
+    from alembic.config import Config
+    from sqlalchemy import text
+
+    engine = create_engine(f"sqlite:///{tmp_path / 'old-jobs.db'}")
+    config = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
+    with engine.begin() as connection:
+        config.attributes["connection"] = connection
+        command.upgrade(config, "0001")
+        connection.execute(
+            text("""
+            INSERT INTO jobs (id, company, position, location, url, description, notes,
+                              status, created_at, updated_at)
+            VALUES ('old-job', 'Keep company', 'Keep role', '', '', '', '',
+                    'saved', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        """)
+        )
+        command.upgrade(config, "head")
+    with Session(engine) as db:
+        from app.services.job_service import JobService
+
+        job = JobService.get_job(db, "old-job")
+        assert job.company == "Keep company" and job.requirements == []
     engine.dispose()
 
 

@@ -67,7 +67,10 @@ def match_job_with_resume(
     job = JobService.get_job(db, job_id)
     resume = ResumeService.get_resume(db, resume_id)
     return MatchingService.match(
-        resume, job_id=job.id, job_description=job.description, requirements=requirements
+        resume,
+        job_id=job.id,
+        job_description=job.description,
+        requirements=requirements if requirements is not None else (job.requirements or None),
     )
 
 

@@ -1,5 +1,39 @@
 import { test, expect } from "@playwright/test";
 import { applyAIEdit } from "../src/lib/ai-edits";
+
+test("saved job requirements survive reload", async ({ page, request }) => {
+  const response = await request.post("http://127.0.0.1:8101/api/jobs", {
+    data: { company: "Requirements regression", position: "Chef" },
+  });
+  expect(response.ok()).toBeTruthy();
+  const job = await response.json();
+  await page.goto("/jobs");
+  await page
+    .getByText("Requirements regression", { exact: true })
+    .first()
+    .click();
+  await page
+    .getByText("Edit job, requirements and submitted copies", { exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "Requirements to compare (one per line)" })
+    .fill("cake decorating\nfood safety");
+  await page.getByRole("button", { name: "Save job", exact: true }).click();
+  await expect
+    .poll(async () =>
+      (await request.get(`http://127.0.0.1:8101/api/jobs/${job.id}`)).json(),
+    )
+    .toMatchObject({ requirements: ["cake decorating", "food safety"] });
+  await page.reload();
+  await page
+    .getByText("Edit job, requirements and submitted copies", { exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", {
+      name: "Requirements to compare (one per line)",
+    }),
+  ).toHaveValue("cake decorating\nfood safety");
+});
 async function create(request: any) {
   const response = await request.post("http://127.0.0.1:8101/api/resumes", {
     data: { title: "Browser regression", templateId: "technical" },

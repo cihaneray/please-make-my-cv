@@ -1,5 +1,29 @@
 # Remediation report
 
+## Follow-up: Windows Dev Drive and Docker Compose (2026-10-04)
+
+- Added a development Compose overlay with source mounts, Windows file polling,
+  API reload, and a named Linux volume for frontend build cache. Python/Node
+  dependencies and Chromium stay inside the images.
+- Added an isolated Docker verification image that reuses the API's Python 3.12
+  and Chromium runtime and runs backend checks, contracts, lint, production build,
+  and browser workflows without connecting to the PostgreSQL workspace volume.
+- Fixed PostgreSQL startup by explicitly selecting the installed psycopg2 driver.
+  Production frontend images also retain their Next.js configuration.
+- Job deletion now removes submitted copies in the same transaction. New backups
+  preserve older orphan copies under archived placeholder jobs so they restore.
+- Added persistent editable job requirements, a non-destructive migration,
+  backup/restore support, and saved-requirement matching.
+- Documented Docker-only access to old SQLite files and additive migration to
+  PostgreSQL. No existing user database was migrated during this work.
+- Verified 86 backend tests under container Python 3.12.15, generated contracts,
+  Ruff/formatting, frontend lint/build, and 20 browser workflows. Dev Compose has
+  three healthy services; Windows file changes trigger API reload. A PDF request
+  through the frontend returns real PDF bytes. A separate production frontend
+  container successfully proxies the API health endpoint.
+- Docker's first image downloads stalled on locked layers; restarting the idle
+  engine resolved the issue. Dependency and browser installation then completed.
+
 Date: 2026-09-28
 
 The review has been addressed through implementation, regression coverage, and explicit product boundaries below. The remediation was committed in separate API, PDF, AI, editor, build, and documentation commits. Later feature work is recorded in Git and the changelog; no deployment was performed.

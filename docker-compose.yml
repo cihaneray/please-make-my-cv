@@ -23,7 +23,7 @@ services:
     container_name: cv-workspace-api
     environment:
       APP_ENV: production
-      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/cv_workspace
+      DATABASE_URL: postgresql+psycopg2://postgres:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/cv_workspace
       CORS_ORIGINS: '["http://localhost:3000","http://127.0.0.1:3000"]'
       AI_CONFIG_PATH: /app/data/ai-settings.json
     volumes:

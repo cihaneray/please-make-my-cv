@@ -1,3 +1,4 @@
+import json
 import uuid
 from datetime import UTC, datetime
 
@@ -30,6 +31,7 @@ class JobService:
                 url=m.url,
                 description=m.description,
                 notes=m.notes,
+                requirements=json.loads(m.requirements_json),
                 status=JobStatus(m.status),
                 linkedResumeId=m.linked_resume_id,
                 createdAt=m.created_at.isoformat(),
@@ -51,6 +53,7 @@ class JobService:
             url=m.url,
             description=m.description,
             notes=m.notes,
+            requirements=json.loads(m.requirements_json),
             status=JobStatus(m.status),
             linkedResumeId=m.linked_resume_id,
             createdAt=m.created_at.isoformat(),
@@ -68,6 +71,7 @@ class JobService:
             url=request.url,
             description=request.description,
             notes=request.notes,
+            requirements_json=json.dumps(request.requirements),
             status=request.status.value,
             linked_resume_id=request.linkedResumeId,
         )
@@ -103,6 +107,8 @@ class JobService:
             m.description = request.description
         if request.notes is not None:
             m.notes = request.notes
+        if request.requirements is not None:
+            m.requirements_json = json.dumps(request.requirements)
         if request.status is not None:
             m.status = request.status.value
         if "linkedResumeId" in request.model_fields_set:
@@ -125,5 +131,6 @@ class JobService:
         m = db.query(JobModel).filter(JobModel.id == job_id).first()
         if not m:
             raise EntityNotFoundException("Job", job_id)
+        db.query(ApplicationSnapshotModel).filter_by(job_id=job_id).delete()
         db.delete(m)
         db.commit()

@@ -1,16 +1,16 @@
-FROM python:3.12-slim
+FROM python:3.12-slim AS base
 
 WORKDIR /app
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.12.23 /uv /bin/uv
 
 # Copy dependency files
 COPY pyproject.toml uv.lock ./
 
 # Install dependencies using uv
 RUN uv sync --frozen --no-dev
-RUN uv run playwright install --with-deps chromium
+RUN .venv/bin/playwright install --with-deps chromium
 
 # Copy application source code
 COPY app/ ./app/
@@ -21,3 +21,11 @@ ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8000
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+FROM base AS development
+RUN uv sync --frozen
+COPY scripts/ ./scripts/
+COPY tests/ ./tests/
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/app"]
+
+FROM base AS production

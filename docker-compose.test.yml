@@ -1,0 +1,15 @@
+services:
+  api-test-base:
+    build:
+      context: ./apps/api
+      target: development
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      additional_contexts:
+        api_runtime: service:api-test-base
+    environment:
+      DATABASE_URL: sqlite:///./e2e.db
+      SEED_DEMO: "false"
+      AI_CONFIG_PATH: /tmp/test-ai-settings.json

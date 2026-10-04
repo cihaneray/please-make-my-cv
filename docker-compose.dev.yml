@@ -1,0 +1,32 @@
+services:
+  api:
+    build:
+      target: development
+    environment:
+      APP_ENV: development
+      WATCHFILES_FORCE_POLLING: "true"
+    volumes:
+      - ./apps/api/app:/app/app:ro
+      - ./apps/api/migrations:/app/migrations:ro
+      - ./apps/api/tests:/app/tests:ro
+      - ./apps/api/scripts:/app/scripts:ro
+      - ./apps/api/alembic.ini:/app/alembic.ini:ro
+      - ./packages:/packages:ro
+  web:
+    build:
+      target: development
+    environment:
+      NODE_ENV: development
+      WATCHPACK_POLLING: "true"
+    healthcheck:
+      start_period: 60s
+    volumes:
+      - ./apps/web/src:/app/src:ro
+      - ./apps/web/tests:/app/tests:ro
+      - ./apps/web/next.config.mjs:/app/next.config.mjs:ro
+      - ./apps/web/tsconfig.json:/app/tsconfig.json:ro
+      - ./apps/web/tailwind.config.ts:/app/tailwind.config.ts:ro
+      - ./apps/web/postcss.config.js:/app/postcss.config.js:ro
+      - web_dev_cache:/app/.next
+volumes:
+  web_dev_cache:

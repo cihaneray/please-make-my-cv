@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add Docker Compose development with Windows file polling, container-managed dependencies and Linux build cache, plus an isolated Docker verification workflow.
+- Fix job deletion leaving submitted copies that prevented backup restore; recover older orphan copies into archived placeholder jobs in new backups.
+- Persist editable job requirements, include them in workspace backups, and migrate existing databases without replacing records.
+- Document SQLite-to-PostgreSQL migration and Docker-only access to legacy workspaces.
+
 - Add native Google Gemini API support for connection testing, resume scores, and actionable review suggestions, with backend-only credentials and blocked/incomplete response handling.
 
 - Review and apply individual AI field suggestions with before/after comparison, conflict protection, and undo.

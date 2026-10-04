@@ -29,6 +29,7 @@ class ResumeModel(Base):
 
 class JobModel(Base):
     __tablename__ = "jobs"
+    requirements_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, index=True)
     company: Mapped[str] = mapped_column(String(255), nullable=False)

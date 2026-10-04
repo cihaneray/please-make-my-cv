@@ -25,6 +25,81 @@ Database migrations run at API startup. Existing databases are adopted without d
 
 ## Docker
 
+### Windows Dev Drive + Docker development
+
+Start Docker Desktop with its Linux engine and Docker Compose 2.17 or newer.
+No host Python, Node.js, npm, or
+WSL virtual environment is needed. Keep the repository on the Dev Drive.
+From the repository root in PowerShell or WSL:
+
+```sh
+# First setup only; preserve an existing .env.
+cp .env.example .env
+# Replace POSTGRES_PASSWORD with a long alphanumeric password.
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build --wait --wait-timeout 240
+```
+
+Open http://localhost:3000. Python and Node dependencies are installed inside
+the images, Chromium and its Linux libraries are included, and database/AI
+settings persist in named volumes. The development overlay mounts source
+directories, enables polling for Windows file changes, and keeps Next.js cache
+in a Linux volume. Web development uses Webpack for reliable polling.
+Rebuild after dependency or Dockerfile changes; restart the API after migration
+changes. Regular application source edits reload automatically.
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f api web
+docker compose -f docker-compose.yml -f docker-compose.dev.yml down
+```
+
+`down` keeps saved data. Avoid `down --volumes` unless you intend to erase the
+database and saved AI settings. Development and production Compose use the same
+data volumes; stop one before starting the other. The password is embedded in
+the database URL, so this setup expects an alphanumeric password. Changing the
+file does not change a password already initialized in PostgreSQL.
+
+Run the full isolated Python 3.12 and frontend browser suite through Docker:
+
+```sh
+docker compose -f docker-compose.test.yml run --build --rm test
+```
+
+This uses disposable SQLite databases inside the test container and does not
+connect to the workspace PostgreSQL volume. It checks lint, migrations,
+generated contracts, PDF generation, and production-build browser workflows.
+
+### Moving an existing SQLite workspace
+
+1. Start the updated API against your original SQLite file and download
+   **Settings → workspace backup**. Use an absolute `DATABASE_URL` if the file
+   is outside `apps/api`; relative database paths depend on the working directory.
+2. Stop that instance, start Docker Compose, and restore the backup from Settings.
+   Restore is additive and assigns new IDs. Import only once to avoid duplicates.
+3. Check resumes, history, jobs, library, and submitted copies before retiring
+   the old database. AI credentials are excluded: configure them again in Settings.
+
+For Docker-only access to an old database, stop other processes using the file,
+then run the updated API image on port 8001 with a separate SQLite mount:
+
+```powershell
+docker compose build api
+docker compose run --rm --no-deps -p 127.0.0.1:8001:8000 -v "D:/path/to/old-api:/legacy" -e DATABASE_URL=sqlite:////legacy/cv_workspace.db -e AI_CONFIG_PATH=/tmp/legacy-ai-settings.json api
+```
+
+In another terminal, download the portable backup:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8001/api/workspace/backup -OutFile workspace-backup.json
+```
+
+Use a copy made while the original API is stopped if you want to preserve the
+original file untouched: API startup applies migrations. The backup can contain
+personal data. Older orphan submitted copies are preserved in backups under
+archived placeholder jobs. Permanently deleting a job now deletes its submitted
+copies in the same transaction; archive the job to retain them.
+
+### Production-style local run
+
 Copy `.env.example` to `.env` and replace its password. Then run:
 
 ```sh
