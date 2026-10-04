@@ -2,6 +2,35 @@
 
 A single-user, local CV workspace with a Next.js 16 / React 19 interface and a Python 3.12+ FastAPI API. SQLite is the default; Docker Compose uses PostgreSQL.
 
+Create and maintain English or Turkish CVs, reuse career content, tailor copies
+for job applications, review changes, and export selectable-text PDFs. The
+workspace runs locally; external AI reviews are optional and require a saved
+provider connection.
+
+## Recommended setup
+
+For a Windows Dev Drive repository with Python in WSL, use the
+[Docker Compose development setup](#windows-dev-drive--docker-development).
+It installs Python, Node.js, and PDF browser dependencies in containers and
+persists workspace data across restarts.
+
+## Typical workflow
+
+1. Create a resume or import JSON/YAML; review Markdown imports because they
+   cannot preserve every field.
+2. Edit the current draft in the visual editor or source view. Choose its
+   language, target market, and template, then **Save Draft** to create a revision.
+   On mobile, switch between **Edit content** and **Preview**.
+3. Add a target job and edit its requirements. Inspect matching CV evidence,
+   create a job-specific copy, and compare it with the original or a saved revision.
+4. Review local analysis or configure an optional AI connection for editorial
+   feedback. Review and apply individual suggestions before saving.
+5. Run **Check PDF output**, inspect **Exact PDF pages**, and export the CV.
+6. Link the appropriate CV to a job and track application status. Moving the job
+   to Applied preserves a submitted copy; later CV edits leave that copy intact.
+7. Reuse content through the Career Library and download workspace backups
+   from Settings.
+
 ## Editing and application tools
 
 - Content includes certifications, languages, and custom sections. Experience
@@ -25,6 +54,12 @@ A single-user, local CV workspace with a Next.js 16 / React 19 interface and a P
   Restores add new records, and submitted CV copies remain immutable.
 
 ## Start locally
+
+For this alternative to Docker, run both services in the same environment
+(for example, WSL) with Python 3.12+, uv, and Node.js/npm installed. On Linux,
+install Chromium system dependencies with
+`uv run playwright install --with-deps chromium` instead of the browser-only
+installation below.
 
 In `apps/api`:
 
@@ -145,6 +180,9 @@ All published services bind to `127.0.0.1`. This is a local, single-user applica
 - Concurrent writes use an atomic revision check. A conflict preserves the draft; export JSON before reloading and comparing.
 - Previous saved versions are retained. **All fields, history, library and backups** provides revision loading, complete field editing, reordering, and library insertion. Saving a restored draft creates a new revision.
 - Archived resumes can be restored from Resumes.
+- Permanently deleting a resume clears live job links and detaches its derived
+  copies. Submitted snapshots remain available through their jobs. Permanently
+  deleting a job also deletes its submitted copies; archive it to retain them.
 
 ## Formats and printing
 
@@ -165,7 +203,7 @@ Editorial assistance normalizes whitespace and punctuation and redacts selected 
 
 ## Backups
 
-Settings provides workspace backup and additive restore, including resumes, jobs, library entries, saved revisions, and submitted snapshots. Restore creates new IDs and preserves existing records. Keep downloaded backups private: they contain personal data. HTTP requests are limited to 5 MB. For larger workspaces, stop the API and back up SQLite using its backup tools, or use PostgreSQL backup tooling; do not copy a live database without accounting for its transaction files.
+Settings provides workspace backup and additive restore, including resumes, jobs, library entries, saved revisions, and submitted snapshots. Backup v2 also preserves timestamps and application timelines; v1 remains accepted. Restore creates new IDs and preserves existing records, so restoring the same backup twice creates duplicates. AI credentials and browser-local unsaved drafts are excluded; save drafts before downloading a backup. Keep downloaded backups private: they contain personal data. HTTP requests are limited to 5 MB. For larger workspaces, stop the API and back up SQLite using its backup tools, or use PostgreSQL backup tooling; do not copy a live database without accounting for its transaction files.
 
 ## Verification
 
