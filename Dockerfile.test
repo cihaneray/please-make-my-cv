@@ -10,7 +10,7 @@ RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
 ENV NEXT_TELEMETRY_DISABLED=1
 WORKDIR /web
 COPY apps/web/package.json apps/web/package-lock.json ./
-RUN npm ci && npx playwright install --only-shell chromium
+RUN --mount=type=cache,target=/root/.npm npm ci && npx playwright install --only-shell chromium
 COPY apps/web/ ./
 COPY packages/ /packages/
 COPY scripts/verify-container.sh /verify-container.sh

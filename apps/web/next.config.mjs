@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: process.env.CV_STANDALONE === "1" ? "standalone" : undefined,
   experimental: { proxyTimeout: 120000 },
   distDir: process.env.CV_E2E === "1" ? ".next-e2e" : ".next",
   allowedDevOrigins: ['127.0.0.1'],

@@ -47,6 +47,12 @@ in a Linux volume. Web development uses Webpack for reliable polling.
 Rebuild after dependency or Dockerfile changes; restart the API after migration
 changes. Regular application source edits reload automatically.
 
+Container images omit package download caches. The API installs only Chromium's
+headless shell, which supports PDF exports and the headless browser tests.
+Production web images use Next.js standalone output; development images retain
+the tools needed for editing and rebuilding. Docker build caches can still grow
+outside the images and can be removed when builds are not running.
+
 ```sh
 docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f api web
 docker compose -f docker-compose.yml -f docker-compose.dev.yml down
