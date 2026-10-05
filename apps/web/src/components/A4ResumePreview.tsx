@@ -52,6 +52,7 @@ export function A4ResumePreview({
       [data-studio-section]:hover, [data-studio-section]:focus-visible { outline: 2px solid #597a64; outline-offset: 6px; }
       [data-studio-section].studio-selected { outline: 1px dashed #597a64; outline-offset: 6px; }
       [data-studio-section][aria-disabled="true"] { cursor: default; outline: none; }
+      @media (prefers-reduced-motion: reduce) { [data-studio-section] { transition: none; } }
     `;
     content.head.appendChild(style);
     const keys =

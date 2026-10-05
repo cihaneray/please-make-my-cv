@@ -1564,3 +1564,184 @@ html.dark {
   font-size: 11px;
   line-height: 1.4;
 }
+
+/* One moving selection surface avoids independently flashing active items. */
+.workspace-rail nav,
+.inspector-modes,
+.outline-selection-track {
+  position: relative;
+}
+.sliding-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    width 220ms ease,
+    height 220ms ease;
+}
+.sliding-rail,
+.sliding-section {
+  background: rgb(var(--color-secondary-container));
+  border-radius: 12px;
+}
+.sliding-rail::before {
+  content: "";
+  position: absolute;
+  left: -15px;
+  top: calc(50% - 10px);
+  width: 3px;
+  height: 20px;
+  background: rgb(var(--color-primary));
+}
+.sliding-section {
+  border-radius: 3px;
+  box-shadow: inset 2px 0 rgb(var(--color-primary));
+}
+.sliding-tab::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: rgb(var(--color-primary));
+}
+.workspace-rail nav .rail-link.is-active {
+  background: transparent;
+}
+.rail-link.is-active::before {
+  content: none;
+}
+.rail-link {
+  transition:
+    color 160ms ease,
+    background-color 160ms ease;
+}
+.inspector-modes button,
+.studio-outline button {
+  position: relative;
+}
+.inspector-modes button[aria-pressed="true"] {
+  border-color: transparent;
+}
+.studio-outline button[aria-pressed="true"] {
+  background: transparent;
+  box-shadow: none;
+}
+.workspace-page-transition {
+  animation: workspace-enter 180ms ease-out;
+}
+.motion-content {
+  animation: editor-reveal 160ms ease-out;
+}
+.studio-inspector {
+  overflow: hidden;
+  transition:
+    width 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 180ms ease,
+    transform 220ms ease,
+    visibility 0s;
+}
+.studio-inspector:not([hidden]) {
+  animation: none;
+}
+.studio-inspector[hidden] {
+  display: flex;
+  width: 0;
+  opacity: 0;
+  transform: translateX(16px);
+  visibility: hidden;
+  border-left: 0;
+  transition:
+    width 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 140ms ease,
+    transform 220ms ease,
+    visibility 0s 220ms;
+}
+.motion-list,
+.bullet-list-editor {
+  position: relative;
+}
+.motion-list-ghost {
+  pointer-events: none;
+  z-index: 2;
+  animation: none !important;
+}
+.save-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  animation: workspace-enter 160ms ease-out;
+}
+.save-state-dot {
+  height: 5px;
+  width: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+}
+.save-state[data-saving="true"] .save-state-dot,
+.save-icon[data-saving="true"] {
+  animation: saving-pulse 750ms ease-in-out infinite alternate;
+}
+.feature-document,
+.shelf-paper {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .feature-document:hover {
+    transform: translateY(-2px);
+  }
+  .shelf-document:hover .shelf-paper {
+    transform: translateY(-3px);
+  }
+}
+@keyframes workspace-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes saving-pulse {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rail-link,
+  .studio-inspector,
+  .studio-inspector[hidden],
+  .feature-document,
+  .shelf-paper {
+    transition: none;
+    transform: none;
+  }
+  .sliding-indicator {
+    transition: none;
+  }
+  .workspace-page-transition,
+  .motion-content,
+  .save-state,
+  .save-state-dot,
+  .save-icon {
+    animation: none !important;
+  }
+  .feature-document:hover,
+  .shelf-document:hover .shelf-paper {
+    transform: none;
+  }
+}
+
+.sliding-tab {
+  z-index: 2;
+}

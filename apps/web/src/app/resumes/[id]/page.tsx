@@ -1,4 +1,6 @@
 "use client";
+import { SlidingIndicator } from "@/components/SlidingIndicator";
+import { MotionList } from "@/components/MotionList";
 import { notify } from "@/components/Notifications";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState, useRef } from "react";
@@ -436,7 +438,9 @@ export default function ResumeStudioPage() {
             onClick={() => handleSave()}
             disabled={saving || sourcePending}
           >
-            <Icons.Save size={16} />
+            <span className="save-icon" data-saving={saving}>
+              <Icons.Save size={16} />
+            </span>
             {saving ? t("saving") : t("saveDraft")}
           </button>
           <button
@@ -452,7 +456,14 @@ export default function ResumeStudioPage() {
         </div>
       </div>
       <div role="status" className="studio-status no-print">
-        {copy(dirty ? "Unsaved draft" : "Saved")}
+        <span
+          key={saving ? "saving" : dirty ? "dirty" : "saved"}
+          className="save-state"
+          data-saving={saving}
+        >
+          <span className="save-state-dot" aria-hidden="true" />
+          {saving ? t("saving") : copy(dirty ? "Unsaved draft" : "Saved")}
+        </span>
         {(sourcePending || notice) && (
           <>
             {" "}
@@ -562,6 +573,8 @@ export default function ResumeStudioPage() {
           className="studio-inspector no-print"
           aria-label={copy("Document tools")}
           hidden={!inspectorOpen}
+          inert={!inspectorOpen}
+          aria-hidden={!inspectorOpen}
         >
           <header className="inspector-heading">
             <span className="editorial-eyebrow">{copy("MAKE IT YOURS")}</span>
@@ -577,6 +590,7 @@ export default function ResumeStudioPage() {
             </button>
           </header>
           <nav className="inspector-modes" aria-label={copy("Editing tools")}>
+            <SlidingIndicator active={activeTab} variant="tab" />
             {(
               [
                 ["content", t("contentTab"), Icons.Document],
@@ -601,7 +615,8 @@ export default function ResumeStudioPage() {
             <>
               {/* Outline Column */}
               <aside className="studio-outline w-[200px] bg-surface-container-lowest flex flex-col justify-between p-space-sm shrink-0 select-none overflow-y-auto border-r border-surface-container-high no-print">
-                <div className="flex flex-col gap-0.5">
+                <div className="outline-selection-track flex flex-col gap-0.5">
+                  <SlidingIndicator active={activeSection} variant="section" />
                   <div className="px-space-md py-space-xs text-secondary font-label-sm text-label-sm uppercase tracking-wider">
                     {t("sections")}
                   </div>
@@ -687,7 +702,10 @@ export default function ResumeStudioPage() {
                 </div>
               </aside>
               {/* Focused Form Stage (~490px) */}
-              <div className="studio-form w-[500px] bg-surface-container-lowest overflow-y-auto px-space-xl py-space-lg flex flex-col gap-space-xl shrink-0 shadow-sm border-r border-surface-container-high no-print select-text">
+              <div
+                key={activeSection}
+                className="studio-form motion-content w-[500px] bg-surface-container-lowest overflow-y-auto px-space-xl py-space-lg flex flex-col gap-space-xl shrink-0 shadow-sm border-r border-surface-container-high no-print select-text"
+              >
                 {(
                   ["certifications", "languages", "customSections"] as const
                 ).map(
@@ -866,7 +884,10 @@ export default function ResumeStudioPage() {
 
                 {/* Experience Section */}
                 {activeSection === "experience" && (
-                  <div className="editor-section">
+                  <MotionList
+                    className="editor-section"
+                    motionKey={doc.experience.map((item) => item.id).join(",")}
+                  >
                     <div className="editor-section-heading">
                       <h2 className="font-headline-md">{t("experience")}</h2>
                       <button
@@ -882,6 +903,7 @@ export default function ResumeStudioPage() {
                       <div
                         id={`entry-${exp.id}`}
                         key={exp.id}
+                        data-motion-id={exp.id}
                         className="editor-entry"
                       >
                         <div className="editor-entry-heading">
@@ -960,11 +982,14 @@ export default function ResumeStudioPage() {
                         {copy("Add an entry to start this section.")}
                       </p>
                     )}
-                  </div>
+                  </MotionList>
                 )}
                 {/* Education Section */}
                 {activeSection === "education" && (
-                  <div className="editor-section">
+                  <MotionList
+                    className="editor-section"
+                    motionKey={doc.education.map((item) => item.id).join(",")}
+                  >
                     <div className="editor-section-heading">
                       <h2 className="font-headline-md">{t("education")}</h2>
                       <button
@@ -980,6 +1005,7 @@ export default function ResumeStudioPage() {
                       <div
                         id={`entry-${edu.id}`}
                         key={edu.id}
+                        data-motion-id={edu.id}
                         className="editor-entry"
                       >
                         <div className="editor-entry-heading">
@@ -1057,11 +1083,14 @@ export default function ResumeStudioPage() {
                         {copy("Add an entry to start this section.")}
                       </p>
                     )}
-                  </div>
+                  </MotionList>
                 )}
                 {/* Projects Section */}
                 {activeSection === "projects" && (
-                  <div className="editor-section">
+                  <MotionList
+                    className="editor-section"
+                    motionKey={doc.projects.map((item) => item.id).join(",")}
+                  >
                     <div className="editor-section-heading">
                       <h2 className="font-headline-md">{t("projects")}</h2>
                       <button
@@ -1077,6 +1106,7 @@ export default function ResumeStudioPage() {
                       <div
                         id={`entry-${proj.id}`}
                         key={proj.id}
+                        data-motion-id={proj.id}
                         className="editor-entry"
                       >
                         <div className="editor-entry-heading">
@@ -1152,11 +1182,14 @@ export default function ResumeStudioPage() {
                         {copy("Add an entry to start this section.")}
                       </p>
                     )}
-                  </div>
+                  </MotionList>
                 )}
                 {/* Skills Section */}
                 {activeSection === "skills" && (
-                  <div className="flex flex-col gap-space-md">
+                  <MotionList
+                    className="flex flex-col gap-space-md"
+                    motionKey={doc.skills.map((item) => item.id).join(",")}
+                  >
                     <div className="editor-section-heading">
                       <span className="font-headline-md text-headline-md text-on-surface font-semibold">
                         {t("skills")}
@@ -1182,6 +1215,7 @@ export default function ResumeStudioPage() {
                         <div
                           id={`entry-${grp.id}`}
                           key={grp.id}
+                          data-motion-id={grp.id}
                           className="editor-entry skill-entry"
                         >
                           <div className="editor-entry-heading">
@@ -1226,7 +1260,7 @@ export default function ResumeStudioPage() {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </MotionList>
                 )}
               </div>
               {/* Live A4 Preview */}

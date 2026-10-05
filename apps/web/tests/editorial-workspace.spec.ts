@@ -535,3 +535,86 @@ test("live page guides follow document length and zoom, then disappear when cont
   await page.getByRole("button", { name: "Live content", exact: true }).click();
   await expect(count).toHaveText("≈ 1 page");
 });
+
+test("moving selections track routes and tabs, preserve drafts, and respect reduced motion", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request);
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  const rail = page.locator(".sliding-rail");
+  await expect(rail).toHaveAttribute("data-ready", "true");
+  await expect
+    .poll(async () => {
+      const selected = await page
+        .locator('.workspace-rail [aria-current="page"]')
+        .boundingBox();
+      return Math.abs((await rail.boundingBox())!.y - selected!.y);
+    })
+    .toBeLessThan(1);
+  const initial = await rail.boundingBox();
+  await page
+    .getByRole("navigation", { name: "Workspace", exact: true })
+    .getByRole("link", { name: "Target Jobs", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/jobs$/);
+  await expect
+    .poll(async () => (await rail.boundingBox())!.y)
+    .toBeGreaterThan(initial!.y + 40);
+  await page
+    .getByRole("navigation", { name: "Workspace", exact: true })
+    .getByRole("link", { name: "Resumes", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/resumes$/);
+  await expect
+    .poll(async () => Math.abs((await rail.boundingBox())!.y - initial!.y))
+    .toBeLessThan(1);
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page
+    .getByRole("textbox", { name: "First Name", exact: true })
+    .fill("Motion draft");
+  const tab = page.locator(".sliding-tab");
+  const contentBox = await tab.boundingBox();
+  await page.getByRole("button", { name: "Design", exact: true }).click();
+  await expect
+    .poll(async () => (await tab.boundingBox())!.x)
+    .toBeGreaterThan(contentBox!.x + 30);
+  await page
+    .getByRole("button", { name: "Focus on document", exact: true })
+    .click();
+  await expect(
+    page.getByRole("region", { name: "Document tools" }),
+  ).toBeHidden();
+  await expect(page.locator(".studio-inspector")).toHaveAttribute("inert", "");
+  await page.getByRole("button", { name: "Show tools", exact: true }).click();
+  await page.getByRole("button", { name: "Content", exact: true }).click();
+  await expect(
+    page.getByRole("textbox", { name: "First Name", exact: true }),
+  ).toHaveValue("Motion draft");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(rail).toHaveCSS("transition-duration", "0s");
+  await expect(tab).toHaveCSS("transition-duration", "0s");
+  await expect(page.locator(".workspace-page-transition")).toHaveCSS(
+    "animation-name",
+    "none",
+  );
+  await page.getByRole("button", { name: "Education 0", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Add Education", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Remove education 1", exact: true })
+    .click();
+  await expect(page.locator(".motion-list-ghost")).toHaveCount(0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Design", exact: true }).click();
+  await expect
+    .poll(async () => {
+      const selected = await page
+        .getByRole("button", { name: "Design", exact: true })
+        .boundingBox();
+      const indicator = await tab.boundingBox();
+      return Math.abs(selected!.x - indicator!.x);
+    })
+    .toBeLessThan(1);
+});

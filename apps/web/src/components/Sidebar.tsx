@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
+import { SlidingIndicator } from "./SlidingIndicator";
 import { Icons } from "./Icons";
 
 export function Sidebar() {
@@ -21,6 +22,7 @@ export function Sidebar() {
         cv<span>.</span>
       </Link>
       <nav aria-label={language === "tr" ? "Çalışma alanı" : "Workspace"}>
+        <SlidingIndicator active={pathname} variant="rail" />
         {items.map(({ label, href, icon: Icon }) => {
           const active =
             href === "/" ? pathname === "/" : pathname.startsWith(href);

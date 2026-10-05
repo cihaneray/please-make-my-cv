@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useCopy } from "@/lib/copy";
 import { useI18n } from "@/lib/i18n";
+import { useListMotion } from "./MotionList";
 import { Icons } from "./Icons";
 
 export function BulletListEditor({
@@ -27,6 +28,7 @@ export function BulletListEditor({
   const container = useRef<HTMLDivElement>(null);
   const pendingFocus = useRef<number | null>(null);
   const count = values.length;
+  useListMotion(container, keys.join(","));
   // Keep identity when removing a row; positional keys move focus to the wrong text.
   useEffect(() => {
     setKeys((current) =>
@@ -68,6 +70,7 @@ export function BulletListEditor({
       {values.map((value, index) => (
         <div
           className="bullet-list-item"
+          data-motion-id={keys[index] ?? `pending-${index}`}
           key={keys[index] ?? `pending-${index}`}
         >
           <label className="bullet-text-field">
