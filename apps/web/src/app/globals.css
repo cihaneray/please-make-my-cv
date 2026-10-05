@@ -1536,3 +1536,31 @@ html.dark {
     transition: none;
   }
 }
+
+.live-page-count {
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 11px;
+  white-space: nowrap;
+  color: rgb(var(--color-on-surface-variant));
+}
+.live-page-boundary {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  border-top: 1px dashed #789080;
+  pointer-events: none;
+}
+.live-page-boundary > span {
+  position: absolute;
+  right: 8px;
+  top: 4px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: #f0f4f1;
+  color: #365440;
+  font-size: 11px;
+  line-height: 1.4;
+}

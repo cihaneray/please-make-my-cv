@@ -473,3 +473,65 @@ test("skill groups can be edited as lists and removed without fabricated default
     )
     .toMatchObject({ skills: [] });
 });
+
+test("live page guides follow document length and zoom, then disappear when content shrinks", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request);
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  const count = page.getByTestId("live-page-count");
+  const guides = page.getByTestId("live-page-boundary");
+  await expect(count).toHaveText("≈ 1 page");
+  await expect(guides).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Professional Summary", exact: true })
+    .click();
+  const summary = page.getByRole("textbox", {
+    name: "Professional Summary",
+    exact: true,
+  });
+  await summary.fill(
+    "Builds reliable software and accessible workflows for people and teams. ".repeat(
+      160,
+    ),
+  );
+  await expect.poll(() => guides.count()).toBeGreaterThan(0);
+  const height = await page
+    .frameLocator("iframe")
+    .locator(".cv-page")
+    .evaluate((el) => el.scrollHeight);
+  const pages = Math.max(1, Math.ceil((height - 1) / ((297 * 96) / 25.4)));
+  await expect(count).toHaveText(`≈ ${pages} pages`);
+  await expect(guides).toHaveCount(pages - 1);
+  await expect(guides.first()).toHaveText("Page 2");
+  await page.getByLabel("Preview zoom").selectOption("0.75");
+  const paper = await page.locator(".canvas-paper").boundingBox();
+  const boundary = await guides.first().boundingBox();
+  expect(boundary!.y - paper!.y).toBeCloseTo(((297 * 96) / 25.4) * 0.75, 0);
+  await expect(count).toHaveText(`≈ ${pages} pages`);
+  await expect(guides.first()).toHaveCSS("pointer-events", "none");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Preview", exact: true }).click();
+  await page.getByLabel("Preview zoom").selectOption("fit");
+  await expect(count).toHaveText(`≈ ${pages} pages`);
+  const mobilePaper = await page.locator(".canvas-paper").boundingBox();
+  const mobileGuide = await guides.first().boundingBox();
+  expect(mobileGuide!.width).toBeLessThan(390);
+  expect(mobileGuide!.y - mobilePaper!.y).toBeCloseTo(
+    (mobilePaper!.width * 297) / 210,
+    0,
+  );
+  await page.getByRole("button", { name: "Edit content", exact: true }).click();
+  await summary.fill("A short professional summary.");
+  await page.getByRole("button", { name: "Preview", exact: true }).click();
+  await expect(count).toHaveText("≈ 1 page");
+  await expect(guides).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Exact PDF pages", exact: true })
+    .click();
+  await expect(count).toHaveCount(0);
+  await expect(guides).toHaveCount(0);
+  await page.getByRole("button", { name: "Live content", exact: true }).click();
+  await expect(count).toHaveText("≈ 1 page");
+});

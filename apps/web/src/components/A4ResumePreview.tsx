@@ -18,6 +18,8 @@ export function A4ResumePreview({
   const copy = useCopy();
 
   const frame = useRef<HTMLIFrameElement>(null);
+  const contentObserver = useRef<ResizeObserver | null>(null);
+  useEffect(() => () => contentObserver.current?.disconnect(), []);
   const selection = useRef({ onSelectSection, activeSection, disabled });
   useEffect(() => {
     selection.current = { onSelectSection, activeSection, disabled };
@@ -125,6 +127,9 @@ export function A4ResumePreview({
   const [sheetHeight, setSheetHeight] = useState(1123);
   const [zoom, setZoom] = useState("fit");
   const sheetWidth = (210 * 96) / 25.4;
+  const pageHeight = (297 * 96) / 25.4;
+  // A one-pixel tolerance avoids counting rounding of a single A4 sheet as overflow.
+  const estimatedPages = Math.max(1, Math.ceil((sheetHeight - 1) / pageHeight));
   const scale =
     zoom === "fit" ? Math.min(1, availableWidth / sheetWidth) : Number(zoom);
   useEffect(() => {
@@ -207,6 +212,18 @@ export function A4ResumePreview({
             {copy("Live content")}
           </button>
         </div>
+        {!pdf && html && (
+          <span
+            className="live-page-count"
+            role="status"
+            data-testid="live-page-count"
+            title={copy(
+              "Estimated page boundaries. Exact PDF pages shows final pagination.",
+            )}
+          >
+            ≈ {estimatedPages} {copy(estimatedPages === 1 ? "page" : "pages")}
+          </span>
+        )}
         {!pdf && (
           <label>
             {copy("Preview zoom")}{" "}
@@ -297,12 +314,21 @@ export function A4ResumePreview({
               srcDoc={html}
               onLoad={(event) => {
                 prepareFrame(event.currentTarget);
-                const body =
-                  event.currentTarget.contentDocument?.querySelector<HTMLElement>(
-                    ".cv-page",
-                  );
-                if (body)
-                  setSheetHeight(Math.max(1123, Math.ceil(body.scrollHeight)));
+                contentObserver.current?.disconnect();
+                const content = event.currentTarget.contentDocument;
+                const body = content?.querySelector<HTMLElement>(".cv-page");
+                if (body && content) {
+                  const measure = () => {
+                    if (frame.current?.contentDocument !== content) return;
+                    setSheetHeight(
+                      Math.max(1123, Math.ceil(body.scrollHeight)),
+                    );
+                  };
+                  measure();
+                  contentObserver.current = new ResizeObserver(measure);
+                  contentObserver.current.observe(body);
+                  void content.fonts.ready.then(measure);
+                }
               }}
               style={{
                 width: sheetWidth,
@@ -314,6 +340,19 @@ export function A4ResumePreview({
               }}
               className="absolute top-0 left-0 bg-white"
             />
+            {Array.from({ length: estimatedPages - 1 }, (_, index) => (
+              <div
+                key={index}
+                className="live-page-boundary no-print"
+                data-testid="live-page-boundary"
+                style={{ top: (index + 1) * pageHeight * scale }}
+                aria-hidden="true"
+              >
+                <span>
+                  {copy("Page")} {index + 2}
+                </span>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -322,7 +361,7 @@ export function A4ResumePreview({
           <span>{copy("Select a section on the page to edit it.")} </span>
         )}{" "}
         {copy(
-          "Live layout preserves A4 width and margins; long documents continue vertically. Select Exact PDF pages to check actual page breaks before printing.",
+          "Dashed lines mark approximate A4 page boundaries. Select Exact PDF pages to check actual page breaks before printing.",
         )}{" "}
       </p>
     </section>

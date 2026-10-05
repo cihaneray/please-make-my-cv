@@ -1,6 +1,12 @@
 "use client";
 import { useI18n } from "./i18n";
 export const copyTranslations: Record<string, string> = {
+  page: "sayfa",
+  pages: "sayfa",
+  "Estimated page boundaries. Exact PDF pages shows final pagination.":
+    "Sayfa sınırları yaklaşık olarak gösterilir. Kesin sayfalama için Gerçek PDF sayfalarını seçin.",
+  "Dashed lines mark approximate A4 page boundaries. Select Exact PDF pages to check actual page breaks before printing.":
+    "Kesikli çizgiler yaklaşık A4 sayfa sınırlarını gösterir. Yazdırmadan önce kesin sayfa sonlarını kontrol etmek için Gerçek PDF sayfalarını seçin.",
   "Live layout preserves A4 width and margins; long documents continue vertically. Select Exact PDF pages to check actual page breaks before printing.":
     "Canlı düzen A4 genişliğini ve kenar boşluklarını korur; uzun belgeler aşağı doğru devam eder. Yazdırmadan önce sayfa sonlarını kontrol etmek için Gerçek PDF sayfalarını seçin.",
   "Education highlights": "Eğitimde öne çıkanlar",
