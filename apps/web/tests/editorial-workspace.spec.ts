@@ -212,3 +212,264 @@ test("mobile design and preview share the draft without horizontal page overflow
     page.getByRole("textbox", { name: "Ad", exact: true }),
   ).toHaveValue("Mobile Alex");
 });
+
+test("education highlights can be added, edited, deleted, saved and recovered in the visual editor", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request);
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page.getByRole("button", { name: "Education 0", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Add Education", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "Institution / University", exact: true })
+    .fill("Example University");
+  await page
+    .getByRole("textbox", { name: "Grade", exact: true })
+    .fill("3.8 / 4.0");
+  await page
+    .getByRole("textbox", { name: "Location", exact: true })
+    .fill("Ankara");
+  await page
+    .getByRole("button", { name: "Add highlight", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "Education highlights 1", exact: true }),
+  ).toBeFocused();
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  expect(
+    (await page.locator(".studio-ribbon").boundingBox())!.y,
+  ).toBeGreaterThanOrEqual(64);
+  await page
+    .getByRole("textbox", { name: "Education highlights 1", exact: true })
+    .fill("Thesis on accessible interfaces");
+  await page
+    .getByRole("button", { name: "Add highlight", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "Education highlights 2", exact: true })
+    .fill("A detail to remove");
+  await page
+    .getByRole("button", { name: "Add highlight", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "Education highlights 3", exact: true })
+    .fill("Exchange year in Berlin");
+  await page
+    .getByRole("button", { name: "Remove bullet 2", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "Education highlights 2", exact: true }),
+  ).toHaveValue("Exchange year in Berlin");
+  await expect(
+    page.getByRole("textbox", { name: "Education highlights 2", exact: true }),
+  ).toBeFocused();
+  await page
+    .getByRole("textbox", { name: "Education highlights 2", exact: true })
+    .fill("Exchange year in Amsterdam");
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  expect(
+    (await page.locator(".studio-ribbon").boundingBox())!.y,
+  ).toBeGreaterThanOrEqual(64);
+  await page.getByRole("button", { name: "Save Draft", exact: true }).click();
+  await expect
+    .poll(async () =>
+      (
+        await request.get(
+          `http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`,
+        )
+      ).json(),
+    )
+    .toMatchObject({
+      education: [
+        {
+          institution: "Example University",
+          grade: "3.8 / 4.0",
+          location: "Ankara",
+          highlights: [
+            "Thesis on accessible interfaces",
+            "Exchange year in Amsterdam",
+          ],
+        },
+      ],
+    });
+  await page.reload();
+  await page.getByRole("button", { name: "Education 1", exact: true }).click();
+  await expect(
+    page.getByRole("textbox", { name: "Education highlights 2", exact: true }),
+  ).toHaveValue("Exchange year in Amsterdam");
+  await expect(
+    page
+      .frameLocator('iframe[title="Resume document preview"]')
+      .locator(".cv-page"),
+  ).toContainText("Thesis on accessible interfaces");
+});
+
+test("project bullets, dates and technology lists persist without rewriting typed separators", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request);
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page.getByRole("button", { name: "Projects 0", exact: true }).click();
+  await page.getByRole("button", { name: "Add Project", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "Project Name", exact: true })
+    .fill("Accessible editor");
+  await page
+    .getByRole("textbox", { name: "Start date", exact: true })
+    .fill("2024-01");
+  await page
+    .getByRole("textbox", { name: "End date", exact: true })
+    .fill("2024-09");
+  await page
+    .getByRole("textbox", { name: "Project achievements 1", exact: true })
+    .fill("A detail to remove");
+  await page.getByRole("button", { name: "Add Bullet", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "Project achievements 2", exact: true })
+    .fill("Built keyboard-accessible editing tools");
+  await page
+    .getByRole("button", { name: "Remove bullet 1", exact: true })
+    .click();
+  const bullet = page.getByRole("textbox", {
+    name: "Project achievements 1",
+    exact: true,
+  });
+  await expect(bullet).toHaveValue("Built keyboard-accessible editing tools");
+  await bullet.fill("Built accessible editing tools for three teams");
+  const technologies = page.getByRole("textbox", {
+    name: "Technologies (comma-separated)",
+    exact: true,
+  });
+  await technologies.pressSequentially("FastAPI, Redis");
+  await expect(technologies).toHaveValue("FastAPI, Redis");
+  await page.getByRole("button", { name: "Save Draft", exact: true }).click();
+  await expect
+    .poll(async () =>
+      (
+        await request.get(
+          `http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`,
+        )
+      ).json(),
+    )
+    .toMatchObject({
+      projects: [
+        {
+          name: "Accessible editor",
+          startDate: "2024-01",
+          endDate: "2024-09",
+          technologies: ["FastAPI", "Redis"],
+          bullets: ["Built accessible editing tools for three teams"],
+        },
+      ],
+    });
+  await page.reload();
+  await page.getByRole("button", { name: "Projects 1", exact: true }).click();
+  await expect(bullet).toHaveValue(
+    "Built accessible editing tools for three teams",
+  );
+  await expect(
+    page
+      .frameLocator('iframe[title="Resume document preview"]')
+      .locator(".cv-page"),
+  ).toContainText("Built accessible editing tools for three teams");
+});
+
+test("touch controls and selected sections stay separated in Turkish at narrow widths", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request);
+  await page.setViewportSize({ width: 320, height: 844 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page.getByRole("button", { name: "Projects 0", exact: true }).click();
+  await page.getByRole("button", { name: "Add Project", exact: true }).click();
+  await page.getByRole("button", { name: "Türkçeye geç", exact: true }).click();
+  for (const width of [320, 390, 1280]) {
+    await page.setViewportSize({ width, height: 844 });
+    const header = page.locator(".editor-entry-heading").first();
+    const field = await header.locator(".editor-field").boundingBox();
+    const remove = await header.getByRole("button").boundingBox();
+    expect(field!.x + field!.width).toBeLessThan(remove!.x);
+    if (width < 900) expect(remove!.height).toBeGreaterThanOrEqual(44);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+    const buttons = await page.locator(".studio-outline button").all();
+    const boxes = await Promise.all(
+      buttons.map((button) => button.boundingBox()),
+    );
+    for (let i = 0; i < boxes.length; i++)
+      for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i]!,
+          b = boxes[j]!;
+        expect(
+          a.x + a.width <= b.x + 1 ||
+            b.x + b.width <= a.x + 1 ||
+            a.y + a.height <= b.y + 1 ||
+            b.y + b.height <= a.y + 1,
+        ).toBeTruthy();
+      }
+  }
+  await expect(page.locator(".editor-entry").first()).toHaveCSS(
+    "animation-name",
+    "none",
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({
+    path: "test-results/editorial-project-controls.png",
+    fullPage: true,
+  });
+});
+
+test("skill groups can be edited as lists and removed without fabricated default values", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request);
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page
+    .getByRole("button", { name: "Skill Groups 0", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Add Category", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "Skill category", exact: true })
+    .fill("Backend");
+  const skills = page.getByRole("textbox", {
+    name: "Skills (comma-separated)",
+    exact: true,
+  });
+  await expect(skills).toHaveValue("");
+  await skills.pressSequentially("Python, FastAPI, SQL");
+  await expect(skills).toHaveValue("Python, FastAPI, SQL");
+  await page.getByRole("button", { name: "Save Draft", exact: true }).click();
+  await expect
+    .poll(async () =>
+      (
+        await request.get(
+          `http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`,
+        )
+      ).json(),
+    )
+    .toMatchObject({
+      skills: [{ category: "Backend", skills: ["Python", "FastAPI", "SQL"] }],
+    });
+  await page
+    .getByRole("button", { name: "Remove skill group 1", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Save Draft", exact: true }).click();
+  await expect
+    .poll(async () =>
+      (
+        await request.get(
+          `http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`,
+        )
+      ).json(),
+    )
+    .toMatchObject({ skills: [] });
+});

@@ -1,6 +1,24 @@
 "use client";
 import { useI18n } from "./i18n";
 export const copyTranslations: Record<string, string> = {
+  "Live layout preserves A4 width and margins; long documents continue vertically. Select Exact PDF pages to check actual page breaks before printing.":
+    "Canlı düzen A4 genişliğini ve kenar boşluklarını korur; uzun belgeler aşağı doğru devam eder. Yazdırmadan önce sayfa sonlarını kontrol etmek için Gerçek PDF sayfalarını seçin.",
+  "Education highlights": "Eğitimde öne çıkanlar",
+  "Add highlight": "Madde ekle",
+  "Project achievements": "Proje başarıları",
+  "Remove bullet": "Maddeyi kaldır",
+  "Remove experience": "Deneyimi kaldır",
+  "Remove education": "Eğitimi kaldır",
+  "Remove project": "Projeyi kaldır",
+  "Remove skill group": "Yetkinlik grubunu kaldır",
+  "Role summary": "Rol özeti",
+  "Technologies (comma-separated)": "Teknolojiler (virgülle ayırın)",
+  "Skills (comma-separated)": "Yetkinlikler (virgülle ayırın)",
+  "Skill category": "Yetkinlik kategorisi",
+  "Add a detail you want to include in your CV.":
+    "Özgeçmişinizde yer vermek istediğiniz bir ayrıntı ekleyin.",
+  "Add an entry to start this section.":
+    "Bu bölüme başlamak için bir kayıt ekleyin.",
   "Close panel": "Paneli kapat",
   "Apply source changes before switching tabs or saving.":
     "Sekme değiştirmeden veya kaydetmeden önce kaynak değişikliklerini uygulayın.",

@@ -1232,3 +1232,307 @@ html.dark {
 .mobile-studio-switch button[aria-pressed="true"]:hover:not(:disabled) {
   background: rgb(var(--color-primary));
 }
+
+/* Repeated fields keep controls in their own rows, including touch layouts. */
+@media screen {
+  html:has(.editorial-studio),
+  body:has(.editorial-studio) {
+    height: 100dvh;
+    overflow: clip;
+  }
+  body:has(.editorial-studio) {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+  }
+}
+.editor-section {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: editor-reveal 160ms ease-out;
+}
+.editor-section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.editor-section-heading > h2 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.editor-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 18px;
+  background: rgb(var(--color-surface-container-low));
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 6px;
+  animation: editor-reveal 160ms ease-out;
+}
+.editor-entry-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+}
+.editor-entry-heading > .editor-field,
+.editor-entry-heading > input {
+  flex: 1;
+  min-width: 0;
+  width: 0;
+}
+.editor-entry-heading > .editor-icon-button {
+  margin-top: 20px;
+}
+.skill-entry .editor-entry-heading > .editor-icon-button {
+  margin-top: 0;
+}
+.editor-field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.editor-field,
+.bullet-text-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+.editor-field-label {
+  font-size: 11px;
+  line-height: 1.5;
+  font-weight: 500;
+  color: rgb(var(--color-secondary));
+  overflow-wrap: anywhere;
+}
+.editor-field > input,
+.editor-field > textarea,
+.bullet-text-field > textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: rgb(var(--color-on-surface));
+  background: rgb(var(--color-surface-container-lowest));
+  resize: vertical;
+}
+.editor-field > textarea,
+.bullet-text-field > textarea {
+  min-height: 84px;
+}
+.editor-field input:focus-visible,
+.editor-field textarea:focus-visible,
+.bullet-text-field textarea:focus-visible {
+  outline: 2px solid rgb(var(--color-primary));
+  outline-offset: 2px;
+}
+.editor-action,
+.editor-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 500;
+  color: rgb(var(--color-primary));
+  background: rgb(var(--color-surface-container-lowest));
+  flex-shrink: 0;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+.editor-action:hover:not(:disabled),
+.editor-icon-button:hover:not(:disabled) {
+  background: rgb(var(--color-secondary-container));
+  border-color: rgb(var(--color-primary));
+}
+.editor-icon-button {
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+}
+.editor-action.danger,
+.editor-icon-button.danger {
+  color: rgb(var(--color-error));
+}
+.editor-action.danger:hover:not(:disabled),
+.editor-icon-button.danger:hover:not(:disabled) {
+  background: rgb(var(--color-error-container));
+  border-color: rgb(var(--color-error));
+}
+.bullet-list-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  border-top: 1px solid rgb(var(--color-outline-variant));
+  padding-top: 16px;
+}
+.bullet-list-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  animation: editor-reveal 160ms ease-out;
+}
+.bullet-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgb(var(--color-surface-container-highest));
+}
+.list-add-button {
+  align-self: flex-start;
+  border-style: dashed;
+  margin-top: 3px;
+}
+.editor-empty-hint {
+  font-size: 11px;
+  color: rgb(var(--color-secondary));
+  line-height: 1.7;
+}
+.field-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+.array-field-editor,
+.array-field-row {
+  min-width: 0;
+}
+.workspace-tools .field-row-actions button {
+  min-height: 36px;
+  white-space: normal;
+}
+.workspace-tools button {
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+.array-field-editor .array-field-row > .grid,
+.array-field-editor label {
+  min-width: 0;
+}
+.array-field-editor input {
+  width: 100%;
+  min-width: 0;
+}
+.array-field-editor input[type="checkbox"] {
+  width: auto;
+}
+.inspector-modes button {
+  min-width: 0;
+  transition:
+    color 140ms ease,
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+.inspector-modes button svg {
+  flex-shrink: 0;
+}
+.inspector-modes button:hover:not(:disabled) {
+  background: rgb(var(--color-surface-container));
+}
+.studio-outline button {
+  min-width: 0;
+  gap: 8px;
+  min-height: 32px;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+.studio-outline button > div {
+  min-width: 0;
+  flex: 1;
+}
+.studio-outline button > span {
+  flex-shrink: 0;
+}
+.studio-outline button[aria-pressed="true"] {
+  box-shadow: inset 2px 0 rgb(var(--color-primary));
+}
+.studio-inspector:not([hidden]),
+.inspector-mode,
+.document-popover {
+  animation: editor-reveal 160ms ease-out;
+}
+.studio-inspector .grid > *,
+.studio-inspector fieldset > label {
+  min-width: 0;
+}
+.studio-inspector input,
+.studio-inspector textarea {
+  min-width: 0;
+}
+@keyframes editor-reveal {
+  from {
+    opacity: 0.4;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 600px), (pointer: coarse) {
+  .editor-action,
+  .editor-icon-button {
+    min-height: 44px;
+  }
+  .editor-icon-button {
+    width: 44px;
+    height: 44px;
+  }
+  .editor-entry {
+    padding: 14px;
+  }
+  .editor-field-grid {
+    gap: 12px;
+  }
+  .workspace-tools .field-row-actions button {
+    min-height: 44px;
+  }
+}
+@media (max-width: 380px) {
+  .inspector-modes button {
+    flex-direction: column;
+    gap: 5px;
+  }
+  .editor-field-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .editor-section,
+  .editor-entry,
+  .bullet-list-item,
+  .studio-inspector:not([hidden]),
+  .inspector-mode,
+  .document-popover {
+    animation: none;
+  }
+  .editor-action,
+  .editor-icon-button,
+  .workspace-tools button,
+  .inspector-modes button,
+  .studio-outline button {
+    transition: none;
+  }
+}

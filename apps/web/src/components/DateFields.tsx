@@ -4,8 +4,10 @@ import { useCopy } from "@/lib/copy";
 export function DateFields({
   value,
   onChange,
+  allowPresent = true,
 }: {
   value: { startDate: string; endDate: string; current: boolean };
+  allowPresent?: boolean;
   onChange: (next: {
     startDate: string;
     endDate: string;
@@ -34,14 +36,16 @@ export function DateFields({
           onChange={(e) => onChange({ ...value, endDate: e.target.value })}
         />
       </label>
-      <label className="col-span-2 flex gap-2">
-        <input
-          type="checkbox"
-          checked={value.current}
-          onChange={(e) => onChange({ ...value, current: e.target.checked })}
-        />
-        {copy("Present")}
-      </label>
+      {allowPresent && (
+        <label className="col-span-2 flex gap-2">
+          <input
+            type="checkbox"
+            checked={value.current}
+            onChange={(e) => onChange({ ...value, current: e.target.checked })}
+          />
+          {copy("Present")}
+        </label>
+      )}
     </fieldset>
   );
 }

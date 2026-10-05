@@ -5,6 +5,11 @@ import React, { useEffect, useState, useRef } from "react";
 import { A4ResumePreview } from "@/components/A4ResumePreview";
 import { Icons } from "@/components/Icons";
 import { AIResumeReview } from "@/components/AIResumeReview";
+import {
+  BulletListEditor,
+  EditorField,
+  EditorListField,
+} from "@/components/BulletListEditor";
 import { DateFields } from "@/components/DateFields";
 import { ResumeChanges } from "@/components/ResumeChanges";
 import { useCopy } from "@/lib/copy";
@@ -284,22 +289,10 @@ export default function ResumeStudioPage() {
     const items = doc.experience.filter((_, i) => i !== index);
     updateField("experience", items);
   }
-  function addBulletToExperience(expIndex: number) {
-    if (!doc) return;
-    const items = structuredClone(doc.experience);
-    items[expIndex].bullets.push("");
-    updateField("experience", items);
-  }
   function updateBullet(expIndex: number, bulletIndex: number, text: string) {
     if (!doc) return;
     const items = structuredClone(doc.experience);
     items[expIndex].bullets[bulletIndex] = text;
-    updateField("experience", items);
-  }
-  function removeBullet(expIndex: number, bulletIndex: number) {
-    if (!doc) return;
-    const items = structuredClone(doc.experience);
-    items[expIndex].bullets.splice(bulletIndex, 1);
     updateField("experience", items);
   }
   // Education handlers
@@ -870,297 +863,301 @@ export default function ResumeStudioPage() {
                     />
                   </div>
                 )}
+
                 {/* Experience Section */}
                 {activeSection === "experience" && (
-                  <div className="flex flex-col gap-space-md">
-                    <div className="flex items-center justify-between">
-                      <span className="font-headline-md text-headline-md text-on-surface font-semibold">
-                        {t("experience")}
-                      </span>
+                  <div className="editor-section">
+                    <div className="editor-section-heading">
+                      <h2 className="font-headline-md">{t("experience")}</h2>
                       <button
                         type="button"
+                        className="editor-action"
                         onClick={addExperience}
-                        className="flex items-center gap-1 font-label-sm text-primary hover:underline"
                       >
                         <Icons.Add size={15} />
-                        <span>{t("addRole")}</span>
+                        {t("addRole")}
                       </button>
                     </div>
-                    <div className="flex flex-col gap-space-md">
-                      {doc.experience.map((exp, expIdx) => (
-                        <div
-                          id={`entry-${exp.id}`}
-                          key={exp.id}
-                          className="flex flex-col rounded-xl bg-surface-container-low p-space-md gap-space-sm border border-surface-container-highest"
-                        >
-                          <div className="flex items-center justify-between">
-                            <input
-                              type="text"
-                              value={exp.position}
-                              onChange={(e) =>
-                                updateExperienceItem(expIdx, {
-                                  ...exp,
-                                  position: e.target.value,
-                                })
-                              }
-                              className="font-headline-md font-semibold bg-transparent border-0 outline-none text-on-surface w-full"
-                              placeholder={t("jobTitle")}
-                            />
-                            <button
-                              aria-label="Delete"
-                              type="button"
-                              onClick={() => removeExperienceItem(expIdx)}
-                              className="text-secondary hover:text-error"
-                            >
-                              <Icons.Delete size={16} />
-                            </button>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              value={exp.company}
-                              onChange={(e) =>
-                                updateExperienceItem(expIdx, {
-                                  ...exp,
-                                  company: e.target.value,
-                                })
-                              }
-                              className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none"
-                              placeholder={t("company")}
-                            />
-                            <div className="col-span-2">
-                              <DateFields
-                                value={exp}
-                                onChange={(dates) =>
-                                  updateExperienceItem(expIdx, {
-                                    ...exp,
-                                    ...dates,
-                                  })
-                                }
-                              />
-                            </div>
-                          </div>
-                          {/* Bullet achievements */}
-                          <div className="flex flex-col gap-2 pt-2">
-                            <span className="font-label-sm text-secondary font-medium">
-                              {t("achievements")}
-                            </span>
-                            {exp.bullets.map((b, bIdx) => (
-                              <div
-                                key={bIdx}
-                                className="flex items-start gap-1 group"
-                              >
-                                <textarea
-                                  aria-label={`${t("achievements")} ${bIdx + 1}`}
-                                  rows={2}
-                                  value={b}
-                                  onChange={(e) =>
-                                    updateBullet(expIdx, bIdx, e.target.value)
-                                  }
-                                  className="flex-1 p-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary"
-                                />
-                                <div className="flex flex-col gap-1">
-                                  <button
-                                    aria-label={t("aiPolish")}
-                                    type="button"
-                                    onClick={() =>
-                                      handleAiRewriteBullet(
-                                        expIdx,
-                                        bIdx,
-                                        "technical",
-                                      )
-                                    }
-                                    title={t("aiPolish")}
-                                    className="w-6 h-6 flex items-center justify-center rounded hover:bg-surface-container text-primary"
-                                  >
-                                    <Icons.Sparkles size={14} />
-                                  </button>
-                                  <button
-                                    aria-label="Close"
-                                    type="button"
-                                    onClick={() => removeBullet(expIdx, bIdx)}
-                                    className="w-6 h-6 flex items-center justify-center rounded hover:bg-error-container text-error opacity-0 group-hover:opacity-100 transition-opacity"
-                                  >
-                                    <Icons.Close size={14} />
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                            <button
-                              type="button"
-                              onClick={() => addBulletToExperience(expIdx)}
-                              className="self-start text-[11px] font-medium text-secondary hover:text-on-surface flex items-center gap-1 pt-1"
-                            >
-                              <Icons.Add size={14} />
-                              <span>{t("addBullet")}</span>
-                            </button>
-                          </div>
+                    {doc.experience.map((exp, expIdx) => (
+                      <div
+                        id={`entry-${exp.id}`}
+                        key={exp.id}
+                        className="editor-entry"
+                      >
+                        <div className="editor-entry-heading">
+                          <EditorField
+                            label={t("jobTitle")}
+                            value={exp.position}
+                            onChange={(position) =>
+                              updateExperienceItem(expIdx, { ...exp, position })
+                            }
+                          />
+                          <button
+                            type="button"
+                            className="editor-icon-button danger"
+                            aria-label={`${copy("Remove experience")} ${expIdx + 1}`}
+                            title={copy("Remove experience")}
+                            onClick={() => removeExperienceItem(expIdx)}
+                          >
+                            <Icons.Delete size={17} />
+                          </button>
                         </div>
-                      ))}
-                    </div>
+                        <div className="editor-field-grid">
+                          <EditorField
+                            label={t("company")}
+                            value={exp.company}
+                            onChange={(company) =>
+                              updateExperienceItem(expIdx, { ...exp, company })
+                            }
+                          />
+                          <EditorField
+                            label={t("location")}
+                            value={exp.location}
+                            onChange={(location) =>
+                              updateExperienceItem(expIdx, { ...exp, location })
+                            }
+                          />
+                        </div>
+                        <DateFields
+                          value={exp}
+                          onChange={(dates) =>
+                            updateExperienceItem(expIdx, { ...exp, ...dates })
+                          }
+                        />
+                        <EditorField
+                          multiline
+                          label={copy("Role summary")}
+                          value={exp.summary}
+                          onChange={(summary) =>
+                            updateExperienceItem(expIdx, { ...exp, summary })
+                          }
+                        />
+                        <BulletListEditor
+                          label={t("achievements")}
+                          values={exp.bullets}
+                          onChange={(bullets) =>
+                            updateExperienceItem(expIdx, { ...exp, bullets })
+                          }
+                          onPolish={(index) =>
+                            handleAiRewriteBullet(expIdx, index, "technical")
+                          }
+                          polishing={aiLoading}
+                        />
+                        <EditorListField
+                          label={copy("Technologies (comma-separated)")}
+                          values={exp.technologies}
+                          onChange={(technologies) =>
+                            updateExperienceItem(expIdx, {
+                              ...exp,
+                              technologies,
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
+                    {!doc.experience.length && (
+                      <p className="editor-empty-hint">
+                        {copy("Add an entry to start this section.")}
+                      </p>
+                    )}
                   </div>
                 )}
                 {/* Education Section */}
                 {activeSection === "education" && (
-                  <div className="flex flex-col gap-space-md">
-                    <div className="flex items-center justify-between">
-                      <span className="font-headline-md text-headline-md text-on-surface font-semibold">
-                        {t("education")}
-                      </span>
+                  <div className="editor-section">
+                    <div className="editor-section-heading">
+                      <h2 className="font-headline-md">{t("education")}</h2>
                       <button
                         type="button"
+                        className="editor-action"
                         onClick={addEducation}
-                        className="flex items-center gap-1 font-label-sm text-primary hover:underline"
                       >
                         <Icons.Add size={15} />
-                        <span>{t("addEducation")}</span>
+                        {t("addEducation")}
                       </button>
                     </div>
-                    <div className="flex flex-col gap-space-md">
-                      {doc.education.map((edu, eduIdx) => (
-                        <div
-                          key={edu.id}
-                          className="flex flex-col rounded-xl bg-surface-container-low p-space-md gap-space-sm border border-surface-container-highest"
-                        >
-                          <div className="flex items-center justify-between">
-                            <input
-                              type="text"
-                              value={edu.institution}
-                              onChange={(e) =>
-                                updateEducationItem(eduIdx, {
-                                  ...edu,
-                                  institution: e.target.value,
-                                })
-                              }
-                              className="font-headline-md font-semibold bg-transparent border-0 outline-none text-on-surface w-full"
-                              placeholder={t("institution")}
-                            />
-                            <button
-                              aria-label="Delete"
-                              type="button"
-                              onClick={() => removeEducationItem(eduIdx)}
-                              className="text-secondary hover:text-error"
-                            >
-                              <Icons.Delete size={16} />
-                            </button>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              value={edu.degree}
-                              onChange={(e) =>
-                                updateEducationItem(eduIdx, {
-                                  ...edu,
-                                  degree: e.target.value,
-                                })
-                              }
-                              className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none"
-                              placeholder={t("degree")}
-                            />
-                            <input
-                              type="text"
-                              value={edu.fieldOfStudy}
-                              onChange={(e) =>
-                                updateEducationItem(eduIdx, {
-                                  ...edu,
-                                  fieldOfStudy: e.target.value,
-                                })
-                              }
-                              className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none"
-                              placeholder={t("fieldOfStudy")}
-                            />
-                          </div>
-                          <DateFields
-                            value={edu}
-                            onChange={(dates) =>
-                              updateEducationItem(eduIdx, { ...edu, ...dates })
+                    {doc.education.map((edu, eduIdx) => (
+                      <div
+                        id={`entry-${edu.id}`}
+                        key={edu.id}
+                        className="editor-entry"
+                      >
+                        <div className="editor-entry-heading">
+                          <EditorField
+                            label={t("institution")}
+                            value={edu.institution}
+                            onChange={(institution) =>
+                              updateEducationItem(eduIdx, {
+                                ...edu,
+                                institution,
+                              })
+                            }
+                          />
+                          <button
+                            type="button"
+                            className="editor-icon-button danger"
+                            aria-label={`${copy("Remove education")} ${eduIdx + 1}`}
+                            title={copy("Remove education")}
+                            onClick={() => removeEducationItem(eduIdx)}
+                          >
+                            <Icons.Delete size={17} />
+                          </button>
+                        </div>
+                        <div className="editor-field-grid">
+                          <EditorField
+                            label={t("degree")}
+                            value={edu.degree}
+                            onChange={(degree) =>
+                              updateEducationItem(eduIdx, { ...edu, degree })
+                            }
+                          />
+                          <EditorField
+                            label={t("fieldOfStudy")}
+                            value={edu.fieldOfStudy}
+                            onChange={(fieldOfStudy) =>
+                              updateEducationItem(eduIdx, {
+                                ...edu,
+                                fieldOfStudy,
+                              })
+                            }
+                          />
+                          <EditorField
+                            label={t("location")}
+                            value={edu.location}
+                            onChange={(location) =>
+                              updateEducationItem(eduIdx, { ...edu, location })
+                            }
+                          />
+                          <EditorField
+                            label={copy("Grade")}
+                            value={edu.grade}
+                            onChange={(grade) =>
+                              updateEducationItem(eduIdx, { ...edu, grade })
                             }
                           />
                         </div>
-                      ))}
-                    </div>
+                        <DateFields
+                          value={edu}
+                          onChange={(dates) =>
+                            updateEducationItem(eduIdx, { ...edu, ...dates })
+                          }
+                        />
+                        <BulletListEditor
+                          label={copy("Education highlights")}
+                          addLabel={copy("Add highlight")}
+                          values={edu.highlights}
+                          onChange={(highlights) =>
+                            updateEducationItem(eduIdx, { ...edu, highlights })
+                          }
+                        />
+                      </div>
+                    ))}
+                    {!doc.education.length && (
+                      <p className="editor-empty-hint">
+                        {copy("Add an entry to start this section.")}
+                      </p>
+                    )}
                   </div>
                 )}
                 {/* Projects Section */}
                 {activeSection === "projects" && (
-                  <div className="flex flex-col gap-space-md">
-                    <div className="flex items-center justify-between">
-                      <span className="font-headline-md text-headline-md text-on-surface font-semibold">
-                        {t("projects")}
-                      </span>
+                  <div className="editor-section">
+                    <div className="editor-section-heading">
+                      <h2 className="font-headline-md">{t("projects")}</h2>
                       <button
                         type="button"
+                        className="editor-action"
                         onClick={addProject}
-                        className="flex items-center gap-1 font-label-sm text-primary hover:underline"
                       >
                         <Icons.Add size={15} />
-                        <span>{t("addProject")}</span>
+                        {t("addProject")}
                       </button>
                     </div>
-                    <div className="flex flex-col gap-space-md">
-                      {doc.projects.map((proj, projIdx) => (
-                        <div
-                          id={`entry-${proj.id}`}
-                          key={proj.id}
-                          className="flex flex-col rounded-xl bg-surface-container-low p-space-md gap-space-sm border border-surface-container-highest"
-                        >
-                          <div className="flex items-center justify-between">
-                            <input
-                              type="text"
-                              value={proj.name}
-                              onChange={(e) =>
-                                updateProjectItem(projIdx, {
-                                  ...proj,
-                                  name: e.target.value,
-                                })
-                              }
-                              className="font-headline-md font-semibold bg-transparent border-0 outline-none text-on-surface w-full"
-                              placeholder={t("projectName")}
-                            />
-                            <button
-                              aria-label="Delete"
-                              type="button"
-                              onClick={() => removeProjectItem(projIdx)}
-                              className="text-secondary hover:text-error"
-                            >
-                              <Icons.Delete size={16} />
-                            </button>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              value={proj.role}
-                              onChange={(e) =>
-                                updateProjectItem(projIdx, {
-                                  ...proj,
-                                  role: e.target.value,
-                                })
-                              }
-                              className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none"
-                              placeholder={t("projectRole")}
-                            />
-                            <input
-                              type="text"
-                              value={proj.url}
-                              onChange={(e) =>
-                                updateProjectItem(projIdx, {
-                                  ...proj,
-                                  url: e.target.value,
-                                })
-                              }
-                              className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm text-on-surface outline-none"
-                              placeholder={t("projectUrl")}
-                            />
-                          </div>
+                    {doc.projects.map((proj, projIdx) => (
+                      <div
+                        id={`entry-${proj.id}`}
+                        key={proj.id}
+                        className="editor-entry"
+                      >
+                        <div className="editor-entry-heading">
+                          <EditorField
+                            label={t("projectName")}
+                            value={proj.name}
+                            onChange={(name) =>
+                              updateProjectItem(projIdx, { ...proj, name })
+                            }
+                          />
+                          <button
+                            type="button"
+                            className="editor-icon-button danger"
+                            aria-label={`${copy("Remove project")} ${projIdx + 1}`}
+                            title={copy("Remove project")}
+                            onClick={() => removeProjectItem(projIdx)}
+                          >
+                            <Icons.Delete size={17} />
+                          </button>
                         </div>
-                      ))}
-                    </div>
+                        <div className="editor-field-grid">
+                          <EditorField
+                            label={t("projectRole")}
+                            value={proj.role}
+                            onChange={(role) =>
+                              updateProjectItem(projIdx, { ...proj, role })
+                            }
+                          />
+                          <EditorField
+                            label={t("projectUrl")}
+                            value={proj.url}
+                            onChange={(url) =>
+                              updateProjectItem(projIdx, { ...proj, url })
+                            }
+                          />
+                        </div>
+                        <DateFields
+                          allowPresent={false}
+                          value={{
+                            startDate: proj.startDate,
+                            endDate: proj.endDate,
+                            current: false,
+                          }}
+                          onChange={({ startDate, endDate }) =>
+                            updateProjectItem(projIdx, {
+                              ...proj,
+                              startDate,
+                              endDate,
+                            })
+                          }
+                        />
+                        <BulletListEditor
+                          label={copy("Project achievements")}
+                          values={proj.bullets}
+                          onChange={(bullets) =>
+                            updateProjectItem(projIdx, { ...proj, bullets })
+                          }
+                        />
+                        <EditorListField
+                          label={copy("Technologies (comma-separated)")}
+                          values={proj.technologies}
+                          onChange={(technologies) =>
+                            updateProjectItem(projIdx, {
+                              ...proj,
+                              technologies,
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
+                    {!doc.projects.length && (
+                      <p className="editor-empty-hint">
+                        {copy("Add an entry to start this section.")}
+                      </p>
+                    )}
                   </div>
                 )}
                 {/* Skills Section */}
                 {activeSection === "skills" && (
                   <div className="flex flex-col gap-space-md">
-                    <div className="flex items-center justify-between">
+                    <div className="editor-section-heading">
                       <span className="font-headline-md text-headline-md text-on-surface font-semibold">
                         {t("skills")}
                       </span>
@@ -1169,12 +1166,12 @@ export default function ResumeStudioPage() {
                         onClick={() => {
                           const newGroup: SkillGroup = {
                             id: `skill-${Date.now()}`,
-                            category: "New Category",
-                            skills: ["Skill 1", "Skill 2"],
+                            category: "",
+                            skills: [],
                           };
                           updateField("skills", [...doc.skills, newGroup]);
                         }}
-                        className="flex items-center gap-1 font-label-sm text-primary hover:underline"
+                        className="editor-action"
                       >
                         <Icons.Add size={15} />
                         <span>{t("addCategory")}</span>
@@ -1185,30 +1182,46 @@ export default function ResumeStudioPage() {
                         <div
                           id={`entry-${grp.id}`}
                           key={grp.id}
-                          className="p-3 rounded-lg bg-surface-container-low flex flex-col gap-2"
+                          className="editor-entry skill-entry"
                         >
-                          <input
-                            type="text"
-                            value={grp.category}
-                            onChange={(e) => {
+                          <div className="editor-entry-heading">
+                            <input
+                              type="text"
+                              aria-label={copy("Skill category")}
+                              value={grp.category}
+                              onChange={(e) => {
+                                const newSkills = structuredClone(doc.skills);
+                                newSkills[idx].category = e.target.value;
+                                updateField("skills", newSkills);
+                              }}
+                              className="font-headline-md bg-transparent font-semibold outline-none"
+                            />
+                            <button
+                              type="button"
+                              className="editor-icon-button danger"
+                              aria-label={
+                                copy("Remove skill group") + " " + (idx + 1)
+                              }
+                              onClick={() =>
+                                updateField(
+                                  "skills",
+                                  doc.skills.filter(
+                                    (_, index) => index !== idx,
+                                  ),
+                                )
+                              }
+                            >
+                              <Icons.Delete size={17} />
+                            </button>
+                          </div>
+                          <EditorListField
+                            label={copy("Skills (comma-separated)")}
+                            values={grp.skills}
+                            onChange={(skills) => {
                               const newSkills = structuredClone(doc.skills);
-                              newSkills[idx].category = e.target.value;
+                              newSkills[idx].skills = skills;
                               updateField("skills", newSkills);
                             }}
-                            className="font-headline-md bg-transparent font-semibold outline-none"
-                          />
-                          <input
-                            type="text"
-                            value={grp.skills.join(", ")}
-                            onChange={(e) => {
-                              const newSkills = structuredClone(doc.skills);
-                              newSkills[idx].skills = e.target.value
-                                .split(",")
-                                .map((s) => s.trim());
-                              updateField("skills", newSkills);
-                            }}
-                            className="h-8 px-2 rounded bg-surface-container-lowest text-body-sm outline-none"
-                            placeholder={t("skillsListPlaceholder")}
                           />
                         </div>
                       ))}

@@ -67,12 +67,12 @@ export function Fields({
 
   if (Array.isArray(value))
     return (
-      <fieldset className="border p-3 my-2">
+      <fieldset className="array-field-editor border p-3 my-2">
         <legend>{copy(label(name))}</legend>
         {value.map((item, i) => (
           <div
             key={typeof item === "object" && item?.id ? item.id : i}
-            className="border-b pb-2 mb-2"
+            className="array-field-row border-b pb-2 mb-2"
           >
             <Fields
               depth={depth + 1}
@@ -82,26 +82,28 @@ export function Fields({
                 change(value.map((old, index) => (index === i ? v : old)))
               }
             />
-            <button
-              type="button"
-              onClick={() => change(value.filter((_, index) => index !== i))}
-            >
-              {" "}
-              {copy("Remove")} {copy(label(name))} {i + 1}
-            </button>
-            {i > 0 && (
+            <div className="field-row-actions">
               <button
                 type="button"
-                onClick={() => {
-                  const next = [...value];
-                  [next[i - 1], next[i]] = [next[i], next[i - 1]];
-                  change(next);
-                }}
+                onClick={() => change(value.filter((_, index) => index !== i))}
               >
                 {" "}
-                {copy("Move up")}{" "}
+                {copy("Remove")} {copy(label(name))} {i + 1}
               </button>
-            )}
+              {i > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = [...value];
+                    [next[i - 1], next[i]] = [next[i], next[i - 1]];
+                    change(next);
+                  }}
+                >
+                  {" "}
+                  {copy("Move up")}{" "}
+                </button>
+              )}
+            </div>
           </div>
         ))}
         <button
