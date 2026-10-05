@@ -9,7 +9,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { I18nProvider } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "CV Workspace — Calm Editorial",
+  title: "CV Workspace — Your personal studio",
   description:
     "Structured personal CV workspace for creating, editing, and optimizing resumes.",
 };
@@ -29,11 +29,9 @@ export default function RootLayout({
           <ThemeProvider>
             <Sidebar />
             <Notifications />
-            <div className="pl-[220px]">
+            <div className="workspace-shell">
               <Header />
-              <main className="relative pt-14 w-full min-h-screen bg-surface-container-low">
-                {children}
-              </main>
+              <main className="workspace-main">{children}</main>
             </div>
           </ThemeProvider>
         </I18nProvider>

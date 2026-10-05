@@ -1,343 +1,270 @@
 "use client";
-import { notify } from "@/components/Notifications";
-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { DocumentCover } from "@/components/DocumentCover";
 import { Icons } from "@/components/Icons";
+import { notify } from "@/components/Notifications";
 import { api } from "@/lib/api";
+import { useCopy } from "@/lib/copy";
 import { useI18n } from "@/lib/i18n";
 import { JobApplication, ResumeSummary } from "@/lib/types";
 
 export default function HomePage() {
   const router = useRouter();
-  const { t, getJobStatusLabel } = useI18n();
+  const { t, language, getJobStatusLabel } = useI18n();
+  const copy = useCopy();
   const [resumes, setResumes] = useState<ResumeSummary[]>([]);
   const [jobs, setJobs] = useState<JobApplication[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
-
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [retry, setRetry] = useState(0);
   useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        const [resList, jobList] = await Promise.all([
-          api.listResumes(),
-          api.listJobs(),
-        ]);
-        setResumes(resList);
-        setJobs(jobList);
-      } catch (err: any) {
-        notify(
-          "Could not load data. Check the API connection and reload to retry.",
+    let cancelled = false;
+    setLoading(true);
+    setError("");
+    Promise.all([api.listResumes(), api.listJobs()])
+      .then(([documents, applications]) => {
+        if (cancelled) return;
+        setResumes(
+          documents
+            .filter((r) => !r.isArchived)
+            .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt)),
         );
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
-
-  async function handleDuplicate(id: string) {
-    try {
-      const duplicated = await api.duplicateResume(id);
-      router.push(`/resumes/${duplicated.metadata.id}`);
-    } catch (err: any) {
-      notify(`Could not duplicate: ${err.message}`);
-    }
-  }
-
-  async function handleDelete(id: string) {
-    if (confirm("Are you sure you want to delete this resume?")) {
-      try {
-        await api.deleteResume(id);
-        setResumes((prev) => prev.filter((r) => r.id !== id));
-      } catch (err: any) {
-        notify(`Delete failed: ${err.message}`);
-      }
-    }
-  }
-
-  async function handleCreateNew() {
-    try {
-      const newResume = await api.createResume({
-        title: "New Resume",
-        targetRole: "Full Stack Engineer",
+        setJobs(
+          applications
+            .filter((j) => j.status !== "archived")
+            .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt)),
+        );
+      })
+      .catch((err) => {
+        if (!cancelled) setError((err as Error).message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
-      router.push(`/resumes/${newResume.metadata.id}`);
-    } catch (err: any) {
-      notify(`Create failed: ${err.message}`);
+    return () => {
+      cancelled = true;
+    };
+  }, [retry]);
+  async function create() {
+    if (creating) return;
+    setCreating(true);
+    try {
+      const doc = await api.createResume({
+        title: t("newResume"),
+        targetRole: "",
+      });
+      router.push(`/resumes/${doc.metadata.id}`);
+    } catch (err) {
+      notify((err as Error).message);
+    } finally {
+      setCreating(false);
     }
   }
-
+  const latest = resumes[0];
+  const date = (value: string) =>
+    new Intl.DateTimeFormat(language === "tr" ? "tr-TR" : "en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(new Date(value));
   return (
-    <div className="flex flex-col w-full" onClick={() => setActiveMenuId(null)}>
-      <div className="max-w-[1120px] w-full mx-auto px-space-lg py-margin-desktop space-y-space-xl">
-        {/* Header Ribbon */}
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-lg border-b border-surface-container-high">
-          <div className="flex flex-col gap-space-xs">
-            <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary">
-              {t("dashboard")}
-            </span>
-            <h1 className="font-headline-xl text-headline-xl text-on-surface">
-              {t("dashboardTitle")}
-            </h1>
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              {t("dashboardSubtitle")}
+    <div className="editorial-home">
+      <header className="desk-heading">
+        <div>
+          <p className="editorial-eyebrow">{copy("YOUR PERSONAL STUDIO")}</p>
+          <h1>
+            {copy("A little space.")}
+            <br />
+            <em>{copy("A clearer story.")}</em>
+          </h1>
+          <p className="desk-intro">
+            {copy("Shape your experience into a document that feels like you.")}
+          </p>
+        </div>
+        <Link href="/import" className="editorial-link">
+          <Icons.Upload size={16} />
+          {t("importCv")}
+        </Link>
+      </header>
+      {error ? (
+        <div role="alert" className="desk-message">
+          {error}
+          <button
+            className="editorial-button"
+            onClick={() => setRetry((n) => n + 1)}
+          >
+            {copy("Retry")}
+          </button>
+        </div>
+      ) : loading ? (
+        <div role="status" className="desk-loading">
+          {t("loadingResumes")}
+        </div>
+      ) : latest ? (
+        <section className="desk-feature" aria-label={copy("Continue working")}>
+          <div className="feature-story">
+            <p className="editorial-eyebrow">
+              <span className="accent-dot" />
+              {copy("ON YOUR DESK")}
             </p>
-          </div>
-
-          <div className="flex items-center gap-space-sm flex-shrink-0">
-            <Link
-              href="/import"
-              className="h-8 px-space-md flex items-center gap-space-xs rounded bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors shadow-sm"
-            >
-              <Icons.Upload size={16} className="text-secondary" />
-              <span>{t("importCv")}</span>
-            </Link>
-            <button
-              type="button"
-              onClick={handleCreateNew}
-              className="h-8 px-space-md flex items-center gap-space-xs rounded bg-primary text-on-primary font-label-md text-label-md hover:bg-inverse-surface transition-colors shadow-sm"
-            >
-              <Icons.Add size={16} />
-              <span>{t("newResume")}</span>
-            </button>
-          </div>
-        </header>
-
-        {/* Section 1: Recent Resumes */}
-        <section className="flex flex-col gap-space-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-space-xs">
-              <h2 className="font-headline-md text-headline-md text-on-surface">
-                {t("recentResumes")}
-              </h2>
-              <span className="px-space-xs py-0.5 rounded bg-surface-container text-secondary font-label-sm text-label-sm">
-                {resumes.length}
+            <h2>{latest.title}</h2>
+            <p className="feature-role">
+              {latest.targetRole || t("statusGeneralProfile")}
+            </p>
+            <p className="feature-description">
+              {copy("Your latest document, ready for its next chapter.")}
+            </p>
+            <div className="document-facts">
+              <span>
+                {latest.language.toUpperCase()} / {latest.targetMarket}
+              </span>
+              <span>{latest.templateId}</span>
+              <span>
+                {copy("Revision")} {latest.revision}
               </span>
             </div>
             <Link
-              href="/resumes"
-              className="font-label-sm text-label-sm text-secondary hover:text-on-surface transition-colors flex items-center gap-space-xs"
+              href={`/resumes/${latest.id}`}
+              className="editorial-button primary"
             >
-              <span>{t("viewAll")}</span>
-              <Icons.ArrowRight size={14} />
+              {copy("Continue editing")}
+              <Icons.ArrowRight size={17} />
             </Link>
+            <span className="feature-updated">
+              {t("lastEdited")} · {date(latest.updatedAt)}
+            </span>
           </div>
-
-          <div className="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-container-highest overflow-visible">
-            {/* Table Header */}
-            <div className="grid grid-cols-12 px-space-md py-space-sm bg-surface-container-low text-secondary font-label-sm text-label-sm select-none rounded-t-lg border-b border-surface-container-high">
-              <div className="col-span-4">{t("colDocumentName")}</div>
-              <div className="col-span-3">{t("colTargetRole")}</div>
-              <div className="col-span-2">{t("colTemplate")}</div>
-              <div className="col-span-2">{t("colLastEdited")}</div>
-              <div className="col-span-1 text-right">{t("colActions")}</div>
-            </div>
-
-            {loading ? (
-              <div className="p-space-lg text-center text-secondary font-body-sm">
-                {t("loadingResumes")}
-              </div>
-            ) : resumes.length === 0 ? (
-              <div className="p-space-xl text-center flex flex-col items-center gap-space-sm">
-                <Icons.Document size={32} className="text-secondary" />
-                <p className="font-body-md text-secondary">
-                  {t("noResumesCreated")}
-                </p>
-                <button
-                  type="button"
-                  onClick={handleCreateNew}
-                  className="px-3 py-1.5 rounded bg-primary text-on-primary text-label-sm"
-                >
-                  {t("createFirstResume")}
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col divide-y divide-surface-container-high">
-                {resumes.map((r) => (
-                  <div
-                    key={r.id}
-                    className="group grid grid-cols-12 items-center px-space-md py-space-md hover:bg-surface-container-low transition-colors relative"
-                  >
-                    <div className="col-span-4 flex items-center gap-space-sm min-w-0 pr-space-md">
-                      <Icons.Document
-                        size={18}
-                        className="text-secondary group-hover:text-on-surface transition-colors flex-shrink-0"
-                      />
-                      <Link
-                        href={`/resumes/${r.id}`}
-                        className="font-label-lg text-label-lg text-on-surface truncate hover:underline underline-offset-2"
-                      >
-                        {r.title}
-                      </Link>
-                    </div>
-
-                    <div className="col-span-3 text-on-surface-variant font-body-md text-body-md truncate pr-space-md">
-                      {r.targetRole || t("statusGeneralProfile")}
-                    </div>
-
-                    <div className="col-span-2 flex items-center gap-1.5 flex-wrap">
-                      <span className="font-label-sm text-label-sm text-on-secondary-container bg-surface-container px-space-xs py-0.5 rounded capitalize">
-                        {r.templateId}
-                      </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface font-medium uppercase">
-                        {(r.language || "en").toUpperCase()}
-                      </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-container-highest text-primary font-semibold">
-                        {r.targetMarket || "TR"}
-                      </span>
-                    </div>
-
-                    <div className="col-span-2 font-body-sm text-body-sm text-secondary">
-                      {new Date(r.updatedAt).toLocaleDateString()}
-                    </div>
-
-                    <div className="col-span-1 flex justify-end relative">
-                      <button
-                        aria-label="More"
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveMenuId(activeMenuId === r.id ? null : r.id);
-                        }}
-                        className="w-7 h-7 flex items-center justify-center rounded text-secondary hover:text-on-surface hover:bg-surface-container transition-colors"
-                      >
-                        <Icons.More size={16} />
-                      </button>
-
-                      {/* Dropdown Menu */}
-                      {activeMenuId === r.id && (
-                        <div
-                          className="absolute right-0 top-8 w-36 bg-surface-container-lowest rounded shadow-lg z-50 p-space-xs flex flex-col gap-0.5 border border-surface-container-highest"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Link
-                            href={`/resumes/${r.id}`}
-                            className="w-full text-left px-space-sm py-space-xs rounded font-label-md text-label-md text-on-surface hover:bg-surface-container flex items-center justify-between"
-                          >
-                            <span>{t("openAction")}</span>
-                            <span className="font-label-sm text-secondary">
-                              ⌘O
-                            </span>
-                          </Link>
-
-                          <button
-                            type="button"
-                            onClick={() => handleDuplicate(r.id)}
-                            className="w-full text-left px-space-sm py-space-xs rounded font-label-md text-label-md text-on-surface hover:bg-surface-container flex items-center justify-between"
-                          >
-                            <span>{t("duplicateAction")}</span>
-                            <span className="font-label-sm text-secondary">
-                              ⌘D
-                            </span>
-                          </button>
-
-                          <a
-                            href={api.getExportUrl(r.id, "pdf", false)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="w-full text-left px-space-sm py-space-xs rounded font-label-md text-label-md text-on-surface hover:bg-surface-container"
-                          >
-                            {t("exportPdf")}
-                          </a>
-
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(r.id)}
-                            className="w-full text-left px-space-sm py-space-xs rounded font-label-md text-label-md text-error hover:bg-error-container"
-                          >
-                            {t("deleteAction")}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <Link
+            className="feature-document"
+            href={`/resumes/${latest.id}`}
+            aria-label={`${t("openStudio")}: ${latest.title}`}
+          >
+            <span className="document-corner">
+              01 / {copy("LATEST DOCUMENT")}
+            </span>
+            <DocumentCover id={latest.id} />
+          </Link>
+        </section>
+      ) : (
+        <section className="desk-empty">
+          <p className="editorial-eyebrow">{copy("A FRESH PAGE")}</p>
+          <h2>{copy("Every story starts somewhere.")}</h2>
+          <p>
+            {copy(
+              "Start a CV or bring an existing document into your workspace.",
             )}
-          </div>
+          </p>
+          <button
+            className="editorial-button primary"
+            onClick={create}
+            disabled={creating}
+          >
+            <Icons.Add size={18} />
+            {t("createFirstResume")}
+          </button>
         </section>
-
-        {/* Section 2: Recent Jobs Tracker */}
-        <section className="flex flex-col gap-space-sm pt-space-md">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-space-xs">
-              <h2 className="font-headline-md text-headline-md text-on-surface">
-                {t("recentJobs")}
-              </h2>
-              <span className="px-space-xs py-0.5 rounded bg-surface-container text-secondary font-label-sm text-label-sm">
-                {jobs.length} {t("trackedCount")}
-              </span>
+      )}
+      {!loading && !error && (
+        <>
+          <section
+            className="document-shelf"
+            aria-label={copy("Your documents")}
+          >
+            <div className="editorial-section-heading">
+              <div>
+                <span className="editorial-eyebrow">
+                  02 / {copy("THE COLLECTION")}
+                </span>
+                <h2>
+                  {copy("Your documents")} <span>{resumes.length}</span>
+                </h2>
+              </div>
+              <Link href="/resumes" className="editorial-link">
+                {t("viewAll")}
+                <Icons.ArrowRight size={15} />
+              </Link>
             </div>
-            <Link
-              href="/jobs"
-              className="font-label-sm text-label-sm text-secondary hover:text-on-surface transition-colors flex items-center gap-space-xs"
-            >
-              <span>{t("manageTracker")}</span>
-              <Icons.ArrowRight size={14} />
-            </Link>
-          </div>
-
-          <div className="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-container-highest overflow-hidden">
-            <div className="grid grid-cols-12 px-space-md py-space-sm bg-surface-container-low text-secondary font-label-sm text-label-sm select-none border-b border-surface-container-high">
-              <div className="col-span-3">{t("colCompany")}</div>
-              <div className="col-span-4">{t("colPosition")}</div>
-              <div className="col-span-2">{t("colStatus")}</div>
-              <div className="col-span-2">{t("colLinkedResume")}</div>
-              <div className="col-span-1 text-right">{t("colDetails")}</div>
-            </div>
-
-            <div className="flex flex-col divide-y divide-surface-container-high">
-              {jobs.map((j) => (
-                <div
-                  key={j.id}
-                  className="group grid grid-cols-12 items-center px-space-md py-space-md hover:bg-surface-container-low transition-colors"
+            <div className="document-shelf-grid">
+              {resumes.slice(0, 3).map((resume) => (
+                <Link
+                  className="shelf-document"
+                  key={resume.id}
+                  href={`/resumes/${resume.id}`}
                 >
-                  <div className="col-span-3 flex items-center gap-space-sm min-w-0 pr-space-sm">
-                    <span className="w-6 h-6 rounded bg-surface-container flex items-center justify-center font-label-sm text-on-surface font-semibold flex-shrink-0">
-                      {j.company.charAt(0)}
-                    </span>
-                    <span className="font-label-lg text-label-lg text-on-surface truncate">
-                      {j.company}
-                    </span>
+                  <div className="shelf-paper">
+                    <DocumentCover id={resume.id} />
                   </div>
-
-                  <div className="col-span-4 font-body-md text-body-md text-on-surface-variant truncate pr-space-md">
-                    {j.position}
-                  </div>
-
-                  <div className="col-span-2">
-                    <span className="font-label-sm text-label-sm px-space-xs py-0.5 rounded capitalize bg-surface-container text-secondary">
-                      {getJobStatusLabel(j.status)}
-                    </span>
-                  </div>
-
-                  <div className="col-span-2 flex items-center gap-space-xs min-w-0 pr-space-sm">
-                    <Icons.Link
-                      size={14}
-                      className="text-secondary flex-shrink-0"
-                    />
-                    <span className="font-body-sm text-body-sm text-secondary truncate">
-                      {j.linkedResumeId ? t("statusLinked") : t("statusNone")}
-                    </span>
-                  </div>
-
-                  <div className="col-span-1 flex justify-end">
-                    <Link
-                      href={`/jobs?selected=${j.id}`}
-                      className="font-label-sm text-label-sm text-secondary group-hover:text-on-surface hover:underline"
-                    >
-                      {t("compareAction")}
-                    </Link>
-                  </div>
-                </div>
+                  <h3>{resume.title}</h3>
+                  <p>{resume.targetRole || t("statusGeneralProfile")}</p>
+                  <span>
+                    {resume.language.toUpperCase()} · {date(resume.updatedAt)}
+                  </span>
+                </Link>
               ))}
+              <button
+                className="shelf-new"
+                onClick={create}
+                disabled={creating}
+              >
+                <span className="shelf-new-paper">
+                  <Icons.Add size={30} />
+                  <span>{copy("Room for a new story")}</span>
+                </span>
+                <strong>{t("newResume")}</strong>
+                <span>{copy("Begin with a blank page")}</span>
+              </button>
             </div>
-          </div>
-        </section>
-      </div>
+          </section>
+          <section className="desk-applications" aria-label={t("recentJobs")}>
+            <div className="editorial-section-heading">
+              <div>
+                <span className="editorial-eyebrow">
+                  03 / {copy("WHAT’S NEXT")}
+                </span>
+                <h2>{copy("Stories in motion")}</h2>
+              </div>
+              <Link className="editorial-link" href="/jobs">
+                {t("manageTracker")}
+                <Icons.ArrowRight size={15} />
+              </Link>
+            </div>
+            {jobs.length ? (
+              jobs.slice(0, 4).map((job, i) => (
+                <Link
+                  key={job.id}
+                  href={`/jobs?selected=${job.id}`}
+                  className="application-line"
+                >
+                  <span className="application-number">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <h3>{job.position}</h3>
+                    <p>{job.company}</p>
+                  </div>
+                  <span className="application-status">
+                    {getJobStatusLabel(job.status)}
+                  </span>
+                  <Icons.ArrowRight size={17} />
+                </Link>
+              ))
+            ) : (
+              <p className="desk-muted">
+                {copy(
+                  "Add a target job to start shaping your next application.",
+                )}
+              </p>
+            )}
+          </section>
+          <footer className="desk-footer">
+            <span>CV WORKSPACE</span>
+            <span>{copy("Thoughtfully written. Entirely yours.")}</span>
+          </footer>
+        </>
+      )}
     </div>
   );
 }
