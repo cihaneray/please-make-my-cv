@@ -186,165 +186,176 @@ export function DocumentTools({
   return (
     <details className="workspace-tools bg-surface-container-lowest border-b px-4 py-2 no-print shrink-0 max-h-[65vh] overflow-auto">
       <summary> {copy("All fields, history, library and backups")} </summary>
-      <fieldset disabled={disabled || busy} className="py-3 space-y-3">
-        <div className="flex flex-wrap gap-4">
-          <button
-            onClick={() => {
-              const blob = new Blob([JSON.stringify(document, null, 2)], {
-                type: "application/json",
-              });
-              const url = URL.createObjectURL(blob);
-              const a = window.document.createElement("a");
-              a.href = url;
-              a.download = "resume.json";
-              a.click();
-              setTimeout(() => URL.revokeObjectURL(url), 1000);
-            }}
-          >
-            {" "}
-            {copy("Download lossless JSON")}{" "}
-          </button>
-          <button
-            disabled={!undo.length}
-            onClick={() => {
-              onChange(undo[undo.length - 1]);
-              setUndo((values) => values.slice(0, -1));
-            }}
-          >
-            {" "}
-            {copy("Undo field edit")}{" "}
-          </button>
-          <button
-            onClick={async () => {
-              try {
-                setHistory(await api.history(document.metadata.id));
-                setMessage(
-                  "Select a revision to load it into the draft. Save creates a new revision.",
-                );
-              } catch (e) {
-                setMessage((e as Error).message);
-              }
-            }}
-          >
-            {" "}
-            {copy("Load revision history")}{" "}
-          </button>
-          <button
-            onClick={async () => {
-              try {
-                setSnippets(await api.listSnippets());
-              } catch (e) {
-                setMessage((e as Error).message);
-              }
-            }}
-          >
-            {" "}
-            {copy("Browse career library")}{" "}
-          </button>
-        </div>
-        {history.map((item) => (
-          <button
-            className="mr-3"
-            key={item.revision}
-            onClick={() => {
-              edit({
-                ...item.document,
-                metadata: {
-                  ...item.document.metadata,
-                  revision: document.metadata.revision,
-                },
-              });
-              setMessage(
-                `Revision ${item.revision} loaded into draft. Review and save.`,
-              );
-            }}
-          >
-            {" "}
-            {copy("Restore revision")} {item.revision}
-          </button>
-        ))}
-        {!!snippets.length && (
-          <div>
-            <label>
+      <div className="document-popover">
+        <button
+          className="document-popover-close"
+          aria-label={copy("Close panel")}
+          onClick={(event) =>
+            event.currentTarget.closest("details")?.removeAttribute("open")
+          }
+        >
+          {copy("Close panel")}
+        </button>
+        <fieldset disabled={disabled || busy} className="py-3 space-y-3">
+          <div className="flex flex-wrap gap-4">
+            <button
+              onClick={() => {
+                const blob = new Blob([JSON.stringify(document, null, 2)], {
+                  type: "application/json",
+                });
+                const url = URL.createObjectURL(blob);
+                const a = window.document.createElement("a");
+                a.href = url;
+                a.download = "resume.json";
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+              }}
+            >
               {" "}
-              {copy("Insert into")}{" "}
-              <select
-                value={target}
-                onChange={(e) => setTarget(e.target.value)}
-              >
-                <option value="summary"> {copy("Summary")} </option>
-                {document.experience.map((item, i) => (
-                  <option key={item.id} value={`experience:${i}`}>
-                    {item.company || "Experience"} {copy("achievements")}{" "}
-                  </option>
-                ))}
-                {document.projects.map((item, i) => (
-                  <option key={item.id} value={`projects:${i}`}>
-                    {item.name || "Project"} {copy("achievements")}{" "}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {snippets.map((item) => (
-              <button
-                className="block text-left border p-2"
-                key={item.id}
-                onClick={() => {
-                  const next = structuredClone(document);
-                  if (target === "summary")
-                    next.summary = [next.summary, item.content]
-                      .filter(Boolean)
-                      .join(" ");
-                  else {
-                    const [section, index] = target.split(":");
-                    const entries =
-                      section === "experience"
-                        ? next.experience
-                        : next.projects;
-                    if (entries[Number(index)])
-                      entries[Number(index)].bullets.push(item.content);
-                  }
-                  edit(next);
-                }}
-              >
-                {item.title}: {item.content}
-              </button>
-            ))}
+              {copy("Download lossless JSON")}{" "}
+            </button>
+            <button
+              disabled={!undo.length}
+              onClick={() => {
+                onChange(undo[undo.length - 1]);
+                setUndo((values) => values.slice(0, -1));
+              }}
+            >
+              {" "}
+              {copy("Undo field edit")}{" "}
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  setHistory(await api.history(document.metadata.id));
+                  setMessage(
+                    "Select a revision to load it into the draft. Save creates a new revision.",
+                  );
+                } catch (e) {
+                  setMessage((e as Error).message);
+                }
+              }}
+            >
+              {" "}
+              {copy("Load revision history")}{" "}
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  setSnippets(await api.listSnippets());
+                } catch (e) {
+                  setMessage((e as Error).message);
+                }
+              }}
+            >
+              {" "}
+              {copy("Browse career library")}{" "}
+            </button>
           </div>
-        )}
-        <p role="status">{message}</p>
-        {Object.entries(document)
-          .filter(([key]) => key !== "metadata")
-          .map(([key, value]) => (
-            <details key={key} className="border p-2">
-              <summary>{copy(label(key))}</summary>
-              <Fields
-                name={key}
-                value={value}
-                change={(v) => edit({ ...document, [key]: v })}
-              />
-            </details>
+          {history.map((item) => (
+            <button
+              className="mr-3"
+              key={item.revision}
+              onClick={() => {
+                edit({
+                  ...item.document,
+                  metadata: {
+                    ...item.document.metadata,
+                    revision: document.metadata.revision,
+                  },
+                });
+                setMessage(
+                  `Revision ${item.revision} loaded into draft. Review and save.`,
+                );
+              }}
+            >
+              {" "}
+              {copy("Restore revision")} {item.revision}
+            </button>
           ))}
-        <label className="block">
-          {" "}
-          {copy("Tags")}{" "}
-          <input
-            defaultValue={document.metadata.tags.join(", ")}
-            onBlur={(e) =>
-              edit({
-                ...document,
-                metadata: {
-                  ...document.metadata,
-                  tags: e.target.value
-                    .split(",")
-                    .map((v) => v.trim())
-                    .filter(Boolean),
-                },
-              })
-            }
-          />
-        </label>
-      </fieldset>
+          {!!snippets.length && (
+            <div>
+              <label>
+                {" "}
+                {copy("Insert into")}{" "}
+                <select
+                  value={target}
+                  onChange={(e) => setTarget(e.target.value)}
+                >
+                  <option value="summary"> {copy("Summary")} </option>
+                  {document.experience.map((item, i) => (
+                    <option key={item.id} value={`experience:${i}`}>
+                      {item.company || "Experience"} {copy("achievements")}{" "}
+                    </option>
+                  ))}
+                  {document.projects.map((item, i) => (
+                    <option key={item.id} value={`projects:${i}`}>
+                      {item.name || "Project"} {copy("achievements")}{" "}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {snippets.map((item) => (
+                <button
+                  className="block text-left border p-2"
+                  key={item.id}
+                  onClick={() => {
+                    const next = structuredClone(document);
+                    if (target === "summary")
+                      next.summary = [next.summary, item.content]
+                        .filter(Boolean)
+                        .join(" ");
+                    else {
+                      const [section, index] = target.split(":");
+                      const entries =
+                        section === "experience"
+                          ? next.experience
+                          : next.projects;
+                      if (entries[Number(index)])
+                        entries[Number(index)].bullets.push(item.content);
+                    }
+                    edit(next);
+                  }}
+                >
+                  {item.title}: {item.content}
+                </button>
+              ))}
+            </div>
+          )}
+          <p role="status">{message}</p>
+          {Object.entries(document)
+            .filter(([key]) => key !== "metadata")
+            .map(([key, value]) => (
+              <details key={key} className="border p-2">
+                <summary>{copy(label(key))}</summary>
+                <Fields
+                  name={key}
+                  value={value}
+                  change={(v) => edit({ ...document, [key]: v })}
+                />
+              </details>
+            ))}
+          <label className="block">
+            {" "}
+            {copy("Tags")}{" "}
+            <input
+              defaultValue={document.metadata.tags.join(", ")}
+              onBlur={(e) =>
+                edit({
+                  ...document,
+                  metadata: {
+                    ...document.metadata,
+                    tags: e.target.value
+                      .split(",")
+                      .map((v) => v.trim())
+                      .filter(Boolean),
+                  },
+                })
+              }
+            />
+          </label>
+        </fieldset>
+      </div>
     </details>
   );
 }

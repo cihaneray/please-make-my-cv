@@ -106,6 +106,7 @@ test("revision comparison and PDF checks use the current draft", async ({
       exact: true,
     }),
   ).toBeVisible();
+  await page.keyboard.press("Escape");
   await page
     .getByRole("button", { name: "Check PDF output", exact: true })
     .click();
@@ -250,7 +251,9 @@ test("visual draft is preserved in source and invalid source blocks switching", 
   const source = page.getByRole("textbox", { name: "Resume source" });
   await expect(source).toHaveValue(/UnsavedName/);
   await source.fill("profile: [broken");
-  await page.getByRole("button", { name: "Content", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Content", exact: true }),
+  ).toBeDisabled();
   await expect(source).toBeVisible();
   await page.getByRole("button", { name: "Validate", exact: true }).click();
   await expect(page.getByRole("status").last()).toContainText(/Invalid|syntax/);

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Redesign the home and CV studio around real document previews, an editorial desk, compact navigation, contextual section editing, focus mode and mobile tools/preview switching.
 - Preserve job drafts across status changes and reloads; store application status timelines.
 - Fix date range editing, Turkish education text, accessible labels and mobile preview navigation.
 - Preserve timestamps in backward-compatible v2 workspace backups; detach live links when permanently deleting a CV.

@@ -32,6 +32,14 @@ persists workspace data across restarts.
 
 ## Editing and application tools
 
+- The document-first studio uses a compact navigation rail, a desk with real
+  CV covers, and a live document beside a collapsible editing panel. Select a
+  section on the page (or use keyboard navigation) to open its fields.
+- **Focus on document** hides editing tools without discarding the draft.
+  Mobile **Edit content / Preview** works across content, design, review, and
+  source modes. Unapplied source changes block mode switches and exports.
+- History, complete field editing, and revision comparisons open in dismissible
+  panels. Use **Close panel** or Escape to return to the document.
 - Content includes certifications, languages, and custom sections. Experience
   and education have separate start/end dates and a Present toggle.
 - **Compare revisions and variants** shows field-level differences between a
