@@ -47,6 +47,16 @@ persists workspace data across restarts.
   layouts using real PDFs for a one-, two- or three-page target. Apply a proposal
   explicitly; stale proposals cannot replace newer edits. Text is preserved;
   manual content review may still be needed to reach the target.
+- Certifications, languages and custom sections use the same visual entry cards
+  as the rest of the editor, including nested item/bullet editing and ordering.
+- **Ready to apply** checks the linked saved CV for missing name, email, headline
+  and common draft placeholders, then checks its actual PDF layout. Findings
+  link back to relevant editing areas. Checks are advisory and show the checked
+  revision; rerun after CV edits.
+- **Application package** downloads a company/position-named ZIP containing
+  `cv.pdf` and UTF-8 `cover-letter.txt` from saved records. Link a CV and save a
+  cover letter first. Unsaved job edits must be saved before checking or export.
+  Downloading never submits an application or creates a submitted snapshot.
 - **Target Jobs** uses an application dossier: select a job in the compact list,
   then move between **Overview**, **Job details** and **Documents** with the
   sliding tab indicator or keyboard arrows. Notes, requirements and letter drafts

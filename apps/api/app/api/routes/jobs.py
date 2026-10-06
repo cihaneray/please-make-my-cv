@@ -103,3 +103,42 @@ def generate_cover_letter(job_id: str, request: CoverLetterRequest, db: Session 
     job = JobService.get_job(db, job_id)
     document = ResumeService.get_resume(db, request.resumeId)
     return cover_letter(document, job, request.language, request.useAI)
+
+
+@router.post("/{job_id}/package")
+def download_application_package(job_id: str, db: Session = Depends(get_db)):
+    import io
+    import re
+    import unicodedata
+    import zipfile
+    from urllib.parse import quote
+
+    from fastapi import HTTPException, Response
+
+    from app.exporters.pdf_exporter import render_pdf
+
+    job = JobService.get_job(db, job_id)
+    if not job.linkedResumeId:
+        raise HTTPException(status_code=400, detail="Link a CV before downloading a package.")
+    if not job.coverLetter.strip():
+        raise HTTPException(
+            status_code=400, detail="Save a cover letter before downloading a package."
+        )
+    document = ResumeService.get_resume(db, job.linkedResumeId)
+    pdf = render_pdf(document)
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("cv.pdf", pdf)
+        archive.writestr("cover-letter.txt", job.coverLetter.encode("utf-8"))
+    stem = re.sub(r"[^\w-]+", "-", f"{job.company}-{job.position}", flags=re.UNICODE).strip("-")[
+        :100
+    ]
+    filename = f"{stem or 'application'}-application.zip"
+    ascii_name = unicodedata.normalize("NFKD", filename).encode("ascii", "ignore").decode()
+    return Response(
+        buffer.getvalue(),
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f"attachment; filename=\"{ascii_name}\"; filename*=UTF-8''{quote(filename)}"
+        },
+    )

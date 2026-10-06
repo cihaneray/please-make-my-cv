@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Unify certification, language and custom-section editing cards, including nested item and bullet controls.
+- Add saved-CV application preparation checks with actual PDF diagnostics and a read-only ZIP export of the current linked CV plus saved cover letter.
+
 - Simplify selected controls with even borders and quiet fills instead of one-sided accent strips; retain sliding selection transitions.
 
 - Move entry, bullet and nested field reorder controls below editable content, align deletion buttons with their adjacent inputs, and prevent revision comparison labels from overlapping selectors in Turkish and narrow panels.

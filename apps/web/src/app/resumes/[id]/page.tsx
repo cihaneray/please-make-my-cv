@@ -19,9 +19,10 @@ import {
   EditorListField,
 } from "@/components/BulletListEditor";
 import { DateFields } from "@/components/DateFields";
+import { StructuredSectionEditor } from "@/components/StructuredSectionEditor";
 import { ResumeChanges } from "@/components/ResumeChanges";
 import { useCopy } from "@/lib/copy";
-import { DocumentTools, Fields } from "@/components/DocumentTools";
+import { DocumentTools } from "@/components/DocumentTools";
 import { SourceEditor } from "@/components/SourceEditor";
 import { api } from "@/lib/api";
 import { applyAIEdit } from "@/lib/ai-edits";
@@ -832,19 +833,12 @@ export default function ResumeStudioPage() {
                 ).map(
                   (section) =>
                     activeSection === section && (
-                      <div className="workspace-tools" key={section}>
-                        <Fields
-                          name={section}
-                          value={doc[section]}
-                          change={(value) =>
-                            setDoc({
-                              ...doc,
-                              [section]:
-                                value as ResumeDocument[typeof section],
-                            })
-                          }
-                        />
-                      </div>
+                      <StructuredSectionEditor
+                        key={section}
+                        section={section}
+                        document={doc}
+                        onChange={setDoc}
+                      />
                     ),
                 )}
                 {/* Profile Section */}

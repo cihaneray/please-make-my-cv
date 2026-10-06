@@ -2735,3 +2735,108 @@ html.dark .application-dossier {
   justify-content: space-between;
   gap: 10px;
 }
+
+.structured-entry-fields,
+.custom-entry-list {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.structured-entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid rgb(var(--color-outline-variant));
+  padding-top: 10px;
+}
+.custom-entry-list {
+  border-top: 1px solid rgb(var(--color-outline-variant));
+  padding-top: 16px;
+}
+.custom-entry-list .editor-entry {
+  background: rgb(var(--color-surface-container-lowest));
+  padding: 14px;
+}
+.custom-entry-list h3 {
+  font: 16px var(--desk-serif);
+}
+.application-preparation {
+  border-bottom: 1px solid rgb(var(--color-outline-variant));
+  padding-bottom: 24px;
+  display: grid;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.preparation-notice {
+  font-size: 12px;
+  color: rgb(var(--color-primary));
+}
+.preparation-result {
+  font-size: 12px;
+  color: rgb(var(--color-secondary));
+}
+.preparation-checks {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+.preparation-checks li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  min-width: 0;
+}
+.preparation-checks li > svg {
+  flex-shrink: 0;
+}
+.preparation-checks li > span {
+  flex: 1;
+  min-width: 0;
+}
+.preparation-checks li[data-result="review"] > svg {
+  color: rgb(var(--color-primary));
+}
+.preparation-checks a,
+.preparation-checks button {
+  font-size: 11px;
+  color: rgb(var(--color-primary));
+  text-decoration: underline;
+  flex-shrink: 0;
+}
+.preparation-pdf {
+  background: rgb(var(--color-surface-container-low));
+  padding: 14px;
+  font-size: 12px;
+  line-height: 1.7;
+  border-radius: 4px;
+}
+.preparation-pdf ul {
+  padding-left: 18px;
+  list-style: disc;
+}
+.preparation-package {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgb(var(--color-outline-variant));
+}
+.preparation-package > div {
+  flex: 1;
+  min-width: 200px;
+}
+.preparation-package h4 {
+  font: 18px var(--desk-serif);
+  margin-bottom: 6px;
+}
+.preparation-package p {
+  font-size: 12px;
+  line-height: 1.7;
+  color: rgb(var(--color-secondary));
+}

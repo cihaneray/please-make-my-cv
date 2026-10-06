@@ -1,6 +1,38 @@
 "use client";
 import { useI18n } from "./i18n";
 export const copyTranslations: Record<string, string> = {
+  Review: "Gözden geçir",
+  "Checking PDF…": "PDF kontrol ediliyor…",
+  Complete: "Tamam",
+  "Ready to apply": "Başvuruya hazır kontrolü",
+  "Check application": "Başvuruyu kontrol et",
+  "Checks use the saved linked CV and its actual PDF. They are preparation reminders, not a hiring score.":
+    "Kontroller bağlı CV’nin kayıtlı sürümünü ve gerçek PDF çıktısını kullanır. Bunlar hazırlık hatırlatmalarıdır; işe alım puanı değildir.",
+  "Save application edits before checking or downloading.":
+    "Kontrol veya indirme öncesinde başvuru düzenlemelerini kaydedin.",
+  "Name and surname are filled": "Ad ve soyad doldurulmuş",
+  "Contact email has a valid format": "İletişim e-postasının biçimi geçerli",
+  "Professional headline is filled": "Mesleki unvan doldurulmuş",
+  "No common draft placeholders found": "Yaygın taslak ifadeler bulunmadı",
+  "Cover letter is saved": "Ön yazı kaydedilmiş",
+  "Checked revision": "Kontrol edilen sürüm",
+  "items to review": "gözden geçirilecek madde",
+  "PDF check incomplete": "PDF kontrolü tamamlanamadı",
+  "Actual PDF": "Gerçek PDF",
+  "No PDF layout issues detected.": "PDF yerleşiminde sorun tespit edilmedi.",
+  "Application package": "Başvuru paketi",
+  "Download package": "Paketi indir",
+  "One ZIP with cv.pdf and cover-letter.txt, named for the company and position. Downloading does not submit the application.":
+    "Şirket ve pozisyon adıyla tek ZIP: cv.pdf ve cover-letter.txt. İndirme, başvuruyu göndermez.",
+  "Save a cover letter in Documents to include it in the package.":
+    "Pakete eklemek için Belgeler sekmesinde ön yazıyı kaydedin.",
+  "Package downloaded. It contains the current saved CV and cover letter.":
+    "Paket indirildi. Güncel kayıtlı CV ve ön yazıyı içerir.",
+  "Could not download the application package.": "Başvuru paketi indirilemedi.",
+  "Add Custom Sections": "Özel bölüm ekle",
+  "Add Languages": "Dil ekle",
+  "Add Certifications": "Sertifika ekle",
+
   "Application dossier": "Başvuru dosyası",
   "Application files": "Başvuru dosyaları",
   "Your career workspace": "Kariyer çalışma alanınız",
