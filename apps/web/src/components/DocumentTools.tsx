@@ -77,13 +77,6 @@ export function Fields({
             key={typeof item === "object" && item?.id ? item.id : i}
             className="array-field-row border-b pb-2 mb-2"
           >
-            <ReorderControls
-              group={reorderGroup}
-              index={i}
-              count={value.length}
-              label={`${copy(label(name))} ${i + 1}`}
-              onMove={(from, to) => change(moveItem(value, from, to))}
-            />
             <Fields
               depth={depth + 1}
               value={item}
@@ -93,6 +86,13 @@ export function Fields({
               }
             />
             <div className="field-row-actions">
+              <ReorderControls
+                group={reorderGroup}
+                index={i}
+                count={value.length}
+                label={`${copy(label(name))} ${i + 1}`}
+                onMove={(from, to) => change(moveItem(value, from, to))}
+              />
               <button
                 type="button"
                 onClick={() => change(value.filter((_, index) => index !== i))}

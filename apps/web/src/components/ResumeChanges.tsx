@@ -56,10 +56,13 @@ export function ResumeChanges({
         >
           {copy("Close panel")}
         </button>
-        <fieldset disabled={disabled || busy} className="space-y-3 py-3">
+        <fieldset
+          disabled={disabled || busy}
+          className="revision-comparison-fields"
+        >
           <button onClick={load}>{copy("Load comparison choices")}</button>
-          <label className="block">
-            {copy("Compare current draft with")}
+          <label className="revision-comparison-target">
+            <span>{copy("Compare current draft with")}</span>
             <select
               value={target}
               onChange={(e) => {

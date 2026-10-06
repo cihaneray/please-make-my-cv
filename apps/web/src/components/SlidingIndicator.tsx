@@ -20,7 +20,7 @@ export function SlidingIndicator({
     if (!parent) return;
     const measure = () => {
       const selected = parent.querySelector<HTMLElement>(
-        '[aria-current="page"], [aria-pressed="true"]',
+        '[aria-current="page"], [aria-pressed="true"], [aria-selected="true"]',
       );
       if (!selected) {
         setBox(null);
