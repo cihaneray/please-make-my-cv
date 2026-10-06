@@ -35,6 +35,24 @@ persists workspace data across restarts.
 - The document-first studio uses a compact navigation rail, a desk with real
   CV covers, and a live document beside a collapsible editing panel. Select a
   section on the page (or use keyboard navigation) to open its fields.
+- In **Design**, reorder sections with drag handles or up/down buttons; the live
+  preview and exported PDF follow the saved order. Profile stays first. Reorder
+  entries and bullet lists in their content editors with the same controls.
+- Undo/redo tracks up to 100 draft changes and groups consecutive typing in a
+  field. Use **Ctrl+Z**, **Ctrl+Shift+Z** or the toolbar; source view keeps its
+  own text editing behavior. Deleted entries can be recovered before saving.
+- **Ctrl+K** opens CV content search and quick actions. Search results open the
+  matching section and focus the matching field when available.
+- **Design → Page length assistant** measures the current draft and alternative
+  layouts using real PDFs for a one-, two- or three-page target. Apply a proposal
+  explicitly; stale proposals cannot replace newer edits. Text is preserved;
+  manual content review may still be needed to reach the target.
+- Job tools store interview dates, follow-up dates, notes and editable cover
+  letters. The agenda shows the next 14 days and overdue dates until updated;
+  it does not send notifications. Local letter drafts quote visible saved CV
+  evidence. Optional AI uses the configured provider with contact fields removed;
+  review generated wording and claims before sending. Letters can be downloaded
+  as plain text and are saved with the job.
 - **Focus on document** hides editing tools without discarding the draft.
   Mobile **Edit content / Preview** works across content, design, review, and
   source modes. Unapplied source changes block mode switches and exports.

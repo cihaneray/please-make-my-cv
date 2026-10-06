@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add section, entry and bullet ordering with accessible controls and PDF parity.
+- Add grouped draft undo/redo, deletion recovery, CV search and Ctrl+K commands.
+- Add an opt-in page length assistant using actual PDF page counts.
+- Add editable local/optional AI cover letters, interview and follow-up dates, and a 14-day/overdue job agenda; preserve planning fields in backups.
+
 - Redesign the home and CV studio around real document previews, an editorial desk, compact navigation, contextual section editing, focus mode and mobile tools/preview switching.
 - Preserve job drafts across status changes and reloads; store application status timelines.
 - Fix date range editing, Turkish education text, accessible labels and mobile preview navigation.
