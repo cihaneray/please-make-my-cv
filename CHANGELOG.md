@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Refine dark mode with warm charcoal panels, orange action/selection accents, clearer focus states and contrast coverage; preserve white resume paper.
+
 - Add section, entry and bullet ordering with accessible controls and PDF parity.
 - Add grouped draft undo/redo, deletion recovery, CV search and Ctrl+K commands.
 - Add an opt-in page length assistant using actual PDF page counts.

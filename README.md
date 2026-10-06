@@ -276,7 +276,7 @@ Browser-start failures and document-rendering failures now have separate message
 
 ## Appearance
 
-Choose **Settings → Interface Aesthetic → Color theme** to use Light, Dark, or System. System follows the device appearance. The preference is saved in this browser and synchronized between open tabs. Resume previews, template paper, and exported PDFs retain a white print background.
+Choose **Settings → Interface Aesthetic → Color theme** to use Light, Dark, or System. System follows the device appearance. The preference is saved in this browser and synchronized between open tabs. Dark mode uses warm charcoal surfaces and restrained orange accents for actions, selection and keyboard focus. Resume previews, template paper, and exported PDFs retain a white print background.
 
 
 ## Apply coaching and create job-specific copies
