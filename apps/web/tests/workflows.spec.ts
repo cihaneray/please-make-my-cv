@@ -609,7 +609,7 @@ test("dark mode persists and keeps resume paper white", async ({
   await expect(page.locator("html")).toHaveClass(/dark/);
   await expect(page.locator("body")).toHaveCSS(
     "background-color",
-    "rgb(20, 21, 25)",
+    "rgb(18, 19, 21)",
   );
   await page.screenshot({
     path: "test-results/dark-settings.png",
@@ -628,6 +628,44 @@ test("dark mode persists and keeps resume paper white", async ({
     "rgb(255, 255, 255)",
   );
   await expect(page.locator("html")).toHaveClass(/dark/);
+  const firstName = page.getByRole("textbox", {
+    name: "First Name",
+    exact: true,
+  });
+  await firstName.focus();
+  const contrast = await page.evaluate(() => {
+    const luminance = (color: string) => {
+      const channels = color
+        .match(/[\d.]+/g)!
+        .slice(0, 3)
+        .map(Number)
+        .map((c) => {
+          const s = c / 255;
+          return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+        });
+      return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+    };
+    const ratio = (foreground: string, background: string) => {
+      const a = luminance(foreground),
+        b = luminance(background);
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    };
+    const body = getComputedStyle(document.body);
+    const action = getComputedStyle(
+      document.querySelector(".studio-actions .primary")!,
+    );
+    const field = getComputedStyle(document.activeElement!);
+    return {
+      body: ratio(body.color, body.backgroundColor),
+      action: ratio(action.color, action.backgroundColor),
+      field: ratio(field.color, field.backgroundColor),
+      focus: ratio(field.outlineColor, field.backgroundColor),
+    };
+  });
+  expect(contrast.body).toBeGreaterThanOrEqual(4.5);
+  expect(contrast.action).toBeGreaterThanOrEqual(4.5);
+  expect(contrast.field).toBeGreaterThanOrEqual(4.5);
+  expect(contrast.focus).toBeGreaterThanOrEqual(3);
   await page.screenshot({
     path: "test-results/dark-studio.png",
     fullPage: true,
