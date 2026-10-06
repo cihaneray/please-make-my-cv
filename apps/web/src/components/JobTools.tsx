@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { DocumentCover } from "./DocumentCover";
 import { SlidingIndicator } from "./SlidingIndicator";
+import { ApplicationPreparation } from "./ApplicationPreparation";
 import { ApplicationEvidence } from "./ApplicationEvidence";
 import { Icons } from "./Icons";
 import {
@@ -292,6 +293,11 @@ export function JobTools({
         hidden={tab !== "overview"}
         tabIndex={0}
       >
+        <ApplicationPreparation
+          job={job}
+          dirty={dirty}
+          onDocuments={() => switchTab("documents")}
+        />
         <section
           className="dossier-match"
           aria-label={copy("CV match")}

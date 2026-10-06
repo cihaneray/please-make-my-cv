@@ -1161,3 +1161,202 @@ test("evidence previews highlight terms, remember expansion and link to exact CV
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(391);
 });
+
+test("structured certification, language and custom cards save nested edits and ordering", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request);
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page
+    .getByRole("button", { name: "Certifications 0", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Add Certifications", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "Name", exact: true })
+    .fill("Cloud Fundamentals");
+  await page
+    .getByRole("textbox", { name: "Issuer", exact: true })
+    .fill("Example Academy");
+  await page.getByRole("button", { name: "Languages 0", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Add Languages", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "Language", exact: true })
+    .fill("English");
+  await page
+    .getByRole("textbox", { name: "Proficiency", exact: true })
+    .fill("B2");
+  await page
+    .getByRole("button", { name: "Custom sections 0", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Add Custom Sections", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "Title", exact: true })
+    .fill("Volunteering");
+  await page.getByRole("button", { name: "Add Items", exact: true }).click();
+  const item = page.locator(".custom-entry-list .editor-entry").first();
+  await item
+    .getByRole("textbox", { name: "Title", exact: true })
+    .fill("Mentor");
+  await item
+    .getByRole("textbox", { name: "Description", exact: true })
+    .fill("Community support");
+  await item.getByRole("button", { name: "Add Bullet", exact: true }).click();
+  await item
+    .getByRole("textbox", { name: "Bullets 1", exact: true })
+    .fill("Coached five students.");
+  await page.getByRole("button", { name: "Save Draft", exact: true }).click();
+  await expect
+    .poll(async () =>
+      (
+        await request.get(
+          `http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`,
+        )
+      ).json(),
+    )
+    .toMatchObject({
+      certifications: [
+        { name: "Cloud Fundamentals", issuer: "Example Academy" },
+      ],
+      languages: [{ language: "English", proficiency: "B2" }],
+      customSections: [
+        {
+          title: "Volunteering",
+          items: [
+            {
+              title: "Mentor",
+              description: "Community support",
+              bullets: ["Coached five students."],
+            },
+          ],
+        },
+      ],
+    });
+  await page.reload();
+  await page.getByRole("button", { name: "Languages 1", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Add Languages", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "Language", exact: true })
+    .last()
+    .fill("Turkish");
+  await page
+    .getByRole("button", { name: "Move up: Languages", exact: true })
+    .last()
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "Language", exact: true }).first(),
+  ).toHaveValue("Turkish");
+  await page
+    .getByRole("button", { name: "Remove Languages 1", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "Language", exact: true }),
+  ).toHaveValue("English");
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(390);
+});
+
+test("application preparation reports saved evidence, actual PDF warnings and downloads an explicit package", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request, "Readiness CV");
+  doc.profile.email = "";
+  doc.summary = "TODO replace this summary";
+  const saved = await request.put(
+    `http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`,
+    { data: { document: doc, revision: doc.metadata.revision } },
+  );
+  expect(saved.ok()).toBeTruthy();
+  const job = await (
+    await request.post("http://127.0.0.1:8101/api/jobs", {
+      data: {
+        company: "Package Example",
+        position: "Designer",
+        linkedResumeId: doc.metadata.id,
+        coverLetter: "Saved cover letter.",
+      },
+    })
+  ).json();
+  await page.route(`**/api/resumes/${doc.metadata.id}/pdf-check`, (route) =>
+    route.fulfill({
+      json: {
+        pageCount: 2,
+        issues: [
+          {
+            code: "horizontal-overflow",
+            page: null,
+            message:
+              "Content extends beyond the A4 layout. Inspect the exact PDF pages.",
+          },
+        ],
+      },
+    }),
+  );
+  await page.goto("/jobs");
+  await page
+    .locator(".application-index-row")
+    .filter({ hasText: "Package Example" })
+    .click();
+  const preparation = page.getByRole("region", {
+    name: "Ready to apply",
+    exact: true,
+  });
+  await preparation
+    .getByRole("button", { name: "Check application", exact: true })
+    .click();
+  await expect(preparation.locator('[data-result="review"]')).toHaveCount(2);
+  await expect(preparation).toContainText("Actual PDF: 2 pages");
+  await expect(preparation).toContainText(
+    "Content extends beyond the A4 layout",
+  );
+  const downloaded = page.waitForEvent("download");
+  await preparation
+    .getByRole("button", { name: "Download package", exact: true })
+    .click();
+  const file = await downloaded;
+  expect(file.suggestedFilename()).toBe(
+    "Package-Example-Designer-application.zip",
+  );
+  await expect(preparation).toContainText("Package downloaded");
+  await page
+    .getByRole("textbox", { name: "Notes", exact: true })
+    .fill("Unsaved note");
+  await expect(
+    preparation.getByRole("button", { name: "Check application", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    preparation.getByRole("button", { name: "Download package", exact: true }),
+  ).toBeDisabled();
+  await expect(preparation).toContainText("Save application edits");
+  await page.getByRole("button", { name: "Save job", exact: true }).click();
+  await expect(
+    preparation.getByRole("button", { name: "Check application", exact: true }),
+  ).toBeEnabled();
+  await page.route(`**/api/resumes/${doc.metadata.id}/pdf-check`, (route) =>
+    route.fulfill({
+      status: 503,
+      json: { detail: "PDF rendering unavailable" },
+    }),
+  );
+  await preparation
+    .getByRole("button", { name: "Check application", exact: true })
+    .click();
+  await expect(preparation).toContainText("PDF check incomplete");
+  await expect(preparation.getByRole("alert")).toBeVisible();
+  expect(
+    (
+      await request.get(`http://127.0.0.1:8101/api/jobs/${job.id}/snapshots`)
+    ).ok(),
+  ).toBeTruthy();
+});
