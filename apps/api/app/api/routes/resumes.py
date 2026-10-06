@@ -8,6 +8,8 @@ from app.schemas.analysis import PdfCheckReport, ResumeAnalysisReport, ResumeCom
 from app.schemas.resume import (
     CreateResumeRequest,
     CreateVariantRequest,
+    PageFitReport,
+    PageFitRequest,
     PatchResumeMetadataRequest,
     ResumeDocument,
     ResumeSummaryResponse,
@@ -34,6 +36,13 @@ def pdf_check(resume_id: str, document: ResumeDocument):
     from app.services.pdf_check_service import check_pdf
 
     return check_pdf(document)
+
+
+@router.post("/{resume_id}/page-fit", response_model=PageFitReport)
+def page_fit(resume_id: str, request: PageFitRequest):
+    from app.services.page_fit_service import suggest_page_fit
+
+    return suggest_page_fit(request)
 
 
 @router.get("", response_model=list[ResumeSummaryResponse])

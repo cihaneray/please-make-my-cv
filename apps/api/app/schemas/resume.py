@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -109,6 +109,25 @@ class CustomSection(BaseModel):
 
 
 class DesignSettings(BaseModel):
+    sectionOrder: list[
+        Literal[
+            "summary",
+            "experience",
+            "education",
+            "projects",
+            "skills",
+            "certifications",
+            "languages",
+            "customSections",
+        ]
+    ] = Field(default_factory=list, max_length=8)
+
+    @model_validator(mode="after")
+    def unique_sections(self):
+        if len(set(self.sectionOrder)) != len(self.sectionOrder):
+            raise ValueError("Section order must not contain duplicates")
+        return self
+
     template: str = "minimal"  # 'minimal' | 'technical' | 'professional'
     fontFamily: str = "Inter"
     fontSize: str = "10pt"
@@ -271,3 +290,22 @@ class ResumeSummaryResponse(BaseModel):
 class CreateVariantRequest(BaseModel):
     document: ResumeDocument
     targetJob: TargetJob
+
+
+class PageFitRequest(BaseModel):
+    document: ResumeDocument
+    targetPages: int = Field(default=2, ge=1, le=3)
+
+
+class PageFitOption(BaseModel):
+    id: str
+    label: str
+    pageCount: int
+    design: DesignSettings
+
+
+class PageFitReport(BaseModel):
+    targetPages: int
+    currentPages: int
+    options: list[PageFitOption] = Field(default_factory=list)
+    suggestions: list[str] = Field(default_factory=list)

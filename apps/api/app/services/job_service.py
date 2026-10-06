@@ -24,6 +24,7 @@ class JobService:
 
         return [
             JobApplication(
+                **json.loads(m.planning_json or "{}"),
                 id=m.id,
                 company=m.company,
                 position=m.position,
@@ -47,6 +48,7 @@ class JobService:
         if not m:
             raise EntityNotFoundException("Job", job_id)
         return JobApplication(
+            **json.loads(m.planning_json or "{}"),
             id=m.id,
             company=m.company,
             position=m.position,
@@ -73,6 +75,12 @@ class JobService:
             url=request.url,
             description=request.description,
             notes=request.notes,
+            planning_json=json.dumps(
+                {
+                    key: getattr(request, key)
+                    for key in ("interviewAt", "followUpDate", "coverLetter")
+                }
+            ),
             requirements_json=json.dumps(request.requirements),
             timeline_json=json.dumps([JobEvent(status=request.status).model_dump()]),
             status=request.status.value,
@@ -97,6 +105,11 @@ class JobService:
         if not m:
             raise EntityNotFoundException("Job", job_id)
 
+        planning = json.loads(m.planning_json or "{}")
+        for key in ("interviewAt", "followUpDate", "coverLetter"):
+            if key in request.model_fields_set:
+                planning[key] = getattr(request, key)
+        m.planning_json = json.dumps(planning)
         was_applied = m.status == JobStatus.APPLIED.value
         previous_status = m.status
         if request.company is not None:

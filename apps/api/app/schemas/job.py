@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from enum import Enum
+from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 def default_uuid() -> str:
@@ -30,7 +31,23 @@ class JobEvent(BaseModel):
     createdAt: str = Field(default_factory=now_iso)
 
 
-class JobApplication(BaseModel):
+class JobPlanning(BaseModel):
+    interviewAt: str = Field(default="", max_length=40)
+    followUpDate: str = Field(default="", max_length=10)
+    coverLetter: str = Field(default="", max_length=20000)
+
+    @field_validator("interviewAt", "followUpDate")
+    @classmethod
+    def valid_planning_date(cls, value, info):
+        if value:
+            if info.field_name == "followUpDate":
+                date.fromisoformat(value)
+            else:
+                datetime.fromisoformat(value)
+        return value
+
+
+class JobApplication(JobPlanning):
     timeline: list[JobEvent] = Field(default_factory=list)
     requirements: list[str] = Field(default_factory=list, max_length=100)
     id: str = Field(default_factory=default_uuid)
@@ -46,7 +63,7 @@ class JobApplication(BaseModel):
     updatedAt: str = Field(default_factory=now_iso)
 
 
-class CreateJobRequest(BaseModel):
+class CreateJobRequest(JobPlanning):
     requirements: list[str] = Field(default_factory=list, max_length=100)
     company: str
     position: str
@@ -58,7 +75,7 @@ class CreateJobRequest(BaseModel):
     linkedResumeId: str | None = None
 
 
-class UpdateJobRequest(BaseModel):
+class UpdateJobRequest(JobPlanning):
     requirements: list[str] | None = Field(default=None, max_length=100)
     company: str | None = None
     position: str | None = None
@@ -87,3 +104,15 @@ class JobMatchAnalysis(BaseModel):
     recommendedKeywords: list[str] = Field(default_factory=list)
     sectionFeedback: list[dict[str, str]] = Field(default_factory=list)
     summary: str = ""
+
+
+class CoverLetterRequest(BaseModel):
+    resumeId: str
+    language: Literal["en", "tr"] = "en"
+    useAI: bool = False
+
+
+class CoverLetterResult(BaseModel):
+    text: str = Field(min_length=1, max_length=20000)
+    source: Literal["local", "ai"]
+    notice: str

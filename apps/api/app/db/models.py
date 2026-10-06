@@ -29,6 +29,7 @@ class ResumeModel(Base):
 
 class JobModel(Base):
     __tablename__ = "jobs"
+    planning_json: Mapped[str] = mapped_column(Text, default="{}", nullable=False)
     requirements_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
     timeline_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
 

@@ -361,17 +361,37 @@ class HtmlPdfExporter:
             </section>
             """
 
-        # Section Ordering based on template:
-        # Technical puts skills before experience; minimal and professional put experience before skills
-        if template_id == "technical":
-            body_content = (
-                f"{summary_html}{skills_html}{exp_html}{proj_html}{edu_html}{certs_html}{lang_html}"
-            )
-        else:
-            body_content = (
-                f"{summary_html}{exp_html}{edu_html}{proj_html}{skills_html}{certs_html}{lang_html}"
-            )
-
+        default_order = (
+            [
+                "summary",
+                "skills",
+                "experience",
+                "projects",
+                "education",
+                "certifications",
+                "languages",
+            ]
+            if template_id == "technical"
+            else [
+                "summary",
+                "experience",
+                "education",
+                "projects",
+                "skills",
+                "certifications",
+                "languages",
+            ]
+        )
+        section_html = {
+            "summary": summary_html,
+            "skills": skills_html,
+            "experience": exp_html,
+            "projects": proj_html,
+            "education": edu_html,
+            "certifications": certs_html,
+            "languages": lang_html,
+        }
+        custom_html = ""
         for section in doc.customSections:
             items = []
             for item in section.items:
@@ -379,7 +399,14 @@ class HtmlPdfExporter:
                 items.append(
                     f'<div class="entry"><strong>{html.escape(item.title)}</strong><div>{html.escape(item.subtitle)} {html.escape(item.date)}</div><p>{html.escape(item.description)}</p><ul class="bullets">{bullets}</ul></div>'
                 )
-            body_content += f'<section class="section"><h2 class="section-title">{html.escape(section.title)}</h2>{"".join(items)}</section>'
+            custom_html += f'<section class="section"><h2 class="section-title">{html.escape(section.title)}</h2>{"".join(items)}</section>'
+
+        section_html["customSections"] = custom_html
+        order = list(dict.fromkeys([*doc.design.sectionOrder, *default_order, "customSections"]))
+        body_content = "".join(
+            section_html[key].replace("<section ", f'<section data-studio-section="{key}" ')
+            for key in order
+        )
 
         # CSS template variations
         header_align = "center" if template_id == "professional" else "left"

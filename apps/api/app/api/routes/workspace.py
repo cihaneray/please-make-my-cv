@@ -155,6 +155,12 @@ def restore(data: Backup, db: Session = Depends(get_db)):
                 url=job.url,
                 description=job.description,
                 notes=job.notes,
+                planning_json=json.dumps(
+                    {
+                        key: getattr(job, key)
+                        for key in ("interviewAt", "followUpDate", "coverLetter")
+                    }
+                ),
                 requirements_json=json.dumps(job.requirements),
                 timeline_json=json.dumps([event.model_dump() for event in job.timeline]),
                 created_at=backup_timestamp(job.createdAt),

@@ -27,7 +27,20 @@ export interface ComparisonChange {
   description: string;
   details: Record<string, unknown>;
 }
+export interface CoverLetterRequest {
+  resumeId: string;
+  language: "en" | "tr";
+  useAI: boolean;
+}
+export interface CoverLetterResult {
+  text: string;
+  source: "local" | "ai";
+  notice: string;
+}
 export interface CreateJobRequest {
+  interviewAt: string;
+  followUpDate: string;
+  coverLetter: string;
   requirements: Array<string>;
   company: string;
   position: string;
@@ -74,6 +87,7 @@ export interface CustomSectionItem {
   bullets: Array<string>;
 }
 export interface DesignSettings {
+  sectionOrder: Array<"summary" | "experience" | "education" | "projects" | "skills" | "certifications" | "languages" | "customSections">;
   template: string;
   fontFamily: string;
   fontSize: string;
@@ -108,6 +122,9 @@ export interface ExperienceItem {
 export const IssueSeverity = {INFO: "info", WARNING: "warning", IMPORTANT: "important", CRITICAL: "critical"} as const;
 export type IssueSeverity = typeof IssueSeverity[keyof typeof IssueSeverity];
 export interface JobApplication {
+  interviewAt: string;
+  followUpDate: string;
+  coverLetter: string;
   timeline: Array<JobEvent>;
   requirements: Array<string>;
   id: string;
@@ -138,6 +155,11 @@ export interface JobMatchAnalysis {
   sectionFeedback: Array<Record<string, string>>;
   summary: string;
 }
+export interface JobPlanning {
+  interviewAt: string;
+  followUpDate: string;
+  coverLetter: string;
+}
 export const JobStatus = {SAVED: "saved", APPLIED: "applied", INTERVIEW: "interview", OFFER: "offer", REJECTED: "rejected", ARCHIVED: "archived"} as const;
 export type JobStatus = typeof JobStatus[keyof typeof JobStatus];
 export interface LanguageItem {
@@ -159,6 +181,22 @@ export interface LibrarySnippet {
   metrics: string;
   createdAt: string;
   updatedAt: string;
+}
+export interface PageFitOption {
+  id: string;
+  label: string;
+  pageCount: number;
+  design: DesignSettings;
+}
+export interface PageFitReport {
+  targetPages: number;
+  currentPages: number;
+  options: Array<PageFitOption>;
+  suggestions: Array<string>;
+}
+export interface PageFitRequest {
+  document: ResumeDocument;
+  targetPages: number;
 }
 export interface PatchResumeMetadataRequest {
   revision: number;
@@ -289,6 +327,9 @@ export interface TargetJob {
   description: string;
 }
 export interface UpdateJobRequest {
+  interviewAt: string;
+  followUpDate: string;
+  coverLetter: string;
   requirements: Array<string> | null;
   company: string | null;
   position: string | null;
