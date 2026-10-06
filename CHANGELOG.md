@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Simplify selected controls with even borders and quiet fills instead of one-sided accent strips; retain sliding selection transitions.
+
+- Move entry, bullet and nested field reorder controls below editable content, align deletion buttons with their adjacent inputs, and prevent revision comparison labels from overlapping selectors in Turkish and narrow panels.
+
+- Redesign Target Jobs as an editorial application dossier with keyboard-accessible tabs, persistent drafts, highlighted evidence previews, actual CV covers, dated submitted copies and responsive layouts.
+
 - Refine dark mode with warm charcoal panels, orange action/selection accents, clearer focus states and contrast coverage; preserve white resume paper.
 
 - Add section, entry and bullet ordering with accessible controls and PDF parity.

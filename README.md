@@ -47,6 +47,13 @@ persists workspace data across restarts.
   layouts using real PDFs for a one-, two- or three-page target. Apply a proposal
   explicitly; stale proposals cannot replace newer edits. Text is preserved;
   manual content review may still be needed to reach the target.
+- **Target Jobs** uses an application dossier: select a job in the compact list,
+  then move between **Overview**, **Job details** and **Documents** with the
+  sliding tab indicator or keyboard arrows. Notes, requirements and letter drafts
+  survive tab and job changes. Documents shows the linked CV's actual preview
+  and dated submitted snapshots; the overview keeps matching evidence and dates
+  together. Evidence cards preview relevant CV text, highlight matched terms,
+  remember expanded sources for the browser session and link to exact CV entries.
 - Job tools store interview dates, follow-up dates, notes and editable cover
   letters. The agenda shows the next 14 days and overdue dates until updated;
   it does not send notifications. Local letter drafts quote visible saved CV
