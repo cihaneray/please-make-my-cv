@@ -246,6 +246,12 @@ test("education highlights can be added, edited, deleted, saved and recovered in
   await page
     .getByRole("textbox", { name: "Education highlights 1", exact: true })
     .fill("Thesis on accessible interfaces");
+  const bullet = page.locator(".bullet-list-item").first();
+  const textarea = await bullet.locator("textarea").boundingBox();
+  const actions = await bullet.locator(".bullet-row-actions").boundingBox();
+  expect(actions!.y).toBeGreaterThanOrEqual(textarea!.y + textarea!.height);
+  expect(await bullet.locator(":scope > .reorder-controls").count()).toBe(0);
+
   await page
     .getByRole("button", { name: "Add highlight", exact: true })
     .click();
@@ -393,9 +399,15 @@ test("touch controls and selected sections stay separated in Turkish at narrow w
   for (const width of [320, 390, 1280]) {
     await page.setViewportSize({ width, height: 844 });
     const header = page.locator(".editor-entry-heading").first();
-    const field = await header.locator(".editor-field").boundingBox();
+    const card = await page.locator(".editor-entry").first().boundingBox();
+    const heading = await header.boundingBox();
+    expect(heading!.y - card!.y).toBeLessThanOrEqual(20);
+    const field = await header.locator(".editor-field > input").boundingBox();
     const remove = await header.getByRole("button").boundingBox();
     expect(field!.x + field!.width).toBeLessThan(remove!.x);
+    expect(
+      Math.abs(field!.y + field!.height / 2 - (remove!.y + remove!.height / 2)),
+    ).toBeLessThanOrEqual(1);
     if (width < 900) expect(remove!.height).toBeGreaterThanOrEqual(44);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
@@ -947,9 +959,7 @@ test("job planning and editable cover letters persist across status changes and 
   const job = await response.json();
   await page.goto("/jobs");
   await page.getByText("Workflow company", { exact: true }).first().click();
-  await page
-    .getByText("Edit job, requirements and submitted copies", { exact: true })
-    .click();
+  await page.getByRole("tab", { name: "Documents", exact: true }).click();
   await page
     .getByRole("button", { name: "Generate letter draft", exact: true })
     .click();
@@ -961,6 +971,7 @@ test("job planning and editable cover letters persist across status changes and 
     .poll(() => letter.inputValue())
     .toContain("Designed accessible editing workflows.");
   await letter.fill("Reviewed letter with my own wording");
+  await page.getByRole("tab", { name: "Overview", exact: true }).click();
   await page
     .getByLabel("Interview date and time", { exact: true })
     .fill("2026-10-20T14:30");
@@ -978,9 +989,175 @@ test("job planning and editable cover letters persist across status changes and 
       coverLetter: "Reviewed letter with my own wording",
     });
   await page.reload();
-  await page
-    .getByText("Edit job, requirements and submitted copies", { exact: true })
-    .click();
+  await page.getByRole("tab", { name: "Documents", exact: true }).click();
   await expect(letter).toHaveValue("Reviewed letter with my own wording");
   await expect(page.locator(".job-agenda")).toContainText("Overdue");
+});
+
+test("application dossier preserves drafts between tabs and files, and presents submitted documents", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request, "Dossier CV");
+  const other = await request.post("http://127.0.0.1:8101/api/jobs", {
+    data: { company: "Dossier B", position: "Other role" },
+  });
+  expect(other.ok()).toBeTruthy();
+  const response = await request.post("http://127.0.0.1:8101/api/jobs", {
+    data: {
+      company: "Dossier A",
+      position: "Designer",
+      linkedResumeId: doc.metadata.id,
+      requirements: ["accessible"],
+    },
+  });
+  const job = await response.json();
+  await page.goto("/jobs");
+  const index = page.getByRole("complementary", { name: "Application list" });
+  await index.getByRole("button", { name: /Dossier A/ }).click();
+  await page
+    .getByRole("textbox", { name: "Notes", exact: true })
+    .fill("A preserved note");
+  await page
+    .getByRole("tab", { name: "Overview", exact: true })
+    .press("ArrowRight");
+  await expect(
+    page.getByRole("tab", { name: "Job details", exact: true }),
+  ).toBeFocused();
+  await page
+    .getByRole("textbox", { name: "Position", exact: true })
+    .fill("Tailored designer");
+  await page
+    .getByRole("tab", { name: "Job details", exact: true })
+    .press("ArrowRight");
+  await expect(
+    page.getByRole("tab", { name: "Documents", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+  await page
+    .getByRole("textbox", { name: "Letter text", exact: true })
+    .fill("A letter draft");
+  await expect(page.locator(".dossier-cv-cover iframe")).toBeVisible();
+  await index.getByRole("button", { name: /Dossier B/ }).click();
+  await index.getByRole("button", { name: /Dossier A/ }).click();
+  await expect(
+    page.getByRole("textbox", { name: "Notes", exact: true }),
+  ).toHaveValue("A preserved note");
+  await page.getByRole("tab", { name: "Job details", exact: true }).click();
+  await expect(
+    page.getByRole("textbox", { name: "Position", exact: true }),
+  ).toHaveValue("Tailored designer");
+  await page.getByRole("tab", { name: "Documents", exact: true }).click();
+  await expect(
+    page.getByRole("textbox", { name: "Letter text", exact: true }),
+  ).toHaveValue("A letter draft");
+  await page.getByRole("button", { name: "Save job", exact: true }).click();
+  await expect
+    .poll(async () =>
+      (await request.get(`http://127.0.0.1:8101/api/jobs/${job.id}`)).json(),
+    )
+    .toMatchObject({
+      position: "Tailored designer",
+      notes: "A preserved note",
+      coverLetter: "A letter draft",
+    });
+  await page
+    .getByRole("combobox", { name: "Application status", exact: true })
+    .selectOption("applied");
+  await expect
+    .poll(async () =>
+      (await request.get(`http://127.0.0.1:8101/api/jobs/${job.id}`)).json(),
+    )
+    .toMatchObject({ status: "applied" });
+  await page
+    .getByRole("button", { name: "Load submitted copies", exact: true })
+    .click();
+  await expect(page.locator(".submitted-copy-list")).toContainText(
+    "Dossier CV",
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(391);
+  await expect(
+    page.getByRole("button", { name: "Download submitted copy", exact: true }),
+  ).toBeVisible();
+});
+
+test("evidence previews highlight terms, remember expansion and link to exact CV entries", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request);
+  const response = await request.post("http://127.0.0.1:8101/api/jobs", {
+    data: {
+      company: "Evidence file",
+      position: "Designer",
+      linkedResumeId: doc.metadata.id,
+      requirements: ["accessible"],
+    },
+  });
+  const job = await response.json();
+  await page.route(`**/api/jobs/${job.id}/match/*`, (route) =>
+    route.fulfill({
+      json: {
+        jobId: job.id,
+        resumeId: doc.metadata.id,
+        matchScore: 100,
+        matchedSkills: ["accessible"],
+        missingSkills: [],
+        recommendedKeywords: [],
+        sectionFeedback: [],
+        summary: "Explicit evidence found.",
+        evidence: [
+          {
+            requirement: "accessible",
+            section: "experience",
+            entryId: "editorial-experience",
+            text: "Designed accessible editing workflows.",
+          },
+          {
+            requirement: "accessible",
+            section: "summary",
+            entryId: null,
+            text: "Builds accessible tools.",
+          },
+        ],
+      },
+    }),
+  );
+  await page.goto("/jobs");
+  await page
+    .getByRole("complementary", { name: "Application list" })
+    .getByRole("button", { name: /Evidence file/ })
+    .click();
+  const card = page.locator(".evidence-card");
+  await expect(card.locator(".evidence-preview")).toContainText(
+    "Designed accessible editing workflows.",
+  );
+  await expect(card.locator(".evidence-preview mark")).toHaveText("accessible");
+  await expect(card.locator(".evidence-preview small")).toHaveText(
+    "Example Studio",
+  );
+  await card.locator("summary").click();
+  await expect(card).toHaveAttribute("open", "");
+  await expect(
+    card.getByRole("link", { name: "Open in CV" }).first(),
+  ).toHaveAttribute(
+    "href",
+    `/resumes/${doc.metadata.id}?section=experience&entry=editorial-experience`,
+  );
+  await page.getByRole("tab", { name: "Job details", exact: true }).click();
+  await page.getByRole("tab", { name: "Overview", exact: true }).click();
+  await expect(card).toHaveAttribute("open", "");
+  await page.reload();
+  await expect(card).toHaveAttribute("open", "");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(card.locator(".evidence-sources")).toHaveCSS(
+    "animation-name",
+    "none",
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(391);
 });

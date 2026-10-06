@@ -1,26 +1,51 @@
 "use client";
 import { useCopy } from "@/lib/copy";
-import React, { useEffect, useMemo, useState } from "react";
+import { useI18n } from "@/lib/i18n";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api";
+import { DocumentCover } from "./DocumentCover";
+import { SlidingIndicator } from "./SlidingIndicator";
+import { ApplicationEvidence } from "./ApplicationEvidence";
+import { Icons } from "./Icons";
 import {
   JobApplication,
   ResumeDocument,
   ResumeSummary,
   JobMatchAnalysis,
+  JobStatus,
 } from "@/lib/types";
+
+type Tab = "overview" | "listing" | "documents";
+const tabs: Tab[] = ["overview", "listing", "documents"];
+const tabNames = {
+  overview: "Overview",
+  listing: "Job details",
+  documents: "Documents",
+};
 export function JobTools({
   job,
   resumes,
   onSaved,
   onMatch,
+  matchResult,
+  matching,
+  onStatusChange,
 }: {
   job: JobApplication;
   resumes: ResumeSummary[];
   onSaved: (job: JobApplication) => void;
   onMatch: (match: JobMatchAnalysis) => void;
+  matchResult: JobMatchAnalysis | null;
+  matching: boolean;
+  onStatusChange: (status: JobStatus) => Promise<void>;
 }) {
   const copy = useCopy();
-
+  const { language, getJobStatusLabel } = useI18n();
+  const [tab, setTab] = useState<Tab>("overview");
+  const tablist = useRef<HTMLDivElement>(null);
+  const [snapshotState, setSnapshotState] = useState<
+    "idle" | "loading" | "loaded" | "error"
+  >("idle");
   const [draft, setDraft] = useState<JobApplication>(() => {
     try {
       const saved = JSON.parse(
@@ -99,240 +124,268 @@ export function JobTools({
       setBusy(false);
     }
   }
+
+  const linkedResume = resumes.find((row) => row.id === draft.linkedResumeId);
+  const comparedResume = resumes.find(
+    (row) => row.id === matchResult?.resumeId,
+  );
+  let jobUrl = "";
+  try {
+    const parsed = new URL(job.url);
+    if (["https:", "http:"].includes(parsed.protocol)) jobUrl = parsed.href;
+  } catch {
+    /* Empty or invalid links stay as editable text. */
+  }
+  const formatDate = (value: string, time = false) =>
+    value
+      ? new Date(time ? value : `${value}T00:00`).toLocaleString(
+          language === "tr" ? "tr-TR" : "en-GB",
+          time
+            ? { dateStyle: "medium", timeStyle: "short" }
+            : { dateStyle: "medium" },
+        )
+      : copy("Not scheduled");
+  const switchTab = (next: Tab, focus = false) => {
+    setTab(next);
+    if (focus)
+      tablist.current
+        ?.querySelector<HTMLButtonElement>(`[data-tab="${next}"]`)
+        ?.focus();
+  };
+  const save = () =>
+    run(async () => {
+      const updated = await api.updateJob(job.id, {
+        company: draft.company,
+        position: draft.position,
+        location: draft.location,
+        url: draft.url,
+        description: draft.description,
+        notes: draft.notes,
+        interviewAt: draft.interviewAt,
+        followUpDate: draft.followUpDate,
+        coverLetter: draft.coverLetter,
+        linkedResumeId: draft.linkedResumeId,
+        requirements: draftWithRequirements.requirements,
+      });
+      onSaved(updated);
+      setMessage(copy("Saved"));
+    });
   return (
-    <details className="workspace-tools border rounded p-3">
-      <summary> {copy("Edit job, requirements and submitted copies")} </summary>
-      <p role="status">
-        {dirty
-          ? copy("Unsaved job draft · stored in this browser")
-          : copy("Saved")}
-      </p>
-      <fieldset disabled={busy} className="grid gap-3 py-3">
-        {(
-          [
-            "company",
-            "position",
-            "location",
-            "url",
-            "description",
-            "notes",
-          ] as const
-        ).map((key) => (
-          <label key={key} className="grid">
-            {copy(key.charAt(0).toUpperCase() + key.slice(1))}
-            <textarea
-              value={draft[key]}
-              onChange={(e) => setDraft({ ...draft, [key]: e.target.value })}
-            />
-          </label>
-        ))}
-        <label>
-          {" "}
-          {copy("Linked resume")}{" "}
+    <article
+      className="application-dossier"
+      aria-label={copy("Application dossier")}
+    >
+      <header className="dossier-header">
+        <div>
+          <span className="editorial-eyebrow">
+            {copy("Application dossier")}
+          </span>
+          <h2>{job.position}</h2>
+          <p>
+            {job.company}
+            {job.location ? ` · ${job.location}` : ""}
+          </p>
+          <div className="dossier-header-links">
+            {jobUrl && (
+              <a
+                href={jobUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="editorial-link"
+              >
+                {copy("Open job listing")} <Icons.ArrowRight size={14} />
+              </a>
+            )}
+            {linkedResume ? (
+              <a
+                className="editorial-link"
+                href={`/resumes/${linkedResume.id}`}
+              >
+                <Icons.Document size={14} />
+                {linkedResume.title}
+              </a>
+            ) : (
+              <button
+                type="button"
+                className="editorial-link"
+                onClick={() => switchTab("documents")}
+              >
+                {copy("Link a CV")}
+              </button>
+            )}
+          </div>
+        </div>
+        <label className="dossier-status-label">
+          {copy("Application status")}
           <select
-            value={draft.linkedResumeId || ""}
+            aria-label={copy("Application status")}
+            value={job.status}
+            disabled={busy}
             onChange={(e) =>
-              setDraft({ ...draft, linkedResumeId: e.target.value || null })
+              run(() => onStatusChange(e.target.value as JobStatus))
             }
           >
-            <option value=""> {copy("None")} </option>
-            {resumes.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.title}
+            {Object.values(JobStatus).map((status) => (
+              <option key={status} value={status}>
+                {getJobStatusLabel(status)}
               </option>
             ))}
           </select>
         </label>
-
-        <label>
-          {copy("Interview date and time")}
-          <input
-            type="datetime-local"
-            value={draft.interviewAt || ""}
-            onChange={(e) =>
-              setDraft({ ...draft, interviewAt: e.target.value })
-            }
-          />
-        </label>
-        <label>
-          {copy("Follow-up date")}
-          <input
-            type="date"
-            value={draft.followUpDate || ""}
-            onChange={(e) =>
-              setDraft({ ...draft, followUpDate: e.target.value })
-            }
-          />
-        </label>
-        <section className="workflow-tool">
-          <h3>{copy("Cover letter")}</h3>
-          <label>
-            {copy("Letter language")}
-            <select
-              value={letterLanguage}
-              onChange={(e) => setLetterLanguage(e.target.value as "en" | "tr")}
-            >
-              <option value="en">English</option>
-              <option value="tr">Türkçe</option>
-            </select>
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={letterAI}
-              onChange={(e) => setLetterAI(e.target.checked)}
-            />
-            {copy("Use configured AI connection")}
-          </label>
-          <p>
-            {copy(
-              "Local drafts quote CV evidence. AI sends the saved CV without contact fields and the saved job description to your configured provider.",
-            )}
-          </p>
+      </header>
+      <div className="dossier-dates">
+        <div>
+          <span>{copy("Interview")}</span>
+          <strong>{formatDate(draft.interviewAt, true)}</strong>
+        </div>
+        <div>
+          <span>{copy("Follow-up")}</span>
+          <strong>{formatDate(draft.followUpDate)}</strong>
+        </div>
+        <div>
+          <span>{copy("Linked resume")}</span>
+          <strong>{linkedResume?.title || copy("None")}</strong>
+        </div>
+      </div>
+      <div
+        className="dossier-tabs"
+        ref={tablist}
+        role="tablist"
+        aria-label={copy("Application sections")}
+        onKeyDown={(event) => {
+          if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key))
+            return;
+          event.preventDefault();
+          const index = tabs.indexOf(tab);
+          switchTab(
+            event.key === "Home"
+              ? tabs[0]
+              : event.key === "End"
+                ? tabs[2]
+                : tabs[(index + (event.key === "ArrowRight" ? 1 : 2)) % 3],
+            true,
+          );
+        }}
+      >
+        <SlidingIndicator active={tab} variant="tab" />
+        {tabs.map((key) => (
           <button
+            key={key}
             type="button"
-            disabled={!draft.linkedResumeId}
-            onClick={() =>
-              run(async () => {
-                if (dirty) {
-                  setMessage(
-                    copy(
-                      "Save the job first to generate from the current requirements.",
-                    ),
-                  );
-                  return;
-                }
-                if (
-                  draft.coverLetter.trim() &&
-                  !confirm(copy("Replace the existing letter draft?"))
-                )
-                  return;
-                const result = await api.coverLetter(
-                  job.id,
-                  draft.linkedResumeId!,
-                  letterLanguage,
-                  letterAI,
-                );
-                setDraft((previous) => ({
-                  ...previous,
-                  coverLetter: result.text,
-                }));
-                setMessage(copy(result.notice));
-              })
-            }
+            role="tab"
+            id={`job-${job.id}-tab-${key}`}
+            aria-controls={`job-${job.id}-panel-${key}`}
+            aria-selected={tab === key}
+            tabIndex={tab === key ? 0 : -1}
+            data-tab={key}
+            onClick={() => switchTab(key)}
           >
-            {copy("Generate letter draft")}
-          </button>
-          <label>
-            {copy("Letter text")}
-            <textarea
-              rows={10}
-              value={draft.coverLetter || ""}
-              onChange={(e) =>
-                setDraft({ ...draft, coverLetter: e.target.value })
-              }
-            />
-          </label>
-          <button
-            type="button"
-            disabled={!draft.coverLetter}
-            onClick={() => {
-              const blob = new Blob([draft.coverLetter], {
-                type: "text/plain;charset=utf-8",
-              });
-              const url = URL.createObjectURL(blob);
-              const a = window.document.createElement("a");
-              a.href = url;
-              a.download = "cover-letter.txt";
-              a.click();
-              URL.revokeObjectURL(url);
-            }}
-          >
-            {copy("Download letter")}
-          </button>
-        </section>
-        <button
-          onClick={() =>
-            run(async () =>
-              onSaved(
-                await api.updateJob(job.id, {
-                  company: draft.company,
-                  position: draft.position,
-                  location: draft.location,
-                  url: draft.url,
-                  description: draft.description,
-                  notes: draft.notes,
-                  interviewAt: draft.interviewAt,
-                  followUpDate: draft.followUpDate,
-                  coverLetter: draft.coverLetter,
-                  linkedResumeId: draft.linkedResumeId,
-                  requirements: requirements
-                    .split("\n")
-                    .map((value) => value.trim())
-                    .filter(Boolean),
-                }),
-              ),
-            )
-          }
-        >
-          {" "}
-          {copy("Save job")}{" "}
-        </button>
-        <label className="grid">
-          {" "}
-          {copy("Requirements to compare (one per line)")}{" "}
-          <textarea
-            value={requirements}
-            onChange={(e) => setRequirements(e.target.value)}
-            placeholder="Add requirements from any occupation"
-          />
-        </label>
-        <button
-          disabled={!draft.linkedResumeId || !requirements.trim()}
-          onClick={() =>
-            run(async () =>
-              onMatch(
-                await api.matchJob(
-                  job.id,
-                  draft.linkedResumeId!,
-                  requirements.split("\n").filter(Boolean),
-                ),
-              ),
-            )
-          }
-        >
-          {" "}
-          {copy("Compare these requirements")}{" "}
-        </button>
-        <p>
-          {" "}
-          {copy(
-            "Matching checks explicit terms; it does not verify experience or predict hiring outcomes.",
-          )}{" "}
-        </p>
-        <button
-          onClick={() =>
-            run(async () => {
-              const response = await fetch(`/api/jobs/${job.id}/snapshots`);
-              if (!response.ok)
-                throw new Error("Could not load submitted copies");
-              setSnapshots(await response.json());
-            })
-          }
-        >
-          {" "}
-          {copy("Load submitted copies")}{" "}
-        </button>
-        {snapshots.map((row) => (
-          <button
-            key={row.id}
-            onClick={() => run(() => api.downloadPdf(row.document))}
-          >
-            {" "}
-            {copy("Download submitted copy (")} {row.createdAt})
+            {copy(tabNames[key])}
           </button>
         ))}
-        <p role="status">{message}</p>
+      </div>
+      <div
+        className="dossier-panel"
+        role="tabpanel"
+        id={`job-${job.id}-panel-overview`}
+        aria-labelledby={`job-${job.id}-tab-overview`}
+        hidden={tab !== "overview"}
+        tabIndex={0}
+      >
+        <section
+          className="dossier-match"
+          aria-label={copy("CV match")}
+          aria-busy={matching}
+        >
+          <div className="dossier-section-heading">
+            <h3>{copy("CV match")}</h3>
+            <span className="dossier-score">
+              {matching
+                ? copy("Calculating…")
+                : matchResult?.matchScore == null
+                  ? copy("Not assessed")
+                  : `${matchResult.matchScore}%`}
+            </span>
+          </div>
+          <p>
+            {matchResult?.summary ||
+              copy(
+                "Link a CV to compare the requirements in this application.",
+              )}
+          </p>
+          {comparedResume && (
+            <small>
+              {copy("Compared CV")}: {comparedResume.title}
+            </small>
+          )}
+          <p className="dossier-hint">
+            {copy(
+              "Matching checks explicit terms; it does not verify experience or predict hiring outcomes.",
+            )}
+          </p>
+          {!!matchResult?.missingSkills.length && (
+            <div className="dossier-gaps">
+              <span>{copy("Missing requirements")}</span>
+              {matchResult.missingSkills.map((skill) => (
+                <span className="requirement-gap" key={skill}>
+                  {skill}
+                </span>
+              ))}
+            </div>
+          )}
+        </section>
+        {matchResult && (
+          <ApplicationEvidence
+            key={job.id}
+            jobId={job.id}
+            result={matchResult}
+          />
+        )}
+        {!!matchResult?.sectionFeedback.length && (
+          <section className="dossier-insights">
+            <h3>{copy("Match insights")}</h3>
+            {matchResult.sectionFeedback.map((feedback, index) => (
+              <div key={index}>
+                <strong>{copy(feedback.section)}</strong>
+                <p>{feedback.message}</p>
+                <p>{feedback.recommendation}</p>
+              </div>
+            ))}
+          </section>
+        )}
+        <section className="dossier-planning">
+          <h3>{copy("Dates and notes")}</h3>
+          <fieldset disabled={busy} className="dossier-form-grid">
+            <label>
+              {copy("Interview date and time")}
+              <input
+                type="datetime-local"
+                value={draft.interviewAt || ""}
+                onChange={(e) =>
+                  setDraft({ ...draft, interviewAt: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              {copy("Follow-up date")}
+              <input
+                type="date"
+                value={draft.followUpDate || ""}
+                onChange={(e) =>
+                  setDraft({ ...draft, followUpDate: e.target.value })
+                }
+              />
+            </label>
+            <label className="dossier-wide">
+              {copy("Notes")}
+              <textarea
+                rows={4}
+                value={draft.notes}
+                onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
+              />
+            </label>
+          </fieldset>
+        </section>
         <section aria-label={copy("Application timeline")}>
           <h3>{copy("Application timeline")}</h3>
           {!job.timeline.length && (
@@ -344,14 +397,313 @@ export function JobTools({
             {job.timeline.map((event) => (
               <li key={event.id}>
                 <time dateTime={event.createdAt}>
-                  {new Date(event.createdAt).toLocaleString()}
+                  {new Date(event.createdAt).toLocaleString(
+                    language === "tr" ? "tr-TR" : "en-GB",
+                  )}
                 </time>{" "}
                 · {copy(event.status)}
               </li>
             ))}
           </ol>
         </section>
-      </fieldset>
-    </details>
+      </div>
+      <div
+        className="dossier-panel"
+        role="tabpanel"
+        id={`job-${job.id}-panel-listing`}
+        aria-labelledby={`job-${job.id}-tab-listing`}
+        hidden={tab !== "listing"}
+        tabIndex={0}
+      >
+        <div className="dossier-section-heading">
+          <h3>{copy("Job details")}</h3>
+          <span className="editorial-eyebrow">{copy("Saved listing")}</span>
+        </div>
+        <fieldset disabled={busy} className="dossier-form-grid">
+          {(["company", "position", "location", "url"] as const).map((key) => (
+            <label key={key}>
+              {copy(key.charAt(0).toUpperCase() + key.slice(1))}
+              <input
+                value={draft[key]}
+                onChange={(e) => setDraft({ ...draft, [key]: e.target.value })}
+              />
+            </label>
+          ))}
+          <label className="dossier-wide">
+            {copy("Description")}
+            <textarea
+              rows={8}
+              value={draft.description}
+              onChange={(e) =>
+                setDraft({ ...draft, description: e.target.value })
+              }
+            />
+          </label>
+          <label className="dossier-wide">
+            {copy("Requirements to compare (one per line)")}
+            <textarea
+              rows={5}
+              value={requirements}
+              onChange={(e) => setRequirements(e.target.value)}
+              placeholder={copy("Add requirements from any occupation")}
+            />
+          </label>
+          <div className="dossier-wide">
+            <button
+              className="editorial-button"
+              type="button"
+              disabled={!draft.linkedResumeId || !requirements.trim()}
+              onClick={() =>
+                run(async () => {
+                  onMatch(
+                    await api.matchJob(
+                      job.id,
+                      draft.linkedResumeId!,
+                      draftWithRequirements.requirements,
+                    ),
+                  );
+                  switchTab("overview");
+                })
+              }
+            >
+              {copy("Compare these requirements")}
+            </button>
+          </div>
+        </fieldset>
+      </div>
+      <div
+        className="dossier-panel"
+        role="tabpanel"
+        id={`job-${job.id}-panel-documents`}
+        aria-labelledby={`job-${job.id}-tab-documents`}
+        hidden={tab !== "documents"}
+        tabIndex={0}
+      >
+        <section className="dossier-cv">
+          <div>
+            <h3>{copy("Application CV")}</h3>
+            <label>
+              {copy("Linked resume")}
+              <select
+                aria-label={copy("Linked resume")}
+                disabled={busy}
+                value={draft.linkedResumeId || ""}
+                onChange={(e) =>
+                  setDraft({ ...draft, linkedResumeId: e.target.value || null })
+                }
+              >
+                <option value="">{copy("None")}</option>
+                {resumes.map((row) => (
+                  <option key={row.id} value={row.id}>
+                    {row.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {linkedResume ? (
+              <>
+                <p>{linkedResume.title}</p>
+                <a
+                  className="editorial-link"
+                  href={`/resumes/${linkedResume.id}`}
+                >
+                  {copy("Open in studio")} <Icons.ArrowRight size={14} />
+                </a>
+              </>
+            ) : (
+              <p className="dossier-hint">
+                {copy("Choose the CV you want to use for this application.")}
+              </p>
+            )}
+          </div>
+          {tab === "documents" && linkedResume && (
+            <a
+              className="dossier-cv-cover"
+              aria-label={`${copy("Open in studio")}: ${linkedResume.title}`}
+              href={`/resumes/${linkedResume.id}`}
+            >
+              <DocumentCover key={linkedResume.id} id={linkedResume.id} />
+            </a>
+          )}
+        </section>
+        <fieldset disabled={busy}>
+          <section className="letter-document">
+            <h3>{copy("Cover letter")}</h3>
+            <label>
+              {copy("Letter language")}
+              <select
+                aria-label={copy("Letter language")}
+                value={letterLanguage}
+                onChange={(e) =>
+                  setLetterLanguage(e.target.value as "en" | "tr")
+                }
+              >
+                <option value="en">English</option>
+                <option value="tr">Türkçe</option>
+              </select>
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={letterAI}
+                onChange={(e) => setLetterAI(e.target.checked)}
+              />
+              {copy("Use configured AI connection")}
+            </label>
+            <p>
+              {copy(
+                "Local drafts quote CV evidence. AI sends the saved CV without contact fields and the saved job description to your configured provider.",
+              )}
+            </p>
+            <button
+              type="button"
+              disabled={!draft.linkedResumeId}
+              onClick={() =>
+                run(async () => {
+                  if (dirty) {
+                    setMessage(
+                      copy(
+                        "Save the job first to generate from the current requirements.",
+                      ),
+                    );
+                    return;
+                  }
+                  if (
+                    draft.coverLetter.trim() &&
+                    !confirm(copy("Replace the existing letter draft?"))
+                  )
+                    return;
+                  const result = await api.coverLetter(
+                    job.id,
+                    draft.linkedResumeId!,
+                    letterLanguage,
+                    letterAI,
+                  );
+                  setDraft((previous) => ({
+                    ...previous,
+                    coverLetter: result.text,
+                  }));
+                  setMessage(copy(result.notice));
+                })
+              }
+            >
+              {copy("Generate letter draft")}
+            </button>
+            <label>
+              {copy("Letter text")}
+              <textarea
+                rows={10}
+                value={draft.coverLetter || ""}
+                onChange={(e) =>
+                  setDraft({ ...draft, coverLetter: e.target.value })
+                }
+              />
+            </label>
+            <button
+              type="button"
+              disabled={!draft.coverLetter}
+              onClick={() => {
+                const blob = new Blob([draft.coverLetter], {
+                  type: "text/plain;charset=utf-8",
+                });
+                const url = URL.createObjectURL(blob);
+                const a = window.document.createElement("a");
+                a.href = url;
+                a.download = "cover-letter.txt";
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+              }}
+            >
+              {copy("Download letter")}
+            </button>
+          </section>
+        </fieldset>
+        <section className="dossier-snapshots">
+          <div className="dossier-section-heading">
+            <h3>{copy("Submitted copies")}</h3>
+            <button
+              className="editorial-button"
+              type="button"
+              disabled={busy}
+              onClick={() =>
+                run(async () => {
+                  setSnapshotState("loading");
+                  try {
+                    const response = await fetch(
+                      `/api/jobs/${job.id}/snapshots`,
+                    );
+                    if (!response.ok)
+                      throw new Error(copy("Could not load submitted copies"));
+                    setSnapshots(await response.json());
+                    setSnapshotState("loaded");
+                  } catch (error) {
+                    setSnapshotState("error");
+                    throw error;
+                  }
+                })
+              }
+            >
+              {copy(
+                snapshotState === "loading"
+                  ? "Loading…"
+                  : "Load submitted copies",
+              )}
+            </button>
+          </div>
+          {snapshotState === "idle" && (
+            <p className="dossier-hint">
+              {copy(
+                "Saved copies capture the CV as it was when the application was submitted.",
+              )}
+            </p>
+          )}
+          {snapshotState === "loaded" && !snapshots.length && (
+            <p className="dossier-hint">{copy("No submitted copies yet.")}</p>
+          )}
+          <div className="submitted-copy-list">
+            {snapshots.map((row) => (
+              <div key={row.id}>
+                <Icons.Document size={24} />
+                <div>
+                  <strong>{row.document.metadata.title}</strong>
+                  <time dateTime={row.createdAt}>
+                    {new Date(row.createdAt).toLocaleString(
+                      language === "tr" ? "tr-TR" : "en-GB",
+                    )}
+                  </time>
+                </div>
+                <button
+                  type="button"
+                  className="editorial-button"
+                  disabled={busy}
+                  onClick={() => run(() => api.downloadPdf(row.document))}
+                >
+                  {copy("Download submitted copy")} <Icons.Download size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+      <footer className="dossier-savebar">
+        <div role="status">
+          <span className={`draft-state ${dirty ? "is-dirty" : ""}`}>
+            {copy(
+              dirty ? "Unsaved job draft · stored in this browser" : "Saved",
+            )}
+          </span>
+          {message && <p>{message}</p>}
+        </div>
+        <button
+          type="button"
+          className="editorial-button primary"
+          disabled={busy || !dirty}
+          onClick={save}
+        >
+          <Icons.Save size={16} />
+          {copy(busy ? "Working…" : "Save job")}
+        </button>
+      </footer>
+    </article>
   );
 }

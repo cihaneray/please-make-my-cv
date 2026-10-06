@@ -14,9 +14,7 @@ test("job draft survives status changes and reload without reverting status on s
     .getByText("Draft preservation test", { exact: true })
     .first()
     .click();
-  await page
-    .getByText("Edit job, requirements and submitted copies", { exact: true })
-    .click();
+
   await page
     .getByRole("textbox", { name: "Notes", exact: true })
     .fill("Unsaved meeting note");
@@ -27,9 +25,7 @@ test("job draft survives status changes and reload without reverting status on s
     page.getByRole("textbox", { name: "Notes", exact: true }),
   ).toHaveValue("Unsaved meeting note");
   await page.reload();
-  await page
-    .getByText("Edit job, requirements and submitted copies", { exact: true })
-    .click();
+
   await expect(
     page.getByRole("textbox", { name: "Notes", exact: true }),
   ).toHaveValue("Unsaved meeting note");
@@ -94,6 +90,35 @@ test("revision comparison and PDF checks use the current draft", async ({
     .getByText("Compare revisions and variants", { exact: true })
     .click();
   await page.getByRole("button", { name: "Load comparison choices" }).click();
+  await page.getByRole("button", { name: "Türkçeye geç", exact: true }).click();
+  for (const width of [320, 390, 1280]) {
+    await page.setViewportSize({ width, height: 844 });
+    const label = await page
+      .locator(".revision-comparison-target > span")
+      .boundingBox();
+    const select = await page
+      .locator(".revision-comparison-target > select")
+      .boundingBox();
+    expect(select!.y).toBeGreaterThanOrEqual(label!.y + label!.height + 6);
+    const panel = await page
+      .locator(".document-popover")
+      .filter({ has: page.locator(".revision-comparison-target") })
+      .boundingBox();
+    expect(select!.x + select!.width).toBeLessThanOrEqual(
+      panel!.x + panel!.width,
+    );
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 1280, height: 844 });
+  await page
+    .getByRole("button", { name: "Switch to English", exact: true })
+    .click();
+  await page
+    .getByText("Compare revisions and variants", { exact: true })
+    .click();
+
   await page
     .getByLabel("Compare current draft with")
     .selectOption("revision:1");
@@ -205,9 +230,7 @@ test("saved job requirements survive reload", async ({ page, request }) => {
     .getByText("Requirements regression", { exact: true })
     .first()
     .click();
-  await page
-    .getByText("Edit job, requirements and submitted copies", { exact: true })
-    .click();
+  await page.getByRole("tab", { name: "Job details", exact: true }).click();
   await page
     .getByRole("textbox", { name: "Requirements to compare (one per line)" })
     .fill("cake decorating\nfood safety");
@@ -218,9 +241,7 @@ test("saved job requirements survive reload", async ({ page, request }) => {
     )
     .toMatchObject({ requirements: ["cake decorating", "food safety"] });
   await page.reload();
-  await page
-    .getByText("Edit job, requirements and submitted copies", { exact: true })
-    .click();
+  await page.getByRole("tab", { name: "Job details", exact: true }).click();
   await expect(
     page.getByRole("textbox", {
       name: "Requirements to compare (one per line)",

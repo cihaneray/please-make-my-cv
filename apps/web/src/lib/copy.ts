@@ -1,6 +1,54 @@
 "use client";
 import { useI18n } from "./i18n";
 export const copyTranslations: Record<string, string> = {
+  "Application dossier": "Başvuru dosyası",
+  "Application files": "Başvuru dosyaları",
+  "Your career workspace": "Kariyer çalışma alanınız",
+  "A clear view of every opportunity, and the story you send with it.":
+    "Her fırsatın ayrıntıları, başvuru belgeleriniz ve sıradaki adım bir arada.",
+  "Application list": "Başvuru listesi",
+  "Application sections": "Başvuru bölümleri",
+  Overview: "Genel bakış",
+  "Job details": "İlan bilgileri",
+  Documents: "Belgeler",
+  "Open job listing": "İlanı aç",
+  "Link a CV": "CV bağla",
+  "Not scheduled": "Planlanmadı",
+  "Application status": "Başvuru durumu",
+  "Dates and notes": "Tarihler ve notlar",
+  "CV match": "CV eşleşmesi",
+  "Compared CV": "Karşılaştırılan CV",
+  "Calculating…": "Hesaplanıyor…",
+  "Not assessed": "Değerlendirilmedi",
+  "Link a CV to compare the requirements in this application.":
+    "Bu başvurunun gereksinimlerini karşılaştırmak için bir CV bağlayın.",
+  "Missing requirements": "Eksik gereksinimler",
+  "Match insights": "Eşleşme notları",
+  "Requirement evidence": "Gereksinim kanıtları",
+  "Evidence in your CV": "CV'deki kanıtlar",
+  matched: "eşleşme",
+  sources: "kaynak",
+  "Open in CV": "CV'de aç",
+  "No matching evidence yet. Review the requirements and linked CV.":
+    "Henüz eşleşen kanıt yok. Gereksinimleri ve bağlı CV'yi gözden geçirin.",
+  "Saved listing": "Kayıtlı ilan",
+  "Application CV": "Başvuru CV'si",
+  "Open in studio": "Stüdyoda aç",
+  "Choose the CV you want to use for this application.":
+    "Bu başvuruda kullanmak istediğiniz CV'yi seçin.",
+  "Submitted copies": "Gönderilen kopyalar",
+  "Saved copies capture the CV as it was when the application was submitted.":
+    "Kayıtlı kopyalar, başvuru gönderildiği andaki CV'yi saklar.",
+  "No submitted copies yet.": "Henüz gönderilen kopya yok.",
+  "Download submitted copy": "Gönderilen kopyayı indir",
+  "Could not load submitted copies": "Gönderilen kopyalar yüklenemedi",
+  "Could not compare requirements. Save the job or compare again to retry.":
+    "Gereksinimler karşılaştırılamadı. Tekrar denemek için ilanı kaydedin veya yeniden karşılaştırın.",
+  "Choose an application to open its file.":
+    "Dosyasını açmak için bir başvuru seçin.",
+  "Working…": "İşleniyor…",
+  "Add requirements from any occupation": "İlanın gereksinimlerini ekleyin",
+
   Close: "Kapat",
   "Add Education": "Eğitim Ekle",
   "Add Project": "Proje Ekle",
