@@ -76,17 +76,6 @@ export function BulletListEditor({
           data-motion-id={keys[index] ?? `pending-${index}`}
           key={keys[index] ?? `pending-${index}`}
         >
-          <ReorderControls
-            group={listGroup}
-            index={index}
-            count={values.length}
-            label={`${label} ${index + 1}`}
-            onMove={(from, to) => {
-              setKeys((current) => moveItem(current, from, to));
-              pendingFocus.current = to;
-              onChange(moveItem(values, from, to));
-            }}
-          />
           <label className="bullet-text-field">
             <span className="sr-only">
               {label} {index + 1}
@@ -104,6 +93,17 @@ export function BulletListEditor({
             />
           </label>
           <div className="bullet-row-actions">
+            <ReorderControls
+              group={listGroup}
+              index={index}
+              count={values.length}
+              label={`${label} ${index + 1}`}
+              onMove={(from, to) => {
+                setKeys((current) => moveItem(current, from, to));
+                pendingFocus.current = to;
+                onChange(moveItem(values, from, to));
+              }}
+            />
             {onPolish && (
               <button
                 type="button"

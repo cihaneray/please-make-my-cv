@@ -1275,21 +1275,30 @@ html.dark {
   animation: editor-reveal 160ms ease-out;
 }
 .editor-entry-heading {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px 14px;
   min-width: 0;
+  align-items: center;
 }
-.editor-entry-heading > .editor-field,
+.editor-entry-heading > .editor-field {
+  display: contents;
+}
+.editor-entry-heading > .editor-field > .editor-field-label {
+  grid-column: 1;
+  grid-row: 1;
+}
+.editor-entry-heading > .editor-field > input,
 .editor-entry-heading > input {
-  flex: 1;
+  grid-column: 1;
+  grid-row: 2;
   min-width: 0;
-  width: 0;
+  width: 100%;
 }
 .editor-entry-heading > .editor-icon-button {
-  margin-top: 20px;
-}
-.skill-entry .editor-entry-heading > .editor-icon-button {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: center;
   margin-top: 0;
 }
 .editor-field-grid {
@@ -1466,7 +1475,7 @@ html.dark {
   flex-shrink: 0;
 }
 .studio-outline button[aria-pressed="true"] {
-  box-shadow: inset 2px 0 rgb(var(--color-primary));
+  box-shadow: none;
 }
 .studio-inspector:not([hidden]),
 .inspector-mode,
@@ -1587,17 +1596,13 @@ html.dark {
   border-radius: 12px;
 }
 .sliding-rail::before {
-  content: "";
-  position: absolute;
-  left: -15px;
-  top: calc(50% - 10px);
-  width: 3px;
-  height: 20px;
-  background: rgb(var(--color-primary));
+  content: none;
 }
 .sliding-section {
-  border-radius: 3px;
-  box-shadow: inset 2px 0 rgb(var(--color-primary));
+  background: rgb(var(--color-surface-container));
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 4px;
+  box-shadow: none;
 }
 .sliding-tab::after {
   content: "";
@@ -1936,9 +1941,11 @@ html.dark .workflow-tool {
   border-color: rgb(var(--color-outline-variant) / 0.65);
   box-shadow: 0 2px 10px #00000018;
 }
-html.dark .sliding-rail,
-html.dark .sliding-section {
+html.dark .sliding-rail {
   background: rgb(var(--color-primary) / 0.12);
+}
+html.dark .sliding-section {
+  background: rgb(var(--color-surface-container));
 }
 html.dark .sliding-tab {
   background: linear-gradient(
@@ -2691,3 +2698,40 @@ html.dark .application-dossier {
   }
 }
 
+/* Keep revision selectors below their labels at every panel width. */
+.revision-comparison-fields {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.revision-comparison-fields > button {
+  justify-self: start;
+  max-width: 100%;
+  white-space: normal;
+}
+.revision-comparison-target {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  font-size: 12px;
+}
+.revision-comparison-target > select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.editor-entry > .reorder-controls {
+  border-top: 1px solid rgb(var(--color-outline-variant));
+  padding-top: 10px;
+}
+
+.bullet-row-actions > .reorder-controls {
+  margin-right: auto;
+}
+
+.array-field-row > .field-row-actions {
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}

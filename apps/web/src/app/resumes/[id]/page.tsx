@@ -1027,20 +1027,6 @@ export default function ResumeStudioPage() {
                         data-motion-id={exp.id}
                         className="editor-entry"
                       >
-                        <ReorderControls
-                          group="experience"
-                          index={expIdx}
-                          count={doc.experience.length}
-                          label={
-                            exp.position || exp.company || String(expIdx + 1)
-                          }
-                          onMove={(from, to) =>
-                            updateField(
-                              "experience",
-                              moveItem(doc.experience, from, to),
-                            )
-                          }
-                        />
                         <div className="editor-entry-heading">
                           <EditorField
                             label={t("jobTitle")}
@@ -1110,6 +1096,21 @@ export default function ResumeStudioPage() {
                             })
                           }
                         />
+
+                        <ReorderControls
+                          group="experience"
+                          index={expIdx}
+                          count={doc.experience.length}
+                          label={
+                            exp.position || exp.company || String(expIdx + 1)
+                          }
+                          onMove={(from, to) =>
+                            updateField(
+                              "experience",
+                              moveItem(doc.experience, from, to),
+                            )
+                          }
+                        />
                       </div>
                     ))}
                     {!doc.experience.length && (
@@ -1143,18 +1144,6 @@ export default function ResumeStudioPage() {
                         data-motion-id={edu.id}
                         className="editor-entry"
                       >
-                        <ReorderControls
-                          group="education"
-                          index={eduIdx}
-                          count={doc.education.length}
-                          label={edu.institution || String(eduIdx + 1)}
-                          onMove={(from, to) =>
-                            updateField(
-                              "education",
-                              moveItem(doc.education, from, to),
-                            )
-                          }
-                        />
                         <div className="editor-entry-heading">
                           <EditorField
                             label={t("institution")}
@@ -1223,6 +1212,19 @@ export default function ResumeStudioPage() {
                             updateEducationItem(eduIdx, { ...edu, highlights })
                           }
                         />
+
+                        <ReorderControls
+                          group="education"
+                          index={eduIdx}
+                          count={doc.education.length}
+                          label={edu.institution || String(eduIdx + 1)}
+                          onMove={(from, to) =>
+                            updateField(
+                              "education",
+                              moveItem(doc.education, from, to),
+                            )
+                          }
+                        />
                       </div>
                     ))}
                     {!doc.education.length && (
@@ -1256,18 +1258,6 @@ export default function ResumeStudioPage() {
                         data-motion-id={proj.id}
                         className="editor-entry"
                       >
-                        <ReorderControls
-                          group="projects"
-                          index={projIdx}
-                          count={doc.projects.length}
-                          label={proj.name || String(projIdx + 1)}
-                          onMove={(from, to) =>
-                            updateField(
-                              "projects",
-                              moveItem(doc.projects, from, to),
-                            )
-                          }
-                        />
                         <div className="editor-entry-heading">
                           <EditorField
                             label={t("projectName")}
@@ -1334,6 +1324,19 @@ export default function ResumeStudioPage() {
                             })
                           }
                         />
+
+                        <ReorderControls
+                          group="projects"
+                          index={projIdx}
+                          count={doc.projects.length}
+                          label={proj.name || String(projIdx + 1)}
+                          onMove={(from, to) =>
+                            updateField(
+                              "projects",
+                              moveItem(doc.projects, from, to),
+                            )
+                          }
+                        />
                       </div>
                     ))}
                     {!doc.projects.length && (
@@ -1377,18 +1380,6 @@ export default function ResumeStudioPage() {
                           data-motion-id={grp.id}
                           className="editor-entry skill-entry"
                         >
-                          <ReorderControls
-                            group="skills"
-                            index={idx}
-                            count={doc.skills.length}
-                            label={grp.category || String(idx + 1)}
-                            onMove={(from, to) =>
-                              updateField(
-                                "skills",
-                                moveItem(doc.skills, from, to),
-                              )
-                            }
-                          />
                           <div className="editor-entry-heading">
                             <input
                               type="text"
@@ -1427,6 +1418,19 @@ export default function ResumeStudioPage() {
                               newSkills[idx].skills = skills;
                               updateField("skills", newSkills);
                             }}
+                          />
+
+                          <ReorderControls
+                            group="skills"
+                            index={idx}
+                            count={doc.skills.length}
+                            label={grp.category || String(idx + 1)}
+                            onMove={(from, to) =>
+                              updateField(
+                                "skills",
+                                moveItem(doc.skills, from, to),
+                              )
+                            }
                           />
                         </div>
                       ))}
