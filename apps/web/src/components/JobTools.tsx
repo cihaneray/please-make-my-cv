@@ -44,6 +44,9 @@ export function JobTools({
       value.url,
       value.description,
       value.notes,
+      value.interviewAt,
+      value.followUpDate,
+      value.coverLetter,
       value.linkedResumeId,
       value.requirements,
     ]);
@@ -82,12 +85,14 @@ export function JobTools({
     Array<{ id: string; createdAt: string; document: ResumeDocument }>
   >([]);
   const [message, setMessage] = useState("");
+  const [letterLanguage, setLetterLanguage] = useState<"en" | "tr">("en");
+  const [letterAI, setLetterAI] = useState(false);
   const [busy, setBusy] = useState(false);
   async function run(action: () => Promise<void>) {
     setBusy(true);
     try {
       await action();
-      setMessage("Done.");
+      /* Actions set their own messages; keep generated draft guidance. */
     } catch (e) {
       setMessage((e as Error).message);
     } finally {
@@ -138,6 +143,114 @@ export function JobTools({
             ))}
           </select>
         </label>
+
+        <label>
+          {copy("Interview date and time")}
+          <input
+            type="datetime-local"
+            value={draft.interviewAt || ""}
+            onChange={(e) =>
+              setDraft({ ...draft, interviewAt: e.target.value })
+            }
+          />
+        </label>
+        <label>
+          {copy("Follow-up date")}
+          <input
+            type="date"
+            value={draft.followUpDate || ""}
+            onChange={(e) =>
+              setDraft({ ...draft, followUpDate: e.target.value })
+            }
+          />
+        </label>
+        <section className="workflow-tool">
+          <h3>{copy("Cover letter")}</h3>
+          <label>
+            {copy("Letter language")}
+            <select
+              value={letterLanguage}
+              onChange={(e) => setLetterLanguage(e.target.value as "en" | "tr")}
+            >
+              <option value="en">English</option>
+              <option value="tr">Türkçe</option>
+            </select>
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={letterAI}
+              onChange={(e) => setLetterAI(e.target.checked)}
+            />
+            {copy("Use configured AI connection")}
+          </label>
+          <p>
+            {copy(
+              "Local drafts quote CV evidence. AI sends the saved CV without contact fields and the saved job description to your configured provider.",
+            )}
+          </p>
+          <button
+            type="button"
+            disabled={!draft.linkedResumeId}
+            onClick={() =>
+              run(async () => {
+                if (dirty) {
+                  setMessage(
+                    copy(
+                      "Save the job first to generate from the current requirements.",
+                    ),
+                  );
+                  return;
+                }
+                if (
+                  draft.coverLetter.trim() &&
+                  !confirm(copy("Replace the existing letter draft?"))
+                )
+                  return;
+                const result = await api.coverLetter(
+                  job.id,
+                  draft.linkedResumeId!,
+                  letterLanguage,
+                  letterAI,
+                );
+                setDraft((previous) => ({
+                  ...previous,
+                  coverLetter: result.text,
+                }));
+                setMessage(copy(result.notice));
+              })
+            }
+          >
+            {copy("Generate letter draft")}
+          </button>
+          <label>
+            {copy("Letter text")}
+            <textarea
+              rows={10}
+              value={draft.coverLetter || ""}
+              onChange={(e) =>
+                setDraft({ ...draft, coverLetter: e.target.value })
+              }
+            />
+          </label>
+          <button
+            type="button"
+            disabled={!draft.coverLetter}
+            onClick={() => {
+              const blob = new Blob([draft.coverLetter], {
+                type: "text/plain;charset=utf-8",
+              });
+              const url = URL.createObjectURL(blob);
+              const a = window.document.createElement("a");
+              a.href = url;
+              a.download = "cover-letter.txt";
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+          >
+            {copy("Download letter")}
+          </button>
+        </section>
         <button
           onClick={() =>
             run(async () =>
@@ -149,6 +262,9 @@ export function JobTools({
                   url: draft.url,
                   description: draft.description,
                   notes: draft.notes,
+                  interviewAt: draft.interviewAt,
+                  followUpDate: draft.followUpDate,
+                  coverLetter: draft.coverLetter,
                   linkedResumeId: draft.linkedResumeId,
                   requirements: requirements
                     .split("\n")

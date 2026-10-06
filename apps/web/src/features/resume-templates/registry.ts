@@ -192,6 +192,7 @@ export const SAMPLE_PREVIEW_RESUME: ResumeDocument = {
   ],
   customSections: [],
   design: {
+    sectionOrder: [],
     template: "minimal",
     fontFamily: "Inter",
     fontSize: "normal",

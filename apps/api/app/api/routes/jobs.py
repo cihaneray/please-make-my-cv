@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.matching.matcher import MatchingService
 from app.schemas.job import (
+    CoverLetterRequest,
+    CoverLetterResult,
     CreateJobRequest,
     JobApplication,
     JobMatchAnalysis,
@@ -92,3 +94,12 @@ def application_snapshots(job_id: str, db: Session = Depends(get_db)):
         .order_by(ApplicationSnapshotModel.created_at.desc())
         .all()
     ]
+
+
+@router.post("/{job_id}/cover-letter", response_model=CoverLetterResult)
+def generate_cover_letter(job_id: str, request: CoverLetterRequest, db: Session = Depends(get_db)):
+    from app.services.cover_letter_service import cover_letter
+
+    job = JobService.get_job(db, job_id)
+    document = ResumeService.get_resume(db, request.resumeId)
+    return cover_letter(document, job, request.language, request.useAI)
