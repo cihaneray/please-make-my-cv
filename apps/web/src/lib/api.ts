@@ -1,4 +1,6 @@
 import {
+  PageFitReport,
+  CoverLetterResult,
   ResumeComparisonReport,
   PdfCheckReport,
   JobApplication,
@@ -345,6 +347,27 @@ export const api = {
         body: JSON.stringify({ requirements }),
       },
     );
+  },
+
+  async pageFit(
+    document: ResumeDocument,
+    targetPages: number,
+  ): Promise<PageFitReport> {
+    return fetchJson(`${API_BASE}/resumes/${document.metadata.id}/page-fit`, {
+      method: "POST",
+      body: JSON.stringify({ document, targetPages }),
+    });
+  },
+  async coverLetter(
+    jobId: string,
+    resumeId: string,
+    language: "en" | "tr",
+    useAI: boolean,
+  ): Promise<CoverLetterResult> {
+    return fetchJson(`${API_BASE}/jobs/${jobId}/cover-letter`, {
+      method: "POST",
+      body: JSON.stringify({ resumeId, language, useAI }),
+    });
   },
 
   // Library

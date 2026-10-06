@@ -1,6 +1,8 @@
 "use client";
 import { useCopy } from "@/lib/copy";
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
+import { ReorderControls } from "./ReorderControls";
+import { moveItem } from "@/lib/section-order";
 import { api } from "@/lib/api";
 import { ResumeDocument, LibrarySnippet } from "@/lib/types";
 
@@ -64,6 +66,7 @@ export function Fields({
   change: (value: unknown) => void;
 }) {
   const copy = useCopy();
+  const reorderGroup = useId();
 
   if (Array.isArray(value))
     return (
@@ -74,6 +77,13 @@ export function Fields({
             key={typeof item === "object" && item?.id ? item.id : i}
             className="array-field-row border-b pb-2 mb-2"
           >
+            <ReorderControls
+              group={reorderGroup}
+              index={i}
+              count={value.length}
+              label={`${copy(label(name))} ${i + 1}`}
+              onMove={(from, to) => change(moveItem(value, from, to))}
+            />
             <Fields
               depth={depth + 1}
               value={item}
@@ -90,19 +100,6 @@ export function Fields({
                 {" "}
                 {copy("Remove")} {copy(label(name))} {i + 1}
               </button>
-              {i > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const next = [...value];
-                    [next[i - 1], next[i]] = [next[i], next[i - 1]];
-                    change(next);
-                  }}
-                >
-                  {" "}
-                  {copy("Move up")}{" "}
-                </button>
-              )}
             </div>
           </div>
         ))}

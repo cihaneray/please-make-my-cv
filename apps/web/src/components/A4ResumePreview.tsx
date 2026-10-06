@@ -1,4 +1,5 @@
 "use client";
+import { sectionOrder } from "@/lib/section-order";
 import { Icons } from "./Icons";
 import { useCopy } from "@/lib/copy";
 import React, { useEffect, useState, useRef } from "react";
@@ -55,28 +56,9 @@ export function A4ResumePreview({
       @media (prefers-reduced-motion: reduce) { [data-studio-section] { transition: none; } }
     `;
     content.head.appendChild(style);
-    const keys =
-      (document.design.template || document.metadata.templateId)
-        .toLowerCase()
-        .trim() === "technical"
-        ? [
-            "summary",
-            "skills",
-            "experience",
-            "projects",
-            "education",
-            "certifications",
-            "languages",
-          ]
-        : [
-            "summary",
-            "experience",
-            "education",
-            "projects",
-            "skills",
-            "certifications",
-            "languages",
-          ];
+    const keys = sectionOrder(document).filter(
+      (key) => key !== "customSections",
+    );
     const visible = keys.filter((key) => {
       const value = document[key as keyof ResumeDocument];
       const flag = ("show" +
@@ -96,7 +78,7 @@ export function A4ResumePreview({
       ...(header ? [{ element: header, key: "profile" }] : []),
       ...sections.map((element, i) => ({
         element,
-        key: visible[i] || "customSections",
+        key: element.dataset.studioSection || visible[i] || "customSections",
       })),
     ];
     targets.forEach(({ element: target, key }) => {

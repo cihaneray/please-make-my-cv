@@ -618,3 +618,369 @@ test("moving selections track routes and tabs, preserve drafts, and respect redu
     })
     .toBeLessThan(1);
 });
+
+test("visual ordering persists, follows PDF section order and supports undo/redo", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request);
+  doc.experience[0].position = "First role";
+  doc.experience[0].bullets = ["First detail", "Second detail"];
+  doc.experience.push({
+    ...doc.experience[0],
+    id: "second-role",
+    position: "Second role",
+    bullets: ["Another fact"],
+  });
+  await request.put(`http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`, {
+    data: { document: doc, revision: doc.metadata.revision },
+  });
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page
+    .getByRole("button", { name: "Work Experience 2", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Move up: Second role", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "Job Title", exact: true }).first(),
+  ).toHaveValue("Second role");
+  await page
+    .getByRole("button", { name: "Undo last draft edit", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "Job Title", exact: true }).first(),
+  ).toHaveValue("First role");
+  await page
+    .getByRole("button", { name: "Redo last draft edit", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "Job Title", exact: true }).first(),
+  ).toHaveValue("Second role");
+  const details = page
+    .getByRole("group", { name: "Achievements:", exact: true })
+    .nth(1);
+  await details
+    .getByRole("button", { name: "Move up: Achievements: 2", exact: true })
+    .click();
+  await expect(
+    details.getByRole("textbox", { name: "Achievements: 1", exact: true }),
+  ).toHaveValue("Second detail");
+  await page
+    .getByRole("button", { name: "Undo last draft edit", exact: true })
+    .click();
+  await expect(
+    details.getByRole("textbox", { name: "Achievements: 1", exact: true }),
+  ).toHaveValue("First detail");
+  await page.getByRole("button", { name: "Design", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Move up: Work Experience", exact: true })
+    .click();
+  await expect
+    .poll(() =>
+      page
+        .frameLocator("iframe")
+        .locator(".cv-page > section")
+        .first()
+        .getAttribute("data-studio-section"),
+    )
+    .toBe("experience");
+  await page
+    .getByRole("button", {
+      name: "Drag to reorder: Professional Summary",
+      exact: true,
+    })
+    .dragTo(
+      page.getByRole("button", {
+        name: "Drag to reorder: Work Experience",
+        exact: true,
+      }),
+    );
+  await expect
+    .poll(() =>
+      page
+        .frameLocator("iframe")
+        .locator(".cv-page > section")
+        .first()
+        .getAttribute("data-studio-section"),
+    )
+    .toBe("summary");
+  await page
+    .getByRole("button", { name: "Undo last draft edit", exact: true })
+    .click();
+  await expect
+    .poll(() =>
+      page
+        .frameLocator("iframe")
+        .locator(".cv-page > section")
+        .first()
+        .getAttribute("data-studio-section"),
+    )
+    .toBe("experience");
+
+  await page.getByRole("button", { name: "Save Draft", exact: true }).click();
+  await expect
+    .poll(async () =>
+      (
+        await request.get(
+          `http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`,
+        )
+      ).json(),
+    )
+    .toMatchObject({
+      design: {
+        sectionOrder: [
+          "experience",
+          "summary",
+          "education",
+          "projects",
+          "skills",
+          "certifications",
+          "languages",
+          "customSections",
+        ],
+      },
+      experience: [{ position: "Second role" }, { position: "First role" }],
+    });
+  await page.reload();
+  await expect
+    .poll(() =>
+      page
+        .frameLocator("iframe")
+        .locator(".cv-page > section")
+        .first()
+        .getAttribute("data-studio-section"),
+    )
+    .toBe("experience");
+});
+
+test("typing history coalesces, deletion is recoverable, and redo cannot overwrite a new edit", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request);
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  const first = page.getByRole("textbox", { name: "First Name", exact: true });
+  await first.fill("");
+  await first.pressSequentially("Edited Alex");
+  await first.press("Control+z");
+  await expect(first).toHaveValue("Alex");
+  await first.press("Control+Shift+z");
+  await expect(first).toHaveValue("Edited Alex");
+  await page.getByRole("button", { name: "Save Draft", exact: true }).click();
+  await expect(page.locator(".studio-status")).toContainText("Saved");
+  await page
+    .getByRole("button", { name: "Work Experience 1", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Remove experience 1", exact: true })
+    .click();
+  await expect(page.locator(".deletion-feedback")).toContainText(
+    "Item removed.",
+  );
+  await page
+    .locator(".deletion-feedback")
+    .getByRole("button", { name: "Undo", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "Job Title", exact: true }),
+  ).toHaveValue("Designer");
+  await page
+    .getByRole("textbox", { name: "Job Title", exact: true })
+    .fill("Senior designer");
+  await expect(
+    page.getByRole("button", { name: "Redo last draft edit", exact: true }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "Save Draft", exact: true }).click();
+  await expect
+    .poll(async () =>
+      (
+        await request.get(
+          `http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`,
+        )
+      ).json(),
+    )
+    .toMatchObject({
+      profile: { firstName: "Edited Alex" },
+      experience: [{ position: "Senior designer" }],
+    });
+});
+
+test("command search locates CV fields and quick actions work with the keyboard", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request);
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page
+    .getByRole("textbox", { name: "First Name", exact: true })
+    .fill("Search draft");
+  await page
+    .getByRole("textbox", { name: "First Name", exact: true })
+    .press("Control+k");
+  const dialog = page.getByRole("dialog", { name: "Search and commands" });
+  await expect(dialog).toBeVisible();
+  const search = dialog.getByRole("textbox", { name: "Search CV or actions" });
+  await search.fill("accessible editing");
+  await search.press("Control+z");
+  await search.fill("accessible editing");
+  await search.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(dialog).toBeHidden();
+  await expect(
+    page
+      .locator(".studio-inspector textarea")
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (document.activeElement as HTMLTextAreaElement)?.value,
+      ),
+    )
+    .toBe("Designed accessible editing workflows.");
+  await page.getByRole("button", { name: "Search and commands" }).click();
+  await search.fill("Add Project");
+  await search.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(
+    page.getByRole("textbox", { name: "Project Name", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Personal Profile", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "First Name", exact: true }),
+  ).toHaveValue("Search draft");
+});
+
+test("page fit proposals require approval and stale results cannot change the draft", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request);
+  await page.route("**/api/resumes/*/page-fit", async (route) => {
+    const source = route.request().postDataJSON().document;
+    await route.fulfill({
+      json: {
+        currentPages: 3,
+        targetPages: 2,
+        suggestions: [],
+        options: [
+          {
+            id: "margins",
+            label: "Compact spacing and margins",
+            pageCount: 2,
+            design: {
+              ...source.design,
+              spacing: "compact",
+              margins: "compact",
+            },
+          },
+        ],
+      },
+    });
+  });
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page.getByRole("button", { name: "Design", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Find layout suggestions", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Apply layout", exact: true }),
+  ).toBeEnabled();
+  await page.getByLabel("Target page count", { exact: true }).selectOption("1");
+  await expect(
+    page.getByRole("button", { name: "Apply layout", exact: true }),
+  ).toBeDisabled();
+  await page.getByLabel("Target page count", { exact: true }).selectOption("2");
+  expect(
+    (
+      await request.get(`http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`)
+    ).status(),
+  ).toBe(200);
+  await page.getByRole("button", { name: "Content", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "First Name", exact: true })
+    .fill("Changed draft");
+  await page.getByRole("button", { name: "Design", exact: true }).click();
+  // Reopening the helper clears its old report; no stale proposal survives.
+  await expect(
+    page.getByRole("button", { name: "Apply layout", exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Find layout suggestions", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Apply layout", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Undo last draft edit", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Save Draft", exact: true }).click();
+  await expect
+    .poll(async () =>
+      (
+        await request.get(
+          `http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`,
+        )
+      ).json(),
+    )
+    .toMatchObject({
+      profile: { firstName: "Changed draft" },
+      design: { margins: "normal" },
+    });
+});
+
+test("job planning and editable cover letters persist across status changes and reloads", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request);
+  const response = await request.post("http://127.0.0.1:8101/api/jobs", {
+    data: {
+      company: "Workflow company",
+      position: "Designer",
+      linkedResumeId: doc.metadata.id,
+      followUpDate: "2020-01-01",
+    },
+  });
+  const job = await response.json();
+  await page.goto("/jobs");
+  await page.getByText("Workflow company", { exact: true }).first().click();
+  await page
+    .getByText("Edit job, requirements and submitted copies", { exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Generate letter draft", exact: true })
+    .click();
+  const letter = page.getByRole("textbox", {
+    name: "Letter text",
+    exact: true,
+  });
+  await expect
+    .poll(() => letter.inputValue())
+    .toContain("Designed accessible editing workflows.");
+  await letter.fill("Reviewed letter with my own wording");
+  await page
+    .getByLabel("Interview date and time", { exact: true })
+    .fill("2026-10-20T14:30");
+  await page
+    .getByRole("combobox", { name: "Application status" })
+    .selectOption("interview");
+  await page.getByRole("button", { name: "Save job", exact: true }).click();
+  await expect
+    .poll(async () =>
+      (await request.get(`http://127.0.0.1:8101/api/jobs/${job.id}`)).json(),
+    )
+    .toMatchObject({
+      status: "interview",
+      interviewAt: "2026-10-20T14:30",
+      coverLetter: "Reviewed letter with my own wording",
+    });
+  await page.reload();
+  await page
+    .getByText("Edit job, requirements and submitted copies", { exact: true })
+    .click();
+  await expect(letter).toHaveValue("Reviewed letter with my own wording");
+  await expect(page.locator(".job-agenda")).toContainText("Overdue");
+});

@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useId } from "react";
 import { useCopy } from "@/lib/copy";
 import { useI18n } from "@/lib/i18n";
+import { moveItem } from "@/lib/section-order";
+import { ReorderControls } from "./ReorderControls";
 import { useListMotion } from "./MotionList";
 import { Icons } from "./Icons";
 
@@ -21,6 +23,7 @@ export function BulletListEditor({
   onPolish?: (index: number) => void;
   polishing?: boolean;
 }) {
+  const listGroup = useId();
   const copy = useCopy();
   const { t } = useI18n();
   const [keys, setKeys] = useState(() => values.map((_, i) => i));
@@ -73,6 +76,17 @@ export function BulletListEditor({
           data-motion-id={keys[index] ?? `pending-${index}`}
           key={keys[index] ?? `pending-${index}`}
         >
+          <ReorderControls
+            group={listGroup}
+            index={index}
+            count={values.length}
+            label={`${label} ${index + 1}`}
+            onMove={(from, to) => {
+              setKeys((current) => moveItem(current, from, to));
+              pendingFocus.current = to;
+              onChange(moveItem(values, from, to));
+            }}
+          />
           <label className="bullet-text-field">
             <span className="sr-only">
               {label} {index + 1}

@@ -1,6 +1,79 @@
 "use client";
 import { useI18n } from "./i18n";
 export const copyTranslations: Record<string, string> = {
+  Close: "Kapat",
+  "Add Education": "Eğitim Ekle",
+  "Add Project": "Proje Ekle",
+  "Redo last draft edit": "Son düzenlemeyi yinele",
+  "Drag to reorder": "Sıralamak için sürükle",
+  "Drag a handle onto another handle, or use the arrow buttons.":
+    "Bir tutamağı başka bir tutamağın üzerine sürükleyin veya ok düğmelerini kullanın.",
+  "Move down": "Aşağı taşı",
+  "Section order": "Bölüm sırası",
+  "Restore template order": "Şablon sırasına dön",
+  "Page length assistant": "Sayfa uzunluğu yardımcısı",
+  "Target page count": "Hedef sayfa sayısı",
+  "Suggestions are measured using real PDFs. Changes are only applied when you approve them.":
+    "Öneriler gerçek PDF dosyaları ölçülerek hazırlanır. Değişiklikler yalnızca siz uyguladığınızda geçerli olur.",
+  "Find layout suggestions": "Düzen önerileri bul",
+  "The draft changed. Run the check again.":
+    "Taslak değişti. Kontrolü yeniden çalıştırın.",
+  "The document already fits the target.":
+    "Belge zaten hedef sayfa sayısına sığıyor.",
+  "Apply layout": "Düzeni uygula",
+  "No text is removed or rewritten by layout suggestions.":
+    "Düzen önerileri hiçbir metni silmez veya yeniden yazmaz.",
+  "Compact spacing": "Sıkı aralıklar",
+  "Compact spacing and margins": "Sıkı aralıklar ve dar kenar boşlukları",
+  "Compact layout with 9.5 pt text": "9.5 punto yazıyla sıkı düzen",
+  "Review long bullets and repeated details before removing content.":
+    "İçerik silmeden önce uzun maddeleri ve tekrar eden ayrıntıları gözden geçirin.",
+  "Keep the most relevant experiences and projects for this application.":
+    "Bu başvuru için en ilgili deneyimleri ve projeleri öne çıkarın.",
+  "Search and commands": "Arama ve işlemler",
+  "Search CV or actions": "CV veya işlem ara",
+  "No matching content or actions.": "Eşleşen içerik veya işlem yok.",
+  "Upcoming and overdue tasks": "Yaklaşan ve geciken işler",
+  "Scheduled tasks through the next 14 days; overdue dates stay visible until updated.":
+    "Önümüzdeki 14 gündeki planlı işler; geciken tarihler güncellenene kadar görünür kalır.",
+  "No scheduled tasks in this period.": "Bu dönem için planlı iş yok.",
+  Interview: "Görüşme",
+  "Follow-up": "Takip",
+  Overdue: "Gecikmiş",
+  "Interview date and time": "Görüşme tarihi ve saati",
+  "Follow-up date": "Takip tarihi",
+  "Cover letter": "Ön yazı",
+  "Letter language": "Ön yazı dili",
+  "Use configured AI connection": "Ayarlanmış AI bağlantısını kullan",
+  "Local drafts quote CV evidence. AI sends the saved CV without contact fields and the saved job description to your configured provider.":
+    "Yerel taslak CV’deki ifadeleri kullanır. AI, iletişim alanları çıkarılmış kayıtlı CV’yi ve kayıtlı ilan metnini ayarladığınız sağlayıcıya gönderir.",
+  "Save the job first to generate from the current requirements.":
+    "Güncel gereksinimlerle oluşturmak için önce ilanı kaydedin.",
+  "Replace the existing letter draft?":
+    "Mevcut ön yazı taslağı değiştirilsin mi?",
+  "Generate letter draft": "Ön yazı taslağı oluştur",
+  "Letter text": "Ön yazı metni",
+  "Download letter": "Ön yazıyı indir",
+  "Review the draft before sending. Only use claims you can substantiate.":
+    "Göndermeden önce taslağı gözden geçirin. Yalnızca doğrulayabildiğiniz ifadeleri kullanın.",
+  "Add Experience": "Deneyim Ekle",
+  "Save Draft": "Taslağı Kaydet",
+  "Download PDF": "PDF İndir",
+  "Item removed.": "Öğe kaldırıldı.",
+  Undo: "Geri al",
+  "Work Experience": "İş Deneyimi",
+  "Professional Summary": "Profesyonel Özet",
+  "Skill Groups": "Yetenek Grupları",
+  summary: "Özet",
+  experience: "Deneyim",
+  education: "Eğitim",
+  projects: "Projeler",
+  skills: "Yetkinlikler",
+  profile: "Profil",
+  certifications: "Sertifikalar",
+  languages: "Diller",
+  customSections: "Özel bölümler",
+
   page: "sayfa",
   pages: "sayfa",
   "Estimated page boundaries. Exact PDF pages shows final pagination.":

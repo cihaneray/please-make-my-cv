@@ -1745,3 +1745,161 @@ html.dark {
 .sliding-tab {
   z-index: 2;
 }
+
+.workflow-tool {
+  padding: 14px;
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 6px;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.workflow-tool h3,
+.workflow-tool h2 {
+  font-family: var(--desk-serif);
+  font-size: 18px;
+}
+.workflow-tool p {
+  font-size: 12px;
+  color: rgb(var(--color-secondary));
+}
+.workflow-tool li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+}
+.workflow-tool label {
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+}
+.workflow-tool button,
+.reorder-controls button {
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 4px;
+  padding: 6px 9px;
+  font-size: 12px;
+  min-height: 36px;
+}
+.reorder-controls {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: flex-end;
+}
+.reorder-handle {
+  cursor: grab;
+  touch-action: auto;
+}
+.reorder-handle:active {
+  cursor: grabbing;
+}
+.reorder-controls button:disabled {
+  opacity: 0.35;
+}
+.workflow-tool button:focus-visible,
+.reorder-controls button:focus-visible,
+.command-dialog button:focus-visible {
+  outline: 2px solid rgb(var(--color-primary));
+  outline-offset: 2px;
+}
+.command-dialog {
+  width: min(600px, calc(100vw - 32px));
+  max-height: 75dvh;
+  padding: 0;
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 8px;
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-on-surface));
+}
+.command-dialog::backdrop {
+  background: #0006;
+}
+.command-content {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+.command-content header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.command-content label {
+  display: grid;
+  gap: 6px;
+}
+.command-content input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid rgb(var(--color-outline-variant));
+  background: rgb(var(--color-surface-container-low));
+}
+.command-results {
+  display: grid;
+  gap: 4px;
+  overflow: auto;
+  max-height: 45dvh;
+}
+.command-results button {
+  text-align: left;
+  padding: 10px;
+  border-radius: 4px;
+  display: grid;
+  gap: 5px;
+  overflow-wrap: anywhere;
+}
+.command-results button:hover {
+  background: rgb(var(--color-secondary-container));
+}
+.command-results button span {
+  max-height: 4em;
+  overflow: hidden;
+}
+.command-results small {
+  color: rgb(var(--color-secondary));
+}
+.job-agenda ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+  gap: 12px;
+}
+.job-agenda li {
+  min-width: 0;
+}
+.job-agenda button {
+  width: 100%;
+  display: grid;
+  gap: 5px;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+@media (pointer: coarse), (max-width: 600px) {
+  .reorder-controls button,
+  .workflow-tool button {
+    min-height: 44px;
+  }
+}
+
+.deletion-feedback {
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  padding: 12px 18px;
+  background: rgb(var(--color-inverse-surface));
+  color: rgb(var(--color-inverse-on-surface));
+  border-radius: 6px;
+  box-shadow: 0 4px 20px #0003;
+  font-size: 13px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.deletion-feedback button {
+  text-decoration: underline;
+  min-height: 36px;
+}

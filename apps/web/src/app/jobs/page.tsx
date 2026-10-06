@@ -1,6 +1,7 @@
 "use client";
 import { notify } from "@/components/Notifications";
 
+import { JobAgenda } from "@/components/JobAgenda";
 import { JobTools } from "@/components/JobTools";
 import { useCopy } from "@/lib/copy";
 import React, { useEffect, useState } from "react";
@@ -150,6 +151,7 @@ export default function JobsPage() {
           </button>
         </div>
 
+        <JobAgenda jobs={jobs} onSelect={setSelectedJob} />
         {/* 2-Column Split Workspace */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
           {/* Left Column: Job Cards List (4 cols) */}

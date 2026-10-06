@@ -1,4 +1,10 @@
 "use client";
+import { PageFitAssistant } from "@/components/PageFitAssistant";
+import { EditorCommands } from "@/components/EditorCommands";
+import { useDraftHistory } from "@/lib/draft-history";
+import { sectionOrder, moveItem } from "@/lib/section-order";
+import { ReorderControls } from "@/components/ReorderControls";
+import { SectionOrderEditor } from "@/components/SectionOrderEditor";
 import { SlidingIndicator } from "@/components/SlidingIndicator";
 import { MotionList } from "@/components/MotionList";
 import { notify } from "@/components/Notifications";
@@ -36,11 +42,24 @@ export default function ResumeStudioPage() {
   const copy = useCopy();
   const [mobileView, setMobileView] = useState("edit");
   const [inspectorOpen, setInspectorOpen] = useState(true);
-  const [doc, setDoc] = useState<ResumeDocument | null>(null);
+  const {
+    document: doc,
+    setDocument: setDoc,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    removed,
+  } = useDraftHistory();
   const [savedSnapshot, setSavedSnapshot] = useState("");
   const [notice, setNotice] = useState("");
   const [sourcePending, setSourcePending] = useState(false);
   const [recovery, setRecovery] = useState<ResumeDocument | null>(null);
+  const [searchTarget, setSearchTarget] = useState<{
+    section: string;
+    entry?: string;
+    text?: string;
+  } | null>(null);
   const toolsRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const dismiss = (event: PointerEvent) => {
@@ -67,21 +86,6 @@ export default function ResumeStudioPage() {
     };
   }, []);
   const saveInFlight = useRef(false);
-  const previousDraft = useRef<ResumeDocument | null>(null);
-  const [undoDrafts, setUndoDrafts] = useState<ResumeDocument[]>([]);
-  useEffect(() => {
-    if (
-      doc &&
-      previousDraft.current &&
-      doc.metadata.id === previousDraft.current.metadata.id &&
-      doc.metadata.revision === previousDraft.current.metadata.revision &&
-      JSON.stringify(doc) !== JSON.stringify(previousDraft.current)
-    ) {
-      const previous = structuredClone(previousDraft.current);
-      setUndoDrafts((values) => [...values.slice(-49), previous]);
-    }
-    previousDraft.current = doc ? structuredClone(doc) : null;
-  }, [doc]);
   const dirty = !!doc && JSON.stringify(doc) !== savedSnapshot;
   useEffect(() => {
     if (!doc || doc.metadata.id !== resumeId || !savedSnapshot || recovery)
@@ -125,6 +129,29 @@ export default function ResumeStudioPage() {
   const [activeTab, setActiveTab] = useState<
     "content" | "source" | "design" | "review"
   >("content");
+  useEffect(() => {
+    const shortcuts = (event: KeyboardEvent) => {
+      if (
+        sourcePending ||
+        saving ||
+        activeTab === "source" ||
+        window.document.querySelector(".command-dialog[open]") ||
+        !(event.ctrlKey || event.metaKey) ||
+        event.altKey
+      )
+        return;
+      const redoKey =
+        event.key.toLowerCase() === "y" ||
+        (event.key.toLowerCase() === "z" && event.shiftKey);
+      if (event.key.toLowerCase() !== "z" && !redoKey) return;
+      if (redoKey ? canRedo : canUndo) {
+        event.preventDefault();
+        redoKey ? redo() : undo();
+      }
+    };
+    window.addEventListener("keydown", shortcuts);
+    return () => window.removeEventListener("keydown", shortcuts);
+  }, [sourcePending, saving, activeTab, canUndo, canRedo, undo, redo]);
   const [activeSection, setActiveSection] = useState<string>("profile");
   useEffect(() => {
     const section = new URLSearchParams(window.location.search).get("section");
@@ -141,6 +168,25 @@ export default function ResumeStudioPage() {
         .getElementById(`entry-${entry}`)
         ?.scrollIntoView({ block: "center" });
   }, [activeSection, doc]);
+  useEffect(() => {
+    if (!searchTarget || activeSection !== searchTarget.section) return;
+    const target =
+      (searchTarget.entry
+        ? window.document.getElementById(`entry-${searchTarget.entry}`)
+        : null) || window.document.querySelector(".studio-inspector");
+    const inputs = Array.from(
+      target?.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+        "input, textarea",
+      ) || [],
+    );
+    const match =
+      inputs.find(
+        (input) => searchTarget.text && input.value.includes(searchTarget.text),
+      ) || inputs[0];
+    match?.scrollIntoView({ block: "nearest" });
+    match?.focus();
+    setSearchTarget(null);
+  }, [searchTarget, activeSection, activeTab, inspectorOpen]);
   const [analysisReport, setAnalysisReport] =
     useState<ResumeAnalysisReport | null>(null);
   const [analyzing, setAnalyzing] = useState<boolean>(false);
@@ -175,7 +221,7 @@ export default function ResumeStudioPage() {
     return () => {
       cancelled = true;
     };
-  }, [resumeId]);
+  }, [resumeId, setDoc]);
   // Load ATS analysis when review tab is activated
   useEffect(() => {
     let cancelled = false;
@@ -499,27 +545,97 @@ export default function ResumeStudioPage() {
           </span>
         )}
       </div>
+      {removed && canUndo && (
+        <div role="status" className="deletion-feedback">
+          {copy("Item removed.")}{" "}
+          <button
+            type="button"
+            disabled={sourcePending || saving}
+            onClick={undo}
+          >
+            {copy("Undo")}
+          </button>
+        </div>
+      )}
       <div className="studio-aux-tools no-print" ref={toolsRef}>
+        <EditorCommands
+          document={doc}
+          disabled={sourcePending || saving}
+          onSelect={(section, entry, text) => {
+            setActiveSection(section);
+            setActiveTab("content");
+            setInspectorOpen(true);
+            setMobileView("edit");
+            setSearchTarget({ section, entry, text });
+          }}
+          commands={[
+            {
+              label: "Add Experience",
+              run: () => {
+                setActiveSection("experience");
+                setActiveTab("content");
+                setInspectorOpen(true);
+                setMobileView("edit");
+                addExperience();
+              },
+            },
+            {
+              label: "Add Education",
+              run: () => {
+                setActiveSection("education");
+                setActiveTab("content");
+                setInspectorOpen(true);
+                setMobileView("edit");
+                addEducation();
+              },
+            },
+            {
+              label: "Add Project",
+              run: () => {
+                setActiveSection("projects");
+                setActiveTab("content");
+                setInspectorOpen(true);
+                setMobileView("edit");
+                addProject();
+              },
+            },
+            {
+              label: "Save Draft",
+              run: () => {
+                void handleSave();
+              },
+            },
+            {
+              label: "Download PDF",
+              run: () => {
+                api.downloadPdf(doc).catch((error) => setNotice(error.message));
+              },
+            },
+            {
+              label: "Page length assistant",
+              run: () => {
+                setActiveTab("design");
+                setInspectorOpen(true);
+                setMobileView("edit");
+              },
+            },
+          ]}
+        />
         <button
           className="studio-undo"
-          disabled={sourcePending || saving || !undoDrafts.length}
-          onClick={() => {
-            const previous = undoDrafts.at(-1);
-            setUndoDrafts((values) => values.slice(0, -1));
-            if (previous) {
-              previousDraft.current = previous;
-              setDoc({
-                ...previous,
-                metadata: {
-                  ...previous.metadata,
-                  revision: doc.metadata.revision,
-                },
-              });
-            }
-          }}
+          disabled={sourcePending || saving || !canUndo}
+          onClick={undo}
         >
           <Icons.Undo size={14} />
           {copy("Undo last draft edit")}
+        </button>
+        <button
+          className="studio-undo"
+          disabled={sourcePending || saving || !canRedo}
+          onClick={redo}
+        >
+          <Icons.Redo size={14} />
+          {copy("Redo last draft edit")}
         </button>
         <DocumentTools
           document={doc}
@@ -673,32 +789,37 @@ export default function ResumeStudioPage() {
                       icon: Icons.Document,
                       count: doc.customSections.length,
                     },
-                  ].map((s) => {
-                    const IconComp = s.icon;
-                    return (
-                      <button
-                        key={s.id}
-                        type="button"
-                        aria-pressed={activeSection === s.id}
-                        onClick={() => setActiveSection(s.id)}
-                        className={`flex items-center justify-between px-space-md py-1.5 rounded-lg font-label-md text-label-md transition-colors text-left ${
-                          activeSection === s.id
-                            ? "bg-surface-container text-on-surface font-semibold"
-                            : "text-secondary hover:bg-surface-container hover:text-on-surface"
-                        }`}
-                      >
-                        <div className="flex items-center gap-space-sm min-w-0">
-                          <IconComp size={16} />
-                          <span className="truncate">{s.label}</span>
-                        </div>
-                        {s.count !== undefined && (
-                          <span className="font-label-sm px-1.5 py-0.2 rounded bg-surface-container-high text-secondary">
-                            {s.count}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
+                  ]
+                    .sort((a, b) => {
+                      const order = ["profile", ...sectionOrder(doc)];
+                      return order.indexOf(a.id) - order.indexOf(b.id);
+                    })
+                    .map((s) => {
+                      const IconComp = s.icon;
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          aria-pressed={activeSection === s.id}
+                          onClick={() => setActiveSection(s.id)}
+                          className={`flex items-center justify-between px-space-md py-1.5 rounded-lg font-label-md text-label-md transition-colors text-left ${
+                            activeSection === s.id
+                              ? "bg-surface-container text-on-surface font-semibold"
+                              : "text-secondary hover:bg-surface-container hover:text-on-surface"
+                          }`}
+                        >
+                          <div className="flex items-center gap-space-sm min-w-0">
+                            <IconComp size={16} />
+                            <span className="truncate">{s.label}</span>
+                          </div>
+                          {s.count !== undefined && (
+                            <span className="font-label-sm px-1.5 py-0.2 rounded bg-surface-container-high text-secondary">
+                              {s.count}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                 </div>
               </aside>
               {/* Focused Form Stage (~490px) */}
@@ -906,6 +1027,20 @@ export default function ResumeStudioPage() {
                         data-motion-id={exp.id}
                         className="editor-entry"
                       >
+                        <ReorderControls
+                          group="experience"
+                          index={expIdx}
+                          count={doc.experience.length}
+                          label={
+                            exp.position || exp.company || String(expIdx + 1)
+                          }
+                          onMove={(from, to) =>
+                            updateField(
+                              "experience",
+                              moveItem(doc.experience, from, to),
+                            )
+                          }
+                        />
                         <div className="editor-entry-heading">
                           <EditorField
                             label={t("jobTitle")}
@@ -1008,6 +1143,18 @@ export default function ResumeStudioPage() {
                         data-motion-id={edu.id}
                         className="editor-entry"
                       >
+                        <ReorderControls
+                          group="education"
+                          index={eduIdx}
+                          count={doc.education.length}
+                          label={edu.institution || String(eduIdx + 1)}
+                          onMove={(from, to) =>
+                            updateField(
+                              "education",
+                              moveItem(doc.education, from, to),
+                            )
+                          }
+                        />
                         <div className="editor-entry-heading">
                           <EditorField
                             label={t("institution")}
@@ -1109,6 +1256,18 @@ export default function ResumeStudioPage() {
                         data-motion-id={proj.id}
                         className="editor-entry"
                       >
+                        <ReorderControls
+                          group="projects"
+                          index={projIdx}
+                          count={doc.projects.length}
+                          label={proj.name || String(projIdx + 1)}
+                          onMove={(from, to) =>
+                            updateField(
+                              "projects",
+                              moveItem(doc.projects, from, to),
+                            )
+                          }
+                        />
                         <div className="editor-entry-heading">
                           <EditorField
                             label={t("projectName")}
@@ -1218,6 +1377,18 @@ export default function ResumeStudioPage() {
                           data-motion-id={grp.id}
                           className="editor-entry skill-entry"
                         >
+                          <ReorderControls
+                            group="skills"
+                            index={idx}
+                            count={doc.skills.length}
+                            label={grp.category || String(idx + 1)}
+                            onMove={(from, to) =>
+                              updateField(
+                                "skills",
+                                moveItem(doc.skills, from, to),
+                              )
+                            }
+                          />
                           <div className="editor-entry-heading">
                             <input
                               type="text"
@@ -1280,6 +1451,8 @@ export default function ResumeStudioPage() {
           {activeTab === "design" && (
             <div className="inspector-mode flex flex-1 w-full overflow-hidden">
               <div className="studio-form w-[420px] bg-surface-container-lowest p-space-xl flex flex-col gap-space-lg overflow-y-auto border-r border-surface-container-high no-print">
+                <SectionOrderEditor document={doc} onChange={setDoc} />
+                <PageFitAssistant document={doc} onChange={setDoc} />
                 <span className="font-headline-md text-headline-md text-on-surface font-semibold">
                   {t("designAndTypography")}
                 </span>
