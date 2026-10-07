@@ -1,6 +1,6 @@
 # API reference
 
-The generated OpenAPI specification at `/openapi.json` and interactive `/docs` are authoritative. The usual API prefix is `/api`. API requests are limited to 5 MB.
+The generated OpenAPI specification at `/openapi.json` and interactive `/docs` are authoritative. Routes below are relative to `/api` unless the prefix is shown explicitly. API requests default to a 5 MB limit, configurable with `MAX_UPLOAD_SIZE_BYTES`; `/api/health` reports `maxUploadSizeBytes`.
 
 ## Resume lifecycle
 
@@ -19,7 +19,10 @@ The generated OpenAPI specification at `/openapi.json` and interactive `/docs` a
 - `GET /resumes/{id}/analysis` analyzes saved content.
 - `POST /resumes/{id}/analysis` accepts a complete draft document.
 - `POST /resumes/{id}/preview` accepts a draft and returns safe print-ready HTML.
-- `POST /resumes/{id}/export` accepts a draft and returns actual PDF bytes.
+- `POST /resumes/{id}/export?format=pdf|docx` accepts a draft and returns PDF or editable Word bytes; PDF is the default. DOCX pagination can differ from PDF.
+- `POST /resumes/{id}/pdf-check` accepts a draft and reports checks from its actual PDF output.
+- `POST /resumes/{id}/page-fit` suggests layout changes for a draft; the UI requires explicit application.
+- `POST /resumes/compare-drafts` accepts `{source, target}` and compares two complete drafts.
 - `POST /resumes/{id}/compare/{other_id}` compares content, visibility and design. Entries are matched by stable ID.
 
 ## Source and conversion
@@ -29,16 +32,22 @@ The generated OpenAPI specification at `/openapi.json` and interactive `/docs` a
 - `PUT /resumes/{id}/source` accepts `{format, content, revision}` and persists validated JSON/YAML. The browser uses validation followed by draft application, leaving Save explicit.
 - `POST /import/validate` and `/import/preview` accept `{content, format?}`. Markdown is a lossy import with warnings. Unknown JSON/YAML fields and unsupported schema versions are rejected.
 - `POST /import/apply` creates a new document. `overwriteExistingId` is explicitly rejected.
-- `GET /resumes/{id}/export?format=pdf|html|json|yaml|markdown&download=true` exports a saved document. PDF returns `application/pdf`; HTML is a distinct format.
+- `GET /resumes/{id}/export?format=pdf|docx|html|json|yaml|markdown&download=true` exports a saved document. PDF returns `application/pdf`; HTML is a distinct format. DOCX is export-only.
 
 ## Jobs, library and backups
 
 - `/jobs` supports list/create; `/jobs/{id}` supports read/update/delete. Explicit null `linkedResumeId` unlinks a document.
 - `POST /jobs/{id}/match/{resume_id}` accepts optional `{requirements: ["term", ...]}`. Without explicit terms, extraction covers technical vocabulary. No recognized requirements returns `matchScore: null`.
 - `GET /jobs/{id}/snapshots` returns immutable submitted documents captured when a linked job transitions to Applied.
+- `POST /jobs/{id}/tailoring/{resume_id}` suggests existing visible experience/project bullets and reports requirements missing from the saved CV. No LLM call or new claims are involved.
+- `POST /jobs/{id}/tailoring/{resume_id}/apply` accepts `{revision, jobUpdatedAt, selected}` using suggestion IDs. It creates a new CV copy with selected bullets/entries promoted, preserving all text and the original. A stale CV revision or changed job returns 409; invalid selection returns 422. Job links are unchanged.
+- `POST /jobs/{id}/cover-letter` accepts `{resumeId, language, useAI}` and generates a local or optional AI letter draft.
+- `POST /jobs/{id}/package` downloads a ZIP with the linked saved CV PDF and saved cover letter. It does not submit the application.
 - `/library` supports list/create; `/library/{id}` supports read/update/delete.
 - `GET /workspace/backup` exports all workspace collections, saved history and application snapshots.
-- `POST /workspace/restore` validates a version-1 backup and restores it additively in one transaction, with fresh identifiers.
+- `POST /workspace/restore` accepts backup versions 1 and 2 and restores additively in one transaction, with fresh identifiers. Exports use v2 with timestamps and timeline fields.
+- `POST /workspace/backup/encrypted` accepts `{password}` (12–1024 characters) and returns an authenticated encrypted backup envelope. An envelope too large to restore under the configured request limit returns 413.
+- `POST /workspace/restore/encrypted` accepts `{password, envelope}` and restores decrypted backup data through the same additive restore. Wrong passwords or damaged ciphertext return 422. Passwords are not persisted; AI settings/keys are excluded from both backup forms.
 
 These routes are for a trusted local single-user installation. There is no multi-user ownership/authentication layer.
 
@@ -49,6 +58,11 @@ These routes are for a trusted local single-user installation. There is no multi
 - `PUT /api/ai/settings`: `enabled`, `provider` (`openai-compatible`, `ollama`, or `gemini`), `baseUrl`, `model`, optional `apiKey`, optional `clearApiKey`. A missing key preserves the current one only when endpoint and provider are unchanged.
 - `POST /api/ai/test`: test saved connection using a small JSON generation, no resume payload.
 - `POST /api/ai/review`: `{document, jobDescription?, language: "en" | "tr"}`. Returns explained 0–25 dimensions, normalized score, strengths, recommendations, questions, provider/model, and limitations. No persistence or document mutation.
+
+Saved AI credentials use authenticated encryption with a separate local key.
+Docker keeps that key in `ai_secrets`, separate from the `ai_settings` volume.
+Legacy plaintext settings migrate on first read. An unavailable/invalid key or
+undecryptable credential returns 503; restore the key or reconfigure the connection.
 
 Gemini defaults to `https://generativelanguage.googleapis.com/v1beta` when `baseUrl` is omitted. Enabled Gemini requires an API key and a model ID (optionally prefixed with `models/`); invalid settings return 422. Requests use native `models/{model}:generateContent`, an `x-goog-api-key` header, and JSON response mode. Blocked responses return `AI_RESPONSE_BLOCKED` (502); incomplete or malformed responses return `AI_INVALID_RESPONSE` (502).
 

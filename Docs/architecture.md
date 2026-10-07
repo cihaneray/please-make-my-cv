@@ -10,6 +10,27 @@ Alembic adopts existing databases and creates versioned history/snapshot tables.
 
 One escaped HTML renderer powers live content preview and Chromium PDF generation. The renderer restricts fonts, colors, language attributes and network access. Preview HTML uses a sandboxed iframe. Exact PDF preview uses actual generated PDF bytes and browser pagination controls.
 
+DOCX export maps the same visible sections, ordering and template styling into
+native editable Word content. Word pagination can differ from the print renderer.
+Chromium's headless shell remains inside the API container; there is no separate
+PDF service.
+
 JSON/YAML are lossless within supported schema version 1. Unknown structured fields are rejected. Markdown is a best-effort import/export format and cannot replace a document through source editing. Request bodies are bounded before parsing.
 
 The application is designed for a localhost, single-user trust boundary. Compose binds ports to loopback; it does not supply internet-hosting authentication. Assets no longer fetch Google Fonts. Workspace backups contain personal data and restore additively in one transaction.
+
+Web/API run as non-root UID 10001 with dropped Linux capabilities. The one-shot
+`db-init` configures the restricted `cv_app` PostgreSQL role and existing table
+ownership; `volume-init` repairs persistent-volume permissions before startup.
+Both setup services exit successfully, leaving web/API/database running.
+
+AI settings encrypt credentials with Fernet using a separate local key, stored
+in Docker's `ai_secrets` volume. This protects copied settings without the key,
+not against an administrator able to read both. Optional password-protected
+workspace backups derive keys with Argon2id and use authenticated encryption;
+neither AI credentials nor the local encryption key is included.
+
+Job tailoring uses existing matching evidence to promote selected visible
+experience/project bullets and their entries in a new CV copy. Candidate IDs
+and CV/job revision checks prevent stale or forged selections. No new facts
+are generated, and the original CV and submitted snapshots are preserved.

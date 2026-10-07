@@ -200,7 +200,6 @@ CLAUDE.md
 Docs/*
 !Docs/api.md
 !Docs/architecture.md
-!Docs/remediation-report.md
 
 
 !**/.env.example

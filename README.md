@@ -296,7 +296,7 @@ npm test
 
 Browser tests build production assets and run isolated services on ports 3101 and 8101, using `apps/api/e2e.db`, not the normal workspace database. Backend tests disable normal startup initialization and use isolated databases. Frontend response types are generated from Pydantic schemas: after schema changes run `uv run python scripts/generate_types.py` from `apps/api`.
 
-GitHub Actions checks lint, generated contracts, tests, production-browser workflows, and Docker startup. See [implementation notes](Docs/remediation-report.md) for changes and remaining boundaries.
+GitHub Actions checks lint, generated contracts, tests, production-browser workflows, and Docker startup. See the [architecture](Docs/architecture.md) and [API reference](Docs/api.md) for implementation details; changes are recorded in [CHANGELOG.md](CHANGELOG.md).
 
 Include `[SKIP]` in the latest commit message to skip CI verification jobs on
 push and pull request events. On pull requests, a lightweight job reads the
@@ -330,6 +330,38 @@ Ordinary commits and unmerged feature branches do not publish releases.
 Existing releases are left unchanged on retries, and existing tags are never
 moved to another commit. No extra secret is needed: publication uses the
 repository's built-in `GITHUB_TOKEN` with `contents: write` in the publish job.
+
+### Version changes
+
+Web and API share one application version. Use [Semantic Versioning](https://semver.org/):
+
+| Change | Example |
+| --- | --- |
+| Backward-compatible bug or security fix | `1.2.3` → `1.2.4` |
+| Backward-compatible feature | `1.2.3` → `1.3.0` |
+| Incompatible API, document or backup contract change | `1.2.3` → `2.0.0` |
+| Test release | `1.3.0-beta.1` → `1.3.0-rc.1` → `1.3.0` |
+
+During initial `0.x` development, use patch bumps for fixes and minor bumps
+for features or incompatible changes. Document incompatible changes explicitly.
+Publish `1.0.0` when the application and its data contracts are considered stable.
+Change the version for a release, rather than for every commit. Never reuse or
+move a published version tag.
+
+Before requesting a release:
+
+1. Update `version` in `apps/web/package.json` and `apps/api/pyproject.toml`
+   to the same number without the `v` prefix (for example, `0.2.0`).
+2. Refresh both lockfiles: run `npm install --package-lock-only --ignore-scripts`
+   from `apps/web` and `uv lock` from `apps/api`.
+3. Record changes under that version in `CHANGELOG.md` and run the relevant checks.
+4. Commit and merge the version changes into `main`, then push a matching tag
+   such as `v0.2.0`. Alternatively, retain `[RELEASE:v0.2.0]` in the main commit
+   message to create the tag and release automatically.
+
+The workflow publishes the requested version; it does not increment package
+versions or edit lockfiles. Application releases, resume `schemaVersion`, saved
+document revisions and workspace backup format versions are separate concepts.
 
 ## LLM resume reviews
 
