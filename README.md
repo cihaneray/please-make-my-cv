@@ -3,7 +3,7 @@
 A single-user, local CV workspace with a Next.js 16 / React 19 interface and a Python 3.12+ FastAPI API. SQLite is the default; Docker Compose uses PostgreSQL.
 
 Create and maintain English or Turkish CVs, reuse career content, tailor copies
-for job applications, review changes, and export selectable-text PDFs. The
+for job applications, review changes, and export selectable-text PDFs or editable Word documents. The
 workspace runs locally; external AI reviews are optional and require a saved
 provider connection.
 
@@ -233,6 +233,7 @@ All published services bind to `127.0.0.1`. This is a local, single-user applica
 | Markdown | Human-readable export and **lossy import**; review all imported fields. Not supported as replacement source editing |
 | HTML | Escaped, print-ready HTML with restricted styling and no script execution |
 | PDF | Actual Chromium-generated PDF with selectable text and A4 pagination |
+| DOCX | Editable Word export of the current draft with visible sections, section order, links and native bullets; DOCX import is not supported |
 
 The editor's live content preview and PDF use the same backend HTML renderer. **Exact PDF pages** shows final pagination using the browser PDF viewer. The template gallery provides illustrative template previews. PDF generation requires the installed Playwright Chromium browser. Fonts use local system fallbacks; no remote font requests are required.
 
@@ -301,3 +302,7 @@ Choose **Settings → Interface Aesthetic → Color theme** to use Light, Dark, 
 In a resume's **Review** tab, run an AI review. Suggestions with a verified field target show **Before** and **After**, **Apply suggestion**, **Skip suggestion**, and **Undo this suggestion**. Applying updates only the draft; **Save Draft** persists it as a new revision. Summary text, experience summaries/bullets, and project bullets support direct replacement. Other advice stays manual. If a targeted field changed after review, Apply is disabled to preserve your edits. A changed draft also marks the score outdated. Model wording still requires your factual review.
 
 Expand **Job-specific resume copy**, choose a saved job or enter its company/role and description, then click **Create job-specific copy**. This saves a new copy of the current draft without saving over the original, with parent lineage and a snapshot of the target job. Open the copy to get job-specific coaching and accept changes individually. Job tracker links stay unchanged; link the copy from Target Jobs when ready. Creating a copy does not need an LLM connection.
+
+### Word export
+
+Use **Download → Word (.docx)** in the CV editor to download an editable Word document from the current form draft. DOCX preserves visible sections, their order, links, dates, and native editable bullet lists in the selected template’s A4 layout, including its typography, accent color, section rules and date alignment. PDF remains the option for preserving the designed print layout; Word pagination can differ between applications. DOCX import is not supported.

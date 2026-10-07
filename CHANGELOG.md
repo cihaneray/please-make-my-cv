@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add editable DOCX downloads from the current CV draft, using preview content and template styling; group PDF and Word exports in a keyboard-accessible Download menu.
+
 - Unify certification, language and custom-section editing cards, including nested item and bullet controls.
 - Add saved-CV application preparation checks with actual PDF diagnostics and a read-only ZIP export of the current linked CV plus saved cover letter.
 
@@ -34,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## Unreleased
+
+- Add editable DOCX downloads from the current CV draft, using preview content and template styling; group PDF and Word exports in a keyboard-accessible Download menu.
 
 - Add Docker Compose development with Windows file polling, container-managed dependencies and Linux build cache, plus an isolated Docker verification workflow.
 - Fix job deletion leaving submitted copies that prevented backup restore; recover older orphan copies into archived placeholder jobs in new backups.
