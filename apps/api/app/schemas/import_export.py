@@ -12,6 +12,7 @@ class DataFormat(str, Enum):
     YAML = "yaml"
     MARKDOWN = "markdown"
     PDF = "pdf"
+    DOCX = "docx"
     HTML = "html"
 
 
