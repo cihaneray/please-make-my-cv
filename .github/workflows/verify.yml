@@ -33,6 +33,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - run: python -m unittest discover -s scripts/tests -v
       - run: pip install uv
       - run: uv sync --frozen
         working-directory: apps/api
