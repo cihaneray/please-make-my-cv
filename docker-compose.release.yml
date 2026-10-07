@@ -1,0 +1,89 @@
+name: please-make-my-cv
+services:
+  db-init:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      CV_DB_PASSWORD: ${CV_DB_PASSWORD:?Set a separate CV_DB_PASSWORD in .env}
+    volumes:
+      - ./scripts/init-app-db.sh:/init-app-db.sh:ro
+    entrypoint: ["sh", "/init-app-db.sh"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  volume-init:
+    image: ${CV_API_IMAGE:?Set CV_API_IMAGE in .env}
+    user: "0:0"
+    command: ["python", "/app/prepare-volumes.py"]
+    volumes:
+      - ai_settings:/app/data
+      - ai_secrets:/app/secrets
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: cv_workspace
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: ${CV_API_IMAGE:?Set CV_API_IMAGE in .env}
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    environment:
+      APP_ENV: production
+      DATABASE_USER: cv_app
+      DATABASE_PASSWORD: ${CV_DB_PASSWORD:?Set a separate CV_DB_PASSWORD in .env}
+      DATABASE_HOST: db
+      DATABASE_NAME: cv_workspace
+      CORS_ORIGINS: '["http://localhost:3000","http://127.0.0.1:3000"]'
+      AI_CONFIG_PATH: /app/data/ai-settings.json
+      AI_SECRET_KEY_PATH: /app/secrets/ai-settings.key
+    volumes:
+      - ai_settings:/app/data
+      - ai_secrets:/app/secrets
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+      volume-init:
+        condition: service_completed_successfully
+
+  web:
+    image: ${CV_WEB_IMAGE:?Set CV_WEB_IMAGE in .env}
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    environment:
+      API_INTERNAL_URL: http://api:8000
+    ports:
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  ai_settings:
+  ai_secrets:

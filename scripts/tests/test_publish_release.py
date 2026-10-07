@@ -31,7 +31,7 @@ class PublishReleaseTests(unittest.TestCase):
         bin_path.mkdir()
         gh = bin_path / "gh"
         gh.write_text(
-            '#!/usr/bin/env bash\nprintf "%s\\n" "$*" >> "$GH_CALL_LOG"\nif [ "$1 $2" = "release view" ]; then exit "${GH_VIEW_EXIT:-1}"; fi\n'
+            '#!/usr/bin/env bash\nprintf "%s\\n" "$*" >> "$GH_CALL_LOG"\nif [ "$1 $2" = "release view" ]; then\nif [[ "$*" == *"--json isDraft"* ]]; then echo "${GH_VIEW_DRAFT:-false}"; fi\nexit "${GH_VIEW_EXIT:-1}"; fi\n'
         )
         gh.chmod(0o700)
         self.log = self.repo / "calls.log"
@@ -111,6 +111,30 @@ class PublishReleaseTests(unittest.TestCase):
         self.env.update(RELEASE_TAG="v1.2.3-beta.1", RELEASE_PRERELEASE="true")
         self.assertEqual(self.publish().returncode, 0)
         self.assertIn("--prerelease --latest=false", self.calls())
+
+    def test_assets_are_uploaded_before_draft_is_published(self):
+        assets = self.repo / "dist"
+        assets.mkdir()
+        (assets / "install.zip").write_bytes(b"example")
+        (assets / "install.zip.sha256").write_text("example checksum")
+        (assets / "release-notes.md").write_text("Docker instructions")
+        self.env["RELEASE_ASSET_DIR"] = str(assets)
+        self.assertEqual(self.publish().returncode, 0)
+        self.assertIn("install.zip", self.calls())
+        self.assertIn("--draft", self.calls())
+        self.assertLess(self.calls().index("release create"), self.calls().index("release edit"))
+
+    def test_interrupted_draft_upload_is_repaired_on_retry(self):
+        self.git("tag", "v1.2.3")
+        assets = self.repo / "dist"
+        assets.mkdir()
+        (assets / "install.zip").write_bytes(b"example")
+        (assets / "install.zip.sha256").write_text("example checksum")
+        self.env.update(GH_VIEW_EXIT="0", GH_VIEW_DRAFT="true", RELEASE_ASSET_DIR=str(assets))
+        self.assertEqual(self.publish().returncode, 0)
+        self.assertIn("release upload", self.calls())
+        self.assertIn("--draft=false", self.calls())
+        self.assertNotIn("release create", self.calls())
 
 
 if __name__ == "__main__":

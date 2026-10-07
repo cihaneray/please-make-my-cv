@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+
+- Publish production API/web Docker images to GHCR for explicit releases on linux/amd64.
+- Attach a build-free Compose installation ZIP, digest manifest, checksum and installation/update instructions to releases.
+- Publish releases only after images and assets are ready; support retrying interrupted draft publication.
+
 ## Unreleased — release automation
 
 - Publish GitHub Releases from explicit `[RELEASE:vMAJOR.MINOR.PATCH]` commit markers on main or pushed version tags, with generated notes, prerelease support and idempotent retries.
