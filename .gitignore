@@ -216,3 +216,6 @@ tmp/
 **/.ai-settings-*.tmp
 
 **/e2e-ai-settings.json
+**/ai-settings.key
+**/e2e-ai-settings.key
+**/.private-*.tmp

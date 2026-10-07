@@ -1,5 +1,99 @@
 import { test, expect, APIRequestContext } from "@playwright/test";
 import { ResumeDocument } from "../src/lib/types";
+import { readFile } from "node:fs/promises";
+
+test("job tailoring creates a copy from selected evidence and preserves the source", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request, "Tailoring original");
+  doc.experience[0].bullets = [
+    "Documented workflows.",
+    "Built Python APIs with Docker.",
+  ];
+  await request.put(`http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`, {
+    data: { document: doc, revision: doc.metadata.revision },
+  });
+  const original = await (
+    await request.get(`http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`)
+  ).json();
+  const job = await (
+    await request.post("http://127.0.0.1:8101/api/jobs", {
+      data: {
+        company: "Tailoring test",
+        position: "Backend",
+        linkedResumeId: doc.metadata.id,
+        requirements: ["Python", "Docker", "Kubernetes"],
+      },
+    })
+  ).json();
+  await page.goto(`/jobs?selected=${job.id}`);
+  const region = page.getByRole("region", { name: "Tailor CV to this job" });
+  await region
+    .getByRole("button", { name: "Suggest relevant bullets" })
+    .click();
+  await expect(region).toContainText("kubernetes");
+  await expect(region.getByRole("checkbox")).toBeChecked();
+  await region.getByRole("checkbox").uncheck();
+  await expect(
+    region.getByRole("button", { name: "Create tailored CV copy" }),
+  ).toBeDisabled();
+  await region.getByRole("checkbox").check();
+  await region.getByRole("button", { name: "Create tailored CV copy" }).click();
+  const link = region.getByRole("link", { name: "Open tailored CV" });
+  await expect(link).toBeVisible();
+  const id = (await link.getAttribute("href"))!.split("/").pop();
+  const copy = await (
+    await request.get(`http://127.0.0.1:8101/api/resumes/${id}`)
+  ).json();
+  expect(copy.experience[0].bullets).toEqual([
+    "Built Python APIs with Docker.",
+    "Documented workflows.",
+  ]);
+  expect(
+    await (
+      await request.get(`http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`)
+    ).json(),
+  ).toEqual(original);
+});
+
+test("password protected backups download encrypted data and restore with a password", async ({
+  page,
+}) => {
+  await page.goto("/settings");
+  const backupRegion = page.getByRole("region", {
+    name: "Workspace backup and restore",
+  });
+  const password = page.getByLabel("Backup password (at least 12 characters)");
+  await password.fill("short");
+  const downloadButton = page.getByRole("button", {
+    name: "Download workspace backup",
+  });
+  await expect(downloadButton).toBeDisabled();
+  await password.fill("a-long-test-password");
+  const downloadPromise = page.waitForEvent("download");
+  await downloadButton.click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe(
+    "cv-workspace-backup.encrypted.json",
+  );
+  const path = (await download.path())!;
+  const envelope = JSON.parse(await readFile(path, "utf8"));
+  expect(envelope.format).toBe("cv-workspace-encrypted-v1");
+  expect(envelope.resumes).toBeUndefined();
+  await password.fill("wrong-test-password");
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByLabel("Restore backup").setInputFiles(path);
+  await expect(backupRegion.getByRole("status")).toContainText(
+    "Incorrect backup password",
+  );
+  await password.fill("a-long-test-password");
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByLabel("Restore backup").setInputFiles(path);
+  await expect(backupRegion.getByRole("status")).toContainText(
+    "Restored as new records",
+  );
+});
 
 async function createDocument(
   request: APIRequestContext,

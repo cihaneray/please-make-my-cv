@@ -32,7 +32,7 @@ jobs:
           python-version: '3.12'
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
       - run: pip install uv
       - run: uv sync --frozen
         working-directory: apps/api
@@ -52,6 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       POSTGRES_PASSWORD: disposable-ci-password
+      CV_DB_PASSWORD: disposable-ci-app-password
     steps:
       - uses: actions/checkout@v4
       - run: docker compose config --quiet

@@ -50,3 +50,4 @@ def isolated_ai_settings(tmp_path, monkeypatch):
     from app.core.config import settings
 
     monkeypatch.setattr(settings, "ai_config_path", str(tmp_path / "ai-settings.json"))
+    monkeypatch.setattr(settings, "ai_secret_key_path", "")

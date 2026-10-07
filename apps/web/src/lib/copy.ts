@@ -1,6 +1,31 @@
 "use client";
 import { useI18n } from "./i18n";
 export const copyTranslations: Record<string, string> = {
+  "Maximum backup size": "En büyük yedek boyutu",
+  "Tailor CV to this job": "İlana göre CV düzenleme",
+  "Highlight existing evidence in a new CV copy. No skills or achievements are invented; the original stays unchanged.":
+    "Mevcut kanıtları yeni bir CV kopyasında öne çıkarın. Yetkinlik veya başarı eklenmez; özgün CV korunur.",
+  "Save job changes before generating suggestions.":
+    "Önerileri hazırlamadan önce ilan değişikliklerini kaydedin.",
+  "Preparing suggestions…": "Öneriler hazırlanıyor…",
+  "Suggest relevant bullets": "İlgili maddeleri öner",
+  "No existing bullets match these requirements. Review the job requirements or CV evidence.":
+    "Bu gereksinimlerle eşleşen mevcut madde bulunamadı. İlan gereksinimlerini veya CV kanıtlarını gözden geçirin.",
+  "Requirements without CV evidence": "CV’de kanıtı bulunmayan gereksinimler",
+  "These are wording gaps, not proof that you lack the skill. Add details only if you can verify them.":
+    "Bunlar metindeki eksiklerdir; yetkinliğinizin olmadığı anlamına gelmez. Yalnızca doğrulayabildiğiniz bilgileri ekleyin.",
+  "Selected bullets and their entries move to the top. All existing content is preserved.":
+    "Seçilen maddeler ve bağlı kayıtları öne taşınır. Mevcut içeriğin tamamı korunur.",
+  "Create tailored CV copy": "İlana özel CV kopyası oluştur",
+  "Open tailored CV": "İlana özel CV’yi aç",
+  "The linked CV or job changed. Generate new suggestions.":
+    "Bağlı CV veya ilan değişti. Önerileri yeniden hazırlayın.",
+  "Backup password (at least 12 characters)":
+    "Yedek parolası (en az 12 karakter)",
+  "A password encrypts the backup. Keep it safe: it cannot be recovered. Leave empty for a plain JSON backup.":
+    "Parola yedeği şifreler. Güvenli saklayın: kaybolursa kurtarılamaz. Düz JSON yedek için boş bırakın.",
+  "Enter the backup password before restoring.":
+    "Geri yüklemeden önce yedek parolasını girin.",
   Download: "İndir",
   "Download format": "İndirme biçimi",
   "Preparing download…": "İndirme hazırlanıyor…",

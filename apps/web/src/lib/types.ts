@@ -321,6 +321,28 @@ export interface SkillGroup {
   category: string;
   skills: Array<string>;
 }
+export interface TailoringApplyRequest {
+  revision: number;
+  jobUpdatedAt: string;
+  selected: Array<string>;
+}
+export interface TailoringCandidate {
+  id: string;
+  section: "experience" | "projects";
+  entryId: string;
+  entryTitle: string;
+  bulletIndex: number;
+  text: string;
+  requirements: Array<string>;
+}
+export interface TailoringPlan {
+  resumeId: string;
+  revision: number;
+  jobId: string;
+  jobUpdatedAt: string;
+  candidates: Array<TailoringCandidate>;
+  missingRequirements: Array<string>;
+}
 export interface TargetJob {
   company: string;
   position: string;

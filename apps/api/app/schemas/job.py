@@ -112,6 +112,31 @@ class CoverLetterRequest(BaseModel):
     useAI: bool = False
 
 
+class TailoringCandidate(BaseModel):
+    id: str
+    section: Literal["experience", "projects"]
+    entryId: str
+    entryTitle: str
+    bulletIndex: int
+    text: str
+    requirements: list[str]
+
+
+class TailoringPlan(BaseModel):
+    resumeId: str
+    revision: int
+    jobId: str
+    jobUpdatedAt: str
+    candidates: list[TailoringCandidate]
+    missingRequirements: list[str]
+
+
+class TailoringApplyRequest(BaseModel):
+    revision: int
+    jobUpdatedAt: str
+    selected: list[str] = Field(min_length=1, max_length=500)
+
+
 class CoverLetterResult(BaseModel):
     text: str = Field(min_length=1, max_length=20000)
     source: Literal["local", "ai"]

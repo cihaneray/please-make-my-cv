@@ -9,7 +9,8 @@ provider connection.
 
 ## Recommended setup
 
-Use the [Docker Compose development setup](#docker-development).
+Use the [Docker Compose local runtime](#production-style-local-run).
+For source editing with hot reload, use the [development setup](#docker-development).
 It installs Python, Node.js, and PDF browser dependencies in containers and
 persists workspace data across restarts.
 
@@ -64,6 +65,11 @@ persists workspace data across restarts.
   and dated submitted snapshots; the overview keeps matching evidence and dates
   together. Evidence cards preview relevant CV text, highlight matched terms,
   remember expanded sources for the browser session and link to exact CV entries.
+- **Overview → Tailor CV to this job** suggests existing experience/project
+  bullets supported by the saved job requirements. Select suggestions to create
+  a new CV copy with relevant bullets and entries first. All text is preserved;
+  gaps never become invented skills. The original and submitted copies are
+  unchanged. A changed CV revision or job invalidates the plan.
 - Job tools store interview dates, follow-up dates, notes and editable cover
   letters. The agenda shows the next 14 days and overdue dates until updated;
   it does not send notifications. Local letter drafts quote visible saved CV
@@ -145,7 +151,12 @@ in a Linux volume. Web development uses Webpack for reliable polling.
 Rebuild after dependency or Dockerfile changes; restart the API after migration
 changes. Regular application source edits reload automatically.
 
-Container images omit package download caches. The API installs only Chromium's
+Container images omit package download caches. Web/API run as UID 10001 with
+Linux capabilities dropped. The API uses a separate production runtime without
+uv or development dependencies, on Debian Bookworm to avoid unnecessary GPU
+driver dependencies. English/Turkish fallback fonts and Chromium's
+headless shell are retained; unused CJK fonts and Xvfb are removed.
+The API installs only Chromium's
 headless shell, which supports PDF exports and the headless browser tests.
 Production web images use Next.js standalone output; development images retain
 the tools needed for editing and rebuilding. Docker build caches can still grow
@@ -158,9 +169,16 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml down
 
 `down` keeps saved data. Avoid `down --volumes` unless you intend to erase the
 database and saved AI settings. Development and production Compose use the same
-data volumes; stop one before starting the other. The password is embedded in
-the database URL, so this setup expects an alphanumeric password. Changing the
-file does not change a password already initialized in PostgreSQL.
+data volumes; stop one before starting the other. Configure distinct
+`POSTGRES_PASSWORD` and `CV_DB_PASSWORD` values in `.env`. API connections use
+the restricted `cv_app` database role, not the postgres superuser. The one-shot
+`db-init` service creates/updates this role and transfers existing workspace
+table ownership without deleting records. Changing `POSTGRES_PASSWORD` does
+not change an existing PostgreSQL administrator password; changing
+`CV_DB_PASSWORD` takes effect when `db-init` runs again. Passwords are passed
+through SQLAlchemy URL construction, so special characters are supported.
+One-shot `volume-init` repairs permissions on existing volumes before the
+non-root services start. These setup containers exit successfully after startup.
 
 Run the full isolated Python 3.12 and frontend browser suite through Docker:
 
@@ -187,7 +205,7 @@ then run the updated API image on port 8001 with a separate SQLite mount:
 
 ```powershell
 docker compose build api
-docker compose run --rm --no-deps -p 127.0.0.1:8001:8000 -v "D:/path/to/old-api:/legacy" -e DATABASE_URL=sqlite:////legacy/cv_workspace.db -e AI_CONFIG_PATH=/tmp/legacy-ai-settings.json api
+docker compose run --rm --no-deps -p 127.0.0.1:8001:8000 -v "D:/path/to/old-api:/legacy" -e DATABASE_USER= -e DATABASE_URL=sqlite:////legacy/cv_workspace.db -e AI_CONFIG_PATH=/tmp/legacy-ai-settings.json api
 ```
 
 In another terminal, download the portable backup:
@@ -204,7 +222,7 @@ copies in the same transaction; archive the job to retain them.
 
 ### Production-style local run
 
-Copy `.env.example` to `.env` and replace its password. Then run:
+Copy `.env.example` to `.env` and replace both passwords with different values. Then run:
 
 ```sh
 docker compose up --build --wait
@@ -213,6 +231,19 @@ docker compose up --build --wait
 All published services bind to `127.0.0.1`. This is a local, single-user application, **not an authenticated multi-user hosting service**. Do not expose these ports publicly without a separately configured authentication boundary. Compose includes health checks, the PostgreSQL driver, browser dependencies, and locked dependency installation.
 
 ## Editing and data safety
+
+- AI API keys are encrypted with Fernet before writing settings. Existing
+  plaintext settings are migrated on first read. Docker stores the encryption
+  key in the separate `ai_secrets` volume with private file permissions. Keep
+  that volume: losing it requires re-entering the API key. This protects settings
+  copied without the key; it does not protect against an administrator who can
+  read both volumes. AI credentials and their encryption key are never included
+  in workspace backups.
+- **Settings → workspace backup** accepts an optional password of at least
+  12 characters. Password-protected backups use Argon2id-derived keys and Fernet
+  authenticated encryption. Enter the same password before restoring an
+  `.encrypted.json` backup. Passwords are not saved; losing one makes that
+  backup unrecoverable. Plain JSON backups/restores remain supported.
 
 - Visual forms, JSON/YAML source, analysis, and exports use the current draft.
 - Source **Apply to draft** does not save. Save Draft persists the document.

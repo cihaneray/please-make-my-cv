@@ -10,6 +10,10 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str = "sqlite:///./cv_workspace.db"
+    database_user: str = ""
+    database_password: str = ""
+    database_host: str = "db"
+    database_name: str = "cv_workspace"
 
     # CORS
     cors_origins: list[str] = [
@@ -21,6 +25,7 @@ class Settings(BaseSettings):
 
     # Optional model connection configured through local Settings UI.
     ai_config_path: str = "data/ai-settings.json"
+    ai_secret_key_path: str = ""
     pdf_browser_channel: str | None = None
     pdf_browser_executable: str | None = None
 
