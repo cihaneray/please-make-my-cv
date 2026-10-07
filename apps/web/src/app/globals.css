@@ -699,6 +699,8 @@ html.dark {
   min-height: 0;
 }
 .studio-ribbon {
+  position: relative;
+  z-index: 40;
   flex-shrink: 0;
   display: flex;
   justify-content: space-between;
@@ -725,6 +727,65 @@ html.dark {
 }
 .studio-actions .editorial-button {
   padding: 9px 12px;
+}
+.download-control { position: relative; flex-shrink: 0; }
+.download-control .editorial-button.primary {
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+.download-control .editorial-button.primary:hover:not(:disabled) {
+  background: rgb(var(--color-primary));
+  color: rgb(var(--color-on-primary));
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgb(0 0 0 / 12%);
+}
+.download-control .editorial-button.primary:active:not(:disabled) { transform: translateY(0) scale(.97); }
+.download-icon, .download-chevron { transition: transform 180ms ease; }
+.download-control .editorial-button:hover:not(:disabled) .download-icon { transform: translateY(2px); }
+.download-control [aria-expanded="true"] .download-chevron { transform: rotate(180deg); }
+.download-options {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  width: min(280px, calc(100vw - 32px));
+  padding: 6px;
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 8px;
+  background: rgb(var(--color-surface));
+  box-shadow: 0 8px 28px rgb(0 0 0 / 15%);
+  transform-origin: top right;
+  animation: download-menu-enter 180ms cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes download-menu-enter {
+  from { opacity: 0; transform: translateY(-6px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.download-options > button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 5px;
+  text-align: left;
+  font-size: 13px;
+  transition: background-color 140ms ease;
+}
+.download-options > button > span { color: rgb(var(--color-secondary)); font-size: 11px; }
+.download-options > button:hover, .download-options > button:focus-visible {
+  background: rgb(var(--color-secondary) / 10%);
+}
+@media (max-width: 600px) {
+  .download-control { position: static; }
+  .download-options { left: 16px; right: 16px; width: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .download-control .editorial-button.primary,
+  .download-icon, .download-chevron, .download-options > button { transition: none; }
+  .download-options { animation: none; }
+  .download-control .editorial-button.primary:hover:not(:disabled),
+  .download-control .editorial-button.primary:active:not(:disabled),
+  .download-control .editorial-button:hover:not(:disabled) .download-icon { transform: none; }
 }
 .studio-status {
   font-size: 11px;

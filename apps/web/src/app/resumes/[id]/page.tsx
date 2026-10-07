@@ -1,5 +1,6 @@
 "use client";
 import { PageFitAssistant } from "@/components/PageFitAssistant";
+import { DownloadMenu } from "@/components/DownloadMenu";
 import { EditorCommands } from "@/components/EditorCommands";
 import { useDraftHistory } from "@/lib/draft-history";
 import { sectionOrder, moveItem } from "@/lib/section-order";
@@ -490,16 +491,11 @@ export default function ResumeStudioPage() {
             </span>
             {saving ? t("saving") : t("saveDraft")}
           </button>
-          <button
-            className="editorial-button primary"
+          <DownloadMenu
             disabled={sourcePending}
-            onClick={() =>
-              api.downloadPdf(doc).catch((err) => setNotice(err.message))
-            }
-          >
-            <Icons.Download size={16} />
-            {t("exportPdf")}
-          </button>
+            download={(format) => api.downloadDocument(doc, format)}
+            onError={setNotice}
+          />
         </div>
       </div>
       <div role="status" className="studio-status no-print">

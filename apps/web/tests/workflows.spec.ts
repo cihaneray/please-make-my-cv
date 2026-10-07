@@ -349,7 +349,8 @@ test("source apply changes the draft and PDF contains it", async ({
     page.getByRole("textbox", { name: "First Name", exact: true }),
   ).toHaveValue("SourceName");
   const download = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Export PDF", exact: true }).click();
+  await page.getByRole("button", { name: "Download", exact: true }).click();
+  await page.getByRole("menuitem", { name: /^PDF/ }).click();
   expect((await download).suggestedFilename()).toMatch(/\.pdf$/);
 });
 test("failed deletion remains visible and displays feedback", async ({

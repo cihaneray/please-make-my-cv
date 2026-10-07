@@ -1,6 +1,16 @@
 "use client";
 import { useI18n } from "./i18n";
 export const copyTranslations: Record<string, string> = {
+  Download: "İndir",
+  "Download format": "İndirme biçimi",
+  "Preparing download…": "İndirme hazırlanıyor…",
+  "Download failed.": "İndirme başarısız oldu.",
+  "Preserves the preview layout": "Önizlemedeki düzeni korur",
+  "Editable document with matching template styling":
+    "Şablon stilinde düzenlenebilir Word belgesi",
+  "Download DOCX": "DOCX indir",
+  "Editable Word document; page layout may differ from PDF.":
+    "Düzenlenebilir Word belgesi; sayfa düzeni PDF’den farklı olabilir.",
   Review: "Gözden geçir",
   "Checking PDF…": "PDF kontrol ediliyor…",
   Complete: "Tamam",

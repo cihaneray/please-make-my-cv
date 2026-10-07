@@ -1360,3 +1360,70 @@ test("application preparation reports saved evidence, actual PDF warnings and do
     ).ok(),
   ).toBeTruthy();
 });
+
+test("DOCX download uses the current form draft and blocks unapplied source edits", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request, "Word export");
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page
+    .getByRole("textbox", { name: "First Name", exact: true })
+    .fill("Unsaved Word name");
+  const submitted = page.waitForRequest(
+    (r) => r.method() === "POST" && r.url().endsWith("/export?format=docx"),
+  );
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download", exact: true }).click();
+  await page.getByRole("menuitem", { name: /Word/ }).click();
+  expect((await submitted).postDataJSON().profile.firstName).toBe(
+    "Unsaved Word name",
+  );
+  const file = await download;
+  expect(file.suggestedFilename()).toBe("Word_export.docx");
+  expect(await file.failure()).toBeNull();
+  const saved = await (
+    await request.get(`http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`)
+  ).json();
+  expect(saved.profile.firstName).toBe("Alex");
+  await page.setViewportSize({ width: 390, height: 844 });
+  const button = page.getByRole("button", {
+    name: "Download",
+    exact: true,
+  });
+  await expect(button).toBeVisible();
+  const bounds = await button.boundingBox();
+  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(391);
+  await page.getByRole("button", { name: "Source", exact: true }).click();
+  const source = page.getByRole("textbox", { name: "Resume source" });
+  await source.fill((await source.inputValue()) + "\n# pending");
+  await expect(button).toBeDisabled();
+});
+
+test("download menu supports keyboard dismissal, dark mode and narrow screens", async ({
+  page,
+  request,
+}) => {
+  const doc = await createDocument(request, "Download menu");
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  const trigger = page.getByRole("button", { name: "Download", exact: true });
+  await trigger.press("ArrowDown");
+  await expect(page.getByRole("menuitem", { name: /^PDF/ })).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.getByRole("menuitem", { name: /Word/ })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(trigger).toBeFocused();
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  await trigger.click();
+  await page.getByRole("textbox", { name: "First Name", exact: true }).click();
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await trigger.click();
+  const menu = page.getByRole("menu", { name: "Download format", exact: true });
+  const bounds = await menu.boundingBox();
+  expect(bounds!.x).toBeGreaterThanOrEqual(0);
+  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(391);
+  await page.screenshot({ path: "test-results/download-menu-mobile.png" });
+});

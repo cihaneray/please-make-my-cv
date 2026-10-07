@@ -127,8 +127,17 @@ export const api = {
     return response.blob();
   },
   async downloadPdf(document: ResumeDocument): Promise<void> {
+    return api.downloadDocument(document, "pdf");
+  },
+  async downloadDocx(document: ResumeDocument): Promise<void> {
+    return api.downloadDocument(document, "docx");
+  },
+  async downloadDocument(
+    document: ResumeDocument,
+    format: "pdf" | "docx",
+  ): Promise<void> {
     const response = await fetch(
-      `${API_BASE}/resumes/${document.metadata.id}/export`,
+      `${API_BASE}/resumes/${document.metadata.id}/export?format=${format}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -137,12 +146,12 @@ export const api = {
     );
     if (!response.ok)
       throw new Error(
-        "PDF could not be generated. Check that the API has Chromium installed.",
+        `${format.toUpperCase()} could not be generated. Please try again.`,
       );
     const url = URL.createObjectURL(await response.blob());
     const a = window.document.createElement("a");
     a.href = url;
-    a.download = `${document.metadata.title.replace(/[^a-z0-9_-]/gi, "_") || "resume"}.pdf`;
+    a.download = `${document.metadata.title.replace(/[^a-z0-9_-]/gi, "_") || "resume"}.${format}`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   },
