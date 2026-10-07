@@ -320,8 +320,33 @@ The release workflow publishes a GitHub Release in either of two ways:
 
 Versions use `vMAJOR.MINOR.PATCH`; a suffix such as `v1.2.3-beta.1` publishes
 a prerelease. Commit-triggered releases create the version tag on that exact
-commit. GitHub generates release notes and source ZIP/tar downloads. This
-workflow does not build application installers or Docker images.
+commit. GitHub generates release notes and source ZIP/tar downloads. The same
+workflow builds production API/web images for `linux/amd64`, publishes them to
+GHCR with version tags (for example, `:0.2.0`), and attaches a ready-to-run
+`please-make-my-cv-v0.2.0-docker.zip` plus SHA-256 checksum to the release.
+Images are published only for explicit releases, not ordinary commits. There
+is no moving `latest` tag; installation pins exact image digests.
+
+Download the Docker ZIP from Releases, extract it, copy `.env.example` to
+`.env`, set two different database passwords, then run:
+
+```sh
+docker compose pull
+docker compose up -d --wait
+```
+
+Open `http://localhost:3000`. No source build, Python or Node installation is
+needed. The ZIP includes `INSTALL.md`, Compose, the DB setup script, environment
+example and image manifest. PostgreSQL remains the official image; `volume-init`
+reuses the API image. This release currently supports x86-64/amd64 computers
+running Linux containers, including Docker Desktop.
+
+New GHCR packages may initially be private. The publisher can set each package
+to Public in its GitHub Package settings for anonymous pulls. Otherwise, use
+`docker login ghcr.io` with a GitHub token that has `read:packages` access.
+For updates, follow `INSTALL.md`: preserve `.env` passwords and project name,
+replace only the pinned image references, and keep named data volumes. Never
+use `down --volumes` during an update.
 
 `[SKIP]` skips verification while still allowing an explicitly requested
 release. GitHub's native `[skip ci]` marker suppresses push workflows, including
@@ -329,7 +354,10 @@ commit-triggered releases; use `[SKIP]` when combining these features.
 Ordinary commits and unmerged feature branches do not publish releases.
 Existing releases are left unchanged on retries, and existing tags are never
 moved to another commit. No extra secret is needed: publication uses the
-repository's built-in `GITHUB_TOKEN` with `contents: write` in the publish job.
+repository's built-in `GITHUB_TOKEN` with `contents: write` and `packages: write`
+in the publish job. A published release is skipped on retries; an interrupted
+draft upload can be repaired before publication. The exported Compose package
+is started against its published image digests on the CI runner before release.
 
 ### Version changes
 
