@@ -10,12 +10,47 @@ from app.schemas.job import (
     JobApplication,
     JobMatchAnalysis,
     JobStatus,
+    TailoringApplyRequest,
+    TailoringPlan,
     UpdateJobRequest,
 )
 from app.services.job_service import JobService
 from app.services.resume_service import ResumeService
 
 router = APIRouter(prefix="/jobs", tags=["Job Applications"])
+
+
+@router.post("/{job_id}/tailoring/{resume_id}", response_model=TailoringPlan)
+def plan_tailoring(job_id: str, resume_id: str, db: Session = Depends(get_db)):
+    from app.services.tailoring_service import tailoring_plan
+
+    return tailoring_plan(ResumeService.get_resume(db, resume_id), JobService.get_job(db, job_id))
+
+
+@router.post("/{job_id}/tailoring/{resume_id}/apply")
+def apply_tailoring(
+    job_id: str, resume_id: str, request: TailoringApplyRequest, db: Session = Depends(get_db)
+):
+    from app.core.exceptions import AppException
+    from app.schemas.resume import CreateResumeRequest
+    from app.services.tailoring_service import tailored_document
+
+    document = ResumeService.get_resume(db, resume_id)
+    job = JobService.get_job(db, job_id)
+    if document.metadata.revision != request.revision or job.updatedAt != request.jobUpdatedAt:
+        raise AppException(
+            "STALE_TAILORING_PLAN", "The CV or job changed. Generate a new plan.", 409
+        )
+    tailored = tailored_document(document, job, request.selected)
+    tailored.metadata.parentResumeId = document.metadata.id
+    return ResumeService.create_resume(
+        db,
+        CreateResumeRequest(
+            title=f"{document.metadata.title} — {job.company} / {job.position}",
+            initialData=tailored,
+            targetRole=job.position,
+        ),
+    )
 
 
 @router.get("", response_model=list[JobApplication])

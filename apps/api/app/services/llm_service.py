@@ -1,9 +1,7 @@
 """Explicit, optional model calls. Credentials never appear in public settings or backups."""
 
 import json
-import os
 import re
-import tempfile
 from pathlib import Path
 from threading import RLock
 from typing import Literal
@@ -14,6 +12,7 @@ from pydantic import BaseModel, Field, SecretStr, ValidationError, field_validat
 
 from app.core.config import settings
 from app.core.exceptions import AppException
+from app.core.secrets import decrypt_secret, local_cipher, private_write
 from app.rules.privacy import KVKKDataMinimizer
 from app.schemas.resume import ResumeDocument
 
@@ -63,12 +62,43 @@ class ConnectionUpdate(Connection):
 _lock = RLock()
 
 
+def secret_key_path() -> Path:
+    return (
+        Path(settings.ai_secret_key_path)
+        if settings.ai_secret_key_path
+        else Path(settings.ai_config_path).with_suffix(".key")
+    )
+
+
+def encrypted_settings(config: Connection) -> dict:
+    payload = config.model_dump(exclude={"apiKey"})
+    payload["encryptedApiKey"] = (
+        local_cipher(secret_key_path(), create=True)
+        .encrypt(config.apiKey.get_secret_value().encode())
+        .decode()
+        if config.apiKey and config.apiKey.get_secret_value()
+        else None
+    )
+    return payload
+
+
 def load_connection() -> Connection:
     with _lock:
         path = Path(settings.ai_config_path)
         if path.exists():
             try:
-                return Connection.model_validate_json(path.read_text(encoding="utf8"))
+                payload = json.loads(path.read_text(encoding="utf8"))
+                if not isinstance(payload, dict):
+                    raise ValueError("Expected settings object")
+                legacy_key = "apiKey" in payload
+                if payload.get("encryptedApiKey"):
+                    payload["apiKey"] = decrypt_secret(
+                        payload.pop("encryptedApiKey"), secret_key_path()
+                    )
+                config = Connection.model_validate(payload)
+                if legacy_key:
+                    private_write(path, encrypted_settings(config))
+                return config
             except (OSError, ValueError) as exc:
                 raise AppException(
                     "AI_CONFIG_INVALID",
@@ -88,7 +118,14 @@ def public_connection(config: Connection | None = None) -> dict:
 
 def save_connection(update: ConnectionUpdate) -> dict:
     with _lock:
-        old = load_connection()
+        try:
+            old = load_connection()
+        except AppException as exc:
+            if exc.code not in {"AI_SECRET_KEY_UNAVAILABLE", "AI_SECRET_INVALID"} or not (
+                update.apiKey or update.clearApiKey
+            ):
+                raise
+            old = Connection()
         key = update.apiKey
         # Never forward an existing key to a newly selected endpoint/provider.
         if (
@@ -105,17 +142,7 @@ def save_connection(update: ConnectionUpdate) -> dict:
         validate_gemini_connection(config)
         path = Path(settings.ai_config_path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        payload = config.model_dump(exclude={"apiKey"})
-        payload["apiKey"] = key.get_secret_value() if key else None
-        fd, temporary = tempfile.mkstemp(dir=path.parent, prefix=".ai-settings-", suffix=".tmp")
-        try:
-            with os.fdopen(fd, "w", encoding="utf8") as file:
-                json.dump(payload, file)
-            os.chmod(temporary, 0o600)
-            os.replace(temporary, path)
-        finally:
-            if os.path.exists(temporary):
-                os.unlink(temporary)
+        private_write(path, encrypted_settings(config))
         return public_connection(config)
 
 

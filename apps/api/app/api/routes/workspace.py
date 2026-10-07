@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr
 from sqlalchemy.orm import Session
 
 from app.db.models import (
@@ -70,6 +70,49 @@ class Backup(BaseModel):
     library: list[LibrarySnippet] = Field(default_factory=list)
     history: list[HistoryEntry] = Field(default_factory=list)
     snapshots: list[SnapshotEntry] = Field(default_factory=list)
+
+
+class BackupPassword(BaseModel):
+    password: SecretStr = Field(min_length=12, max_length=1024)
+
+
+class EncryptedRestore(BackupPassword):
+    envelope: dict
+
+
+@router.post("/backup/encrypted")
+def encrypted_backup(request: BackupPassword, db: Session = Depends(get_db)):
+    from fastapi import Response
+
+    from app.core.secrets import encrypt_backup
+
+    envelope = encrypt_backup(
+        backup(db).model_dump_json().encode(), request.password.get_secret_value()
+    )
+    from app.core.config import settings
+    from app.core.exceptions import AppException
+
+    content = json.dumps(envelope)
+    if (
+        len(content.encode()) + len(request.password.get_secret_value().encode()) + 64
+        > settings.max_upload_size_bytes
+    ):
+        raise AppException(
+            "BACKUP_TOO_LARGE",
+            "Encrypted backup exceeds the restore size limit. Increase MAX_UPLOAD_SIZE_BYTES before creating this backup.",
+            413,
+        )
+    return Response(content, media_type="application/json", headers={"Cache-Control": "no-store"})
+
+
+@router.post("/restore/encrypted")
+def encrypted_restore(request: EncryptedRestore, db: Session = Depends(get_db)):
+    from app.core.secrets import decrypt_backup
+
+    data = Backup.model_validate_json(
+        decrypt_backup(request.envelope, request.password.get_secret_value())
+    )
+    return restore(data, db)
 
 
 @router.get("/backup", response_model=Backup)

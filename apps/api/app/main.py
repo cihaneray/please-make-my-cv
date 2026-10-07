@@ -94,6 +94,7 @@ def health():
         "app": settings.app_name,
         "env": settings.app_env,
         "rulesLoaded": len(default_rule_registry.list_rules()),
+        "maxUploadSizeBytes": settings.max_upload_size_bytes,
     }
 
 

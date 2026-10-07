@@ -1,4 +1,7 @@
 services:
+  volume-init:
+    volumes:
+      - web_dev_cache:/web-cache
   api:
     build:
       target: development
@@ -28,5 +31,8 @@ services:
       - ./apps/web/tailwind.config.ts:/app/tailwind.config.ts:ro
       - ./apps/web/postcss.config.js:/app/postcss.config.js:ro
       - web_dev_cache:/app/.next
+    depends_on:
+      volume-init:
+        condition: service_completed_successfully
 volumes:
   web_dev_cache:

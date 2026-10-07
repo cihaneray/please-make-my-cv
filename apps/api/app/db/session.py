@@ -1,16 +1,27 @@
 from collections.abc import Generator
 
-from sqlalchemy import create_engine
+from sqlalchemy import URL, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import settings
 
 connect_args = {}
-if settings.database_url.startswith("sqlite"):
+if not settings.database_user and settings.database_url.startswith("sqlite"):
     connect_args["check_same_thread"] = False
 
+database_url = (
+    URL.create(
+        "postgresql+psycopg2",
+        username=settings.database_user,
+        password=settings.database_password,
+        host=settings.database_host,
+        database=settings.database_name,
+    )
+    if settings.database_user
+    else settings.database_url
+)
 engine = create_engine(
-    settings.database_url,
+    database_url,
     connect_args=connect_args,
     pool_pre_ping=True,
     echo=False,

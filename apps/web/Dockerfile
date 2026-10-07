@@ -1,24 +1,27 @@
-FROM node:20-alpine AS dependencies
+FROM node:24.21.0-alpine3.23 AS dependencies
 
 WORKDIR /app
+RUN addgroup -g 10001 app && adduser -D -u 10001 -G app app && chown app:app /app
 
-COPY package*.json ./
-RUN --mount=type=cache,target=/root/.npm npm ci
+COPY --chown=app:app package*.json ./
+USER app
+RUN --mount=type=cache,target=/home/app/.npm,uid=10001,gid=10001 npm ci \
+    && rm -rf node_modules/@next/swc-linux-x64-gnu node_modules/@next/swc-linux-arm64-gnu
 
 FROM dependencies AS development
-COPY . .
+COPY --chown=app:app . .
 ENV NEXT_TELEMETRY_DISABLED=1
 CMD ["npm", "run", "dev", "--", "--hostname", "0.0.0.0", "--webpack"]
 
 FROM dependencies AS builder
 
-COPY . .
+COPY --chown=app:app . .
 ARG API_INTERNAL_URL=http://127.0.0.1:8000
 ENV API_INTERNAL_URL=$API_INTERNAL_URL
 ENV CV_STANDALONE=1
 RUN npm run build
 
-FROM node:20-alpine AS runner
+FROM node:24.21.0-alpine3.23 AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -26,8 +29,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+RUN addgroup -g 10001 app && adduser -D -u 10001 -G app app \
+    && chown app:app /app && rm -rf /usr/local/lib/node_modules/npm /opt/yarn*
+COPY --from=builder --chown=app:app /app/.next/standalone ./
+COPY --from=builder --chown=app:app /app/.next/static ./.next/static
+USER app
 
 EXPOSE 3000
 

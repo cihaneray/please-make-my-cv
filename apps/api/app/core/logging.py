@@ -36,4 +36,6 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             f'{{"request_id": "{request_id}", "method": "{request.method}", "path": "{request.url.path}", "status": {response.status_code}, "latency_ms": {duration_ms}}}'
         )
         response.headers["X-Request-ID"] = request_id
+        response.headers.setdefault("Cache-Control", "no-store")
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
         return response

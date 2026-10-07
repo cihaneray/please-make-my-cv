@@ -45,6 +45,20 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  planTailoring: (jobId: string, resumeId: string) =>
+    fetchJson<import("./types").TailoringPlan>(
+      `${API_BASE}/jobs/${jobId}/tailoring/${resumeId}`,
+      { method: "POST" },
+    ),
+  applyTailoring: (
+    jobId: string,
+    resumeId: string,
+    request: import("./types").TailoringApplyRequest,
+  ) =>
+    fetchJson<ResumeDocument>(
+      `${API_BASE}/jobs/${jobId}/tailoring/${resumeId}/apply`,
+      { method: "POST", body: JSON.stringify(request) },
+    ),
   workspaceMetrics: () =>
     fetchJson<{
       atsAverage: number | null;

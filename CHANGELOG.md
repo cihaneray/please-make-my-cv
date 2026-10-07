@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — local security and job tailoring
+
+- Added evidence-based job tailoring that reorders selected existing bullets in a new CV copy, with revision and job-change checks.
+- Added encrypted AI credential storage with legacy migration and optional password-protected workspace backups.
+- Updated Next.js and vulnerable production transitive dependencies; switched Docker Node runtime to supported Node 24 LTS.
+- Added browser security headers, non-root services and a restricted PostgreSQL application role with safe existing-volume setup.
+- Reduced production API runtime contents, removed unused Chromium fonts/Xvfb and excluded glibc SWC binaries from Alpine web images.
+
 ## Unreleased
 
 - Add editable DOCX downloads from the current CV draft, using preview content and template styling; group PDF and Word exports in a keyboard-accessible Download menu.
