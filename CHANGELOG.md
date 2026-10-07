@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased — release automation
+
+- Publish GitHub Releases from explicit `[RELEASE:vMAJOR.MINOR.PATCH]` commit markers on main or pushed version tags, with generated notes, prerelease support and idempotent retries.
+
 ## Unreleased — local security and job tailoring
 
 - Added evidence-based job tailoring that reorders selected existing bullets in a new CV copy, with revision and job-change checks.

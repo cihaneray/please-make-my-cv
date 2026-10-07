@@ -304,6 +304,33 @@ head commit message first. GitHub may still show a skipped workflow run;
 use its native `[skip ci]` marker to prevent the workflow run entirely.
 
 
+## GitHub Releases
+
+The release workflow publishes a GitHub Release in either of two ways:
+
+- Push a commit to `main` whose message contains `[RELEASE:v1.2.3]`.
+  Example: `feat(export): improve Word layout [RELEASE:v1.2.3] [SKIP]`.
+  For a PR, keep the marker in the resulting merge/squash commit message.
+- Push a version tag pointing to a commit already merged into `main`:
+
+  ```sh
+  git tag -a v1.2.3 -m "Release v1.2.3"
+  git push origin v1.2.3
+  ```
+
+Versions use `vMAJOR.MINOR.PATCH`; a suffix such as `v1.2.3-beta.1` publishes
+a prerelease. Commit-triggered releases create the version tag on that exact
+commit. GitHub generates release notes and source ZIP/tar downloads. This
+workflow does not build application installers or Docker images.
+
+`[SKIP]` skips verification while still allowing an explicitly requested
+release. GitHub's native `[skip ci]` marker suppresses push workflows, including
+commit-triggered releases; use `[SKIP]` when combining these features.
+Ordinary commits and unmerged feature branches do not publish releases.
+Existing releases are left unchanged on retries, and existing tags are never
+moved to another commit. No extra secret is needed: publication uses the
+repository's built-in `GITHUB_TOKEN` with `contents: write` in the publish job.
+
 ## LLM resume reviews
 
 Open **Settings → LLM connection**. Choose **OpenAI-compatible** (base URL ending in `/v1`, model ID, and API key if required), **Google Gemini** (Gemini Developer API key and model ID from [Google AI Studio](https://aistudio.google.com/)), or **Ollama** (`http://localhost:11434`, with an already downloaded model). Enable AI, save, then use **Test saved connection**. The test makes a small model request without resume content and may incur a provider charge.
@@ -314,7 +341,7 @@ Gemini uses the native [generateContent API](https://ai.google.dev/api/generate-
 
 OpenAI-compatible and Ollama connections support JSON-mode Chat Completions as documented by [OpenAI](https://developers.openai.com/api/docs/guides/structured-outputs) and [Ollama](https://docs.ollama.com/api/openai-compatibility). The selected model must support JSON output. No real provider is enabled automatically. Basic summary/bullet cleanup remains local.
 
-Credentials are stored only on the API host in `data/ai-settings.json` (override `AI_CONFIG_PATH`), excluded from backups and source control. Protect this file: it is not encrypted by the application. For Docker, settings persist in the `ai_settings` volume; host Ollama is reachable using `http://host.docker.internal:11434` if Ollama accepts the connection. Remote APIs require HTTPS. These settings endpoints are for the local single-user deployment only.
+Credentials are stored only on the API host in `data/ai-settings.json` (override `AI_CONFIG_PATH`), encrypted using the separate local key described under Editing and data safety, and excluded from backups and source control. For Docker, settings persist in the `ai_settings` volume and the key in `ai_secrets`; host Ollama is reachable using `http://host.docker.internal:11434` if Ollama accepts the connection. Remote APIs require HTTPS. These settings endpoints are for the local single-user deployment only.
 
 ## PDF browser troubleshooting
 
