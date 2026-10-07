@@ -55,6 +55,9 @@ class ConversionService:
             else:
                 detected_format = DataFormat.YAML
 
+        if detected_format == DataFormat.DOCX:
+            return None, DataFormat.DOCX, [], ["DOCX is an export-only format."]
+
         if detected_format == DataFormat.JSON:
             doc, warnings, errors = JsonParser.parse(content)
             return doc, DataFormat.JSON, warnings, errors
@@ -83,6 +86,14 @@ class ConversionService:
             from app.exporters.pdf_exporter import render_pdf
 
             return render_pdf(doc), "application/pdf", f"{base_name}.pdf"
+        elif target_format == DataFormat.DOCX:
+            from app.exporters.docx_exporter import render_docx
+
+            return (
+                render_docx(doc),
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                f"{base_name}.docx",
+            )
         elif target_format == DataFormat.HTML:
             html_text = HtmlPdfExporter.render_html(doc)
             return html_text, "text/html", f"{base_name}.html"

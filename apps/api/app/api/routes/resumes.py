@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -146,13 +148,13 @@ def preview_draft(resume_id: str, document: ResumeDocument):
 
 
 @router.post("/{resume_id}/export")
-def export_draft(resume_id: str, document: ResumeDocument):
+def export_draft(resume_id: str, document: ResumeDocument, format: Literal["pdf", "docx"] = "pdf"):
     from fastapi import Response
 
     from app.schemas.import_export import DataFormat
     from app.services.conversion_service import ConversionService
 
-    content, mime, filename = ConversionService.export(document, DataFormat.PDF)
+    content, mime, filename = ConversionService.export(document, DataFormat(format))
     return Response(
         content,
         media_type=mime,
