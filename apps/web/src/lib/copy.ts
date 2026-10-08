@@ -1,6 +1,90 @@
 "use client";
 import { useI18n } from "./i18n";
 export const copyTranslations: Record<string, string> = {
+  "Apply suggestion": "Öneriyi uygula",
+  "Skip suggestion": "Öneriyi atla",
+  "Undo this suggestion": "Uygulamayı geri al",
+  "Show skipped suggestion": "Öneriyi yeniden göster",
+  "Suggestion skipped.": "Öneri atlandı.",
+  "Applied to draft.": "Taslağa uygulandı.",
+  After: "Önerilen metin",
+  Evidence: "Dayanak",
+  "(Empty field)": "(Boş alan)",
+  "high priority": "Yüksek öncelik",
+  "medium priority": "Orta öncelik",
+  "low priority": "Düşük öncelik",
+  "Verify every claim before applying. This changes the draft; use Save Draft to keep it.":
+    "Uygulamadan önce bilgileri doğrulayın. Öneri taslağı değiştirir; kalıcı olması için Taslağı Kaydet'i kullanın.",
+  "This field changed since the review. Run a new review to avoid overwriting your edits.":
+    "Bu alan incelemeden sonra değişti. Düzenlemeleriniz korunuyor; güncel öneri için yeniden inceleme yapın.",
+  "Advice only: no safe field replacement was identified.":
+    "Bu bir tavsiyedir. Güvenli bir alan değişikliği belirlenemediği için otomatik uygulanmaz.",
+  "Download a backup": "Yedek indir",
+  "Restore a backup": "Yedeği geri yükle",
+  "Choose a JSON backup. For an encrypted backup, enter its password in the password field.":
+    "JSON yedek dosyasını seçin. Şifreli yedek için parola alanına yedeğin parolasını girin.",
+  "Add the backup contents as new records? Existing records will remain unchanged.":
+    "Yedek içeriği yeni kayıtlar olarak eklensin mi? Mevcut kayıtlar korunacaktır.",
+  "Local rule checks": "Yerel kural kontrolleri",
+  "Rule findings": "Yerel kural bulguları",
+  "How are these scores calculated?": "Bu puanlar nasıl hesaplanıyor?",
+  "These checks run locally without AI. They check document structure, contact details, duplicate or long bullets and other predefined rules. AI wording suggestions above are separate.":
+    "Bu kontroller yapay zeka kullanmadan yerelde çalışır. Belge düzeni, iletişim bilgileri, tekrarlanan veya uzun maddeler ve tanımlı diğer kurallar kontrol edilir. Yukarıdaki AI metin önerileri ayrı bir değerlendirmedir.",
+  "ATS score = earned points ÷ 80 × 100. Job relevance is excluded here. Missing email subtracts 10 contact points; missing phone subtracts 5. Other rule findings reduce their related dimension.":
+    "ATS puanı = kazanılan puan ÷ 80 × 100. İlanla uyum burada puanlanmaz. Eksik e-posta iletişimden 10, eksik telefon 5 puan düşürür. Diğer kural bulguları ilgili boyutun puanını azaltır.",
+  "Content quality starts at 100 and deducts 15/10/5/2 for critical/important/warning/info findings in experience, projects or summary. A score of 100 only means these rules found no issues; it does not mean the text cannot be improved.":
+    "İçerik kalitesi 100'den başlar; deneyim, proje veya özetteki kritik/önemli/uyarı/bilgi bulguları için sırasıyla 15/10/5/2 puan düşülür. 100 puan yalnızca bu kuralların sorun bulmadığını belirtir; metnin geliştirilemeyeceği anlamına gelmez.",
+  "No local rule findings. AI may still suggest wording improvements or ask for missing context.":
+    "Yerel kurallarda bulgu yok. AI yine de metin iyileştirmeleri önerebilir veya eksik bağlam hakkında soru sorabilir.",
+  "Internal document heuristic. Job relevance is not assessed here; use Jobs to compare a specific description. Not an external ATS endorsement.":
+    "Uygulamanın yerel belge kontrolüdür. İlanla uyum için Hedef İlanlar'da eşleştirme yapın. Harici bir ATS onayı değildir.",
+  Cancel: "İptal",
+  "AI editorial score": "Yapay zeka değerlendirme puanı",
+  clarity: "Anlaşılırlık",
+  evidence: "Kanıtlar",
+  completeness: "Bütünlük",
+  relevance: "İlanla uyum",
+  Strengths: "Güçlü yönler",
+  "Recommended improvements": "İyileştirme önerileri",
+  "Details to add or verify": "Eklenecek veya doğrulanacak bilgiler",
+  "Add a target job to assess relevance.":
+    "İlanla uyumu değerlendirmek için hedef ilan ekleyin.",
+  "Draft or review options changed. Run a new review for an updated score.":
+    "Taslak veya inceleme seçenekleri değişti. Güncel puan için yeniden inceleme yapın.",
+  "Overall = earned points ÷ assessed maximum × 100. Without a target job, relevance is excluded.":
+    "Toplam = kazanılan puan ÷ değerlendirilen en yüksek puan × 100. Hedef ilan yoksa ilanla uyum puanlamaya dahil edilmez.",
+  "AI resume coach": "Yapay zeka ile CV incelemesi",
+  "Get an explained score, strengths, gaps, and suggested wording for this draft. Suggestions never change your resume automatically.":
+    "Taslağınızın güçlü yönlerini, eksiklerini ve metin önerilerini gerekçeli bir puanla inceleyin. Öneriler yalnızca onayladığınızda uygulanır.",
+  "Review sends career content to the configured provider. Contact fields are omitted; free text may still identify you.":
+    "İnceleme, kariyer içeriğini seçtiğiniz sağlayıcıya gönderir. İletişim alanları çıkarılır; serbest metinde kişisel bilgiler bulunabilir.",
+  "Target job description (optional)": "Hedef ilan açıklaması (isteğe bağlı)",
+  "Feedback language": "Değerlendirme dili",
+  "Review current draft with AI": "Taslağı yapay zeka ile incele",
+  "Reviewing…": "İnceleniyor…",
+  "Review could not be completed": "İnceleme tamamlanamadı",
+  "The AI provider's request limit or quota was reached. Wait and try again, or check your quota in the provider dashboard.":
+    "Yapay zeka sağlayıcısının istek sınırına veya kotasına ulaşıldı. Bir süre sonra tekrar deneyin ya da sağlayıcı panelinden kotanızı kontrol edin.",
+  "The AI provider is temporarily unavailable. Try again shortly.":
+    "Yapay zeka sağlayıcısına geçici olarak erişilemiyor. Biraz sonra tekrar deneyin.",
+  "The AI provider did not respond in time. Try again or select a faster model in Settings.":
+    "Yapay zeka sağlayıcısı zamanında yanıt vermedi. Tekrar deneyin veya Ayarlar'dan daha hızlı bir model seçin.",
+  "Job-specific resume copy": "İlana özel CV kopyası",
+  "Create a separate copy of this draft for a target job, then review and accept tailored suggestions in the copy. Your original and job tracker links stay unchanged.":
+    "Hedef ilan için taslağınızın ayrı bir kopyasını oluşturun ve önerileri bu kopyada değerlendirin. Asıl CV ve ilan bağlantıları korunur.",
+  "Use a saved job": "Kayıtlı ilan kullan",
+  "Enter manually": "Elle gir",
+  "Target company": "Hedef şirket",
+  "Target role": "Hedef pozisyon",
+  "Uses the target job description below. A role and description are required.":
+    "Aşağıdaki ilan açıklaması kullanılır. Kopya oluşturmak için pozisyon ve açıklama gereklidir.",
+  "Creating copy…": "Kopya oluşturuluyor…",
+  "Create job-specific copy": "İlana özel kopya oluştur",
+  "AI enabled": "Yapay zeka etkin",
+  "AI disabled": "Yapay zeka kapalı",
+  "Gemini API key": "Gemini API anahtarı",
+  "Saved keys are encrypted on the backend and excluded from workspace backups. Leave the key field blank to keep it. Changing provider or URL clears the old key unless you enter a replacement. In Docker, use http://host.docker.internal:11434 for host Ollama.":
+    "Kayıtlı anahtarlar API'de şifrelenir ve çalışma alanı yedeklerine eklenmez. Korumak için anahtar alanını boş bırakın. Sağlayıcı veya adres değiştiğinde yeni anahtar girilmezse eskisi silinir. Docker'da bilgisayarınızdaki Ollama için http://host.docker.internal:11434 kullanın.",
   "Maximum backup size": "En büyük yedek boyutu",
   "Tailor CV to this job": "İlana göre CV düzenleme",
   "Highlight existing evidence in a new CV copy. No skills or achievements are invented; the original stays unchanged.":
@@ -472,3 +556,32 @@ export function useCopy() {
   return (text: string) =>
     language === "tr" ? copyTranslations[text] || text : text;
 }
+Object.assign(copyTranslations, {
+  "Your career archive": "Kariyer arşiviniz",
+  "Search and filter snippets": "Maddeleri ara ve filtrele",
+  "Keep verified achievements here, then reuse them in your resumes.":
+    "Doğrulanmış başarılarınızı burada saklayın, özgeçmişlerinizde yeniden kullanın.",
+  "e.g. Reduced API response time": "Örn. API yanıt süresini azalttım",
+  "e.g. Backend development": "Örn. Backend geliştirme",
+  "Describe what you did, how you did it, and the measurable result.":
+    "Ne yaptığınızı, nasıl yaptığınızı ve ölçülebilir sonucunu yazın.",
+  "Alternative wording": "Alternatif anlatımlar",
+  "Optional versions of the same achievement. Add only details you can verify.":
+    "Aynı başarının isteğe bağlı anlatımları. Yalnızca doğrulayabileceğiniz ayrıntıları ekleyin.",
+  "Emphasize the tools, methods, and technical impact.":
+    "Araçları, yöntemleri ve teknik etkiyi öne çıkarın.",
+  "Summarize the achievement in one short sentence.":
+    "Başarıyı kısa bir cümlede özetleyin.",
+  "Separate tags with commas. Use them to find this achievement later.":
+    "Etiketleri virgülle ayırın. Bu maddeyi daha sonra bulmak için kullanın.",
+  "Loading snippets…": "Maddeler yükleniyor…",
+  "Could not save the snippet.": "Madde kaydedilemedi.",
+  "Enter an achievement before saving.":
+    "Kaydetmeden önce başarı maddesini yazın.",
+  "Career Achievement": "Kariyer başarısı",
+  "Delete snippet": "Maddeyi sil",
+  "Delete this career snippet from the library?":
+    "Bu kariyer maddesi kütüphaneden silinsin mi?",
+  technical: "Teknik",
+  concise: "Kısa",
+});

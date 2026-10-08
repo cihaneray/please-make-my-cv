@@ -53,6 +53,7 @@ def test_native_gemini_review_and_connection_test(client, monkeypatch):
         calls.append(content)
         result = {"ok": True}
         if "resume" in content:
+            assert "summary" in body["generationConfig"]["responseJsonSchema"]["required"]
             assert "private@example.com" not in json.dumps(content)
             assert "PrivateName" not in json.dumps(content)
             result = feedback()
@@ -180,3 +181,92 @@ def test_switching_to_gemini_never_reuses_other_provider_key(client):
     assert response.json()["error"]["code"] == "AI_KEY_REQUIRED"
     # Failed validation must not replace the previous connection.
     assert llm.load_connection().provider == "openai-compatible"
+
+
+def test_gemini_retries_temporary_unavailability_then_succeeds(monkeypatch):
+    configure_gemini()
+    calls = []
+    delays = []
+
+    def handle(request):
+        calls.append(request)
+        if len(calls) < 3:
+            return httpx.Response(503, text="private-provider-details")
+        return httpx.Response(
+            200,
+            json={
+                "candidates": [
+                    {"finishReason": "STOP", "content": {"parts": [{"text": '{"ok": true}'}]}}
+                ]
+            },
+        )
+
+    mock_transport(monkeypatch, handle)
+    monkeypatch.setattr(llm.time, "sleep", delays.append)
+    assert llm.completion("Return JSON", {}) == {"ok": True}
+    assert len(calls) == 3
+    assert delays == [1, 2]
+
+
+def test_gemini_retry_limit_and_timeout_are_safe(monkeypatch):
+    configure_gemini()
+    calls = []
+    timeout = False
+    monkeypatch.setattr(llm.time, "sleep", lambda delay: None)
+
+    def unavailable(request):
+        calls.append(request)
+        if timeout:
+            raise httpx.ReadTimeout("private network details", request=request)
+        return httpx.Response(503, text="gemini-secret private-provider-details")
+
+    mock_transport(monkeypatch, unavailable)
+    with pytest.raises(AppException) as error:
+        llm.completion("Return JSON", {})
+    assert len(calls) == 3
+    assert "temporarily unavailable" in error.value.message
+    assert "gemini-secret" not in error.value.message
+    calls.clear()
+    timeout = True
+    with pytest.raises(AppException) as error:
+        llm.completion("Return JSON", {})
+    assert error.value.code == "AI_TIMEOUT"
+    assert len(calls) == 1
+
+
+def test_gemini_cover_letter_uses_text_schema(client, monkeypatch):
+    configure_gemini()
+
+    def handle(request):
+        body = json.loads(request.content)
+        schema = body["generationConfig"]["responseJsonSchema"]
+        assert schema["required"] == ["text"]
+        return httpx.Response(
+            200,
+            json={
+                "candidates": [
+                    {
+                        "finishReason": "STOP",
+                        "content": {
+                            "parts": [
+                                {
+                                    "text": json.dumps(
+                                        {"text": "Sayın ekip, Python deneyimimle başvuruyorum."}
+                                    )
+                                }
+                            ]
+                        },
+                    }
+                ]
+            },
+        )
+
+    mock_transport(monkeypatch, handle)
+    doc = client.post("/api/resumes", json={}).json()
+    job = client.post("/api/jobs", json={"company": "Example", "position": "Engineer"}).json()
+    response = client.post(
+        f"/api/jobs/{job['id']}/cover-letter",
+        json={"resumeId": doc["metadata"]["id"], "language": "tr", "useAI": True},
+    )
+    assert response.status_code == 200
+    assert response.json()["source"] == "ai"

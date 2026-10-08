@@ -6,6 +6,7 @@ import { WorkspaceBackup } from "@/components/WorkspaceBackup";
 import { Icons } from "@/components/Icons";
 import { useI18n } from "@/lib/i18n";
 import { useCopy } from "@/lib/copy";
+import { version } from "../../../package.json";
 export default function SettingsPage() {
   const { language, setLanguage, t } = useI18n();
   const copy = useCopy();
@@ -70,7 +71,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between text-[11px] text-secondary px-1 pt-1">
                 <span>{t("systemStatus")}</span>
                 <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-surface-container">
-                  v1.0.0
+                  v{version}
                 </span>
               </div>
             </div>

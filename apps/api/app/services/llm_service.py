@@ -2,6 +2,7 @@
 
 import json
 import re
+import time
 from pathlib import Path
 from threading import RLock
 from typing import Literal
@@ -210,12 +211,19 @@ def gemini_text(data: dict) -> str:
     return text
 
 
-def completion(system: str, payload: dict, config: Connection | None = None) -> dict:
+def completion(
+    system: str,
+    payload: dict,
+    config: Connection | None = None,
+    response_schema: dict | None = None,
+) -> dict:
     config = config or load_connection()
     if not config.enabled or not config.model.strip():
         raise AppException("AI_DISABLED", "Configure and enable an LLM in Settings first.", 409)
     if config.provider == "gemini":
         url, headers, body = gemini_request(system, payload, config)
+        if response_schema is not None:
+            body["generationConfig"]["responseJsonSchema"] = response_schema
     else:
         base = config.baseUrl
         if config.provider == "ollama" and not base.endswith("/v1"):
@@ -236,7 +244,24 @@ def completion(system: str, payload: dict, config: Connection | None = None) -> 
         }
     try:
         with httpx.Client(timeout=httpx.Timeout(90, connect=10), follow_redirects=False) as client:
-            response = client.post(url, headers=headers, json=body)
+            deadline = time.monotonic() + 90
+            for attempt in range(3):
+                remaining = max(0.1, deadline - time.monotonic())
+                response = client.post(
+                    url,
+                    headers=headers,
+                    json=body,
+                    timeout=httpx.Timeout(remaining, connect=min(10, remaining)),
+                )
+                # Retry only a rejected, temporarily unavailable request, never a timeout.
+                delay = 2**attempt
+                if (
+                    response.status_code != 503
+                    or attempt == 2
+                    or deadline - time.monotonic() <= delay
+                ):
+                    break
+                time.sleep(delay)
             response.raise_for_status()
             if config.provider == "gemini":
                 text = gemini_text(response.json())
@@ -264,6 +289,10 @@ def completion(system: str, payload: dict, config: Connection | None = None) -> 
         )
         if config.provider == "gemini" and status == 400:
             hint = "Check the Gemini API key, model ID, and request support."
+        elif status == 503:
+            hint = "The model service is temporarily unavailable or overloaded. Try again shortly."
+        elif status == 429:
+            hint = "The provider request limit or quota was reached. Wait and try again, or check your provider quota."
         raise AppException(
             "AI_PROVIDER_ERROR", f"Model server returned HTTP {status}. {hint}", 502
         ) from exc
@@ -371,6 +400,7 @@ def review_resume(document: ResumeDocument, job_description: str, language: str)
     fields = editable_fields(document)
     prompt = (
         SYSTEM
+        + " Do not introduce a technical method (such as indexing), tool, scale, seniority, or achievement that the resume does not explicitly state. Ask about missing details in advice/questions instead. In suggestedText, rewrite only supplied facts; omit an uncertain replacement rather than filling gaps. "
         + """ Score each dimension from 0 to 25 (0 absent, 10 weak, 18 solid, 25 excellent): clarity of wording/structure; evidence supporting impact; completeness appropriate to career stage; relevance to the supplied target job. If no job is supplied, relevance MUST be null. Each dimension has score and rationale. Include summary, strengths (strings), recommendations (section, priority high/medium/low, evidence quoted from input or explicit missing field, advice, suggestedText), questions (strings). For a direct replacement of one supplied editableFields value, return its fieldId and suggestedText containing the COMPLETE replacement field. Use an empty fieldId for general advice, new entries, or uncertain targets. Never combine multiple bullets in one replacement. Follow this JSON schema: """
         + json.dumps(ReviewContent.model_json_schema())
     )
@@ -394,7 +424,7 @@ def review_resume(document: ResumeDocument, job_description: str, language: str)
             "The review input is too large. Shorten the resume or job description.",
             422,
         )
-    raw = completion(prompt, payload, config)
+    raw = completion(prompt, payload, config, ReviewContent.model_json_schema())
     try:
         result = ReviewContent.model_validate(raw)
     except ValidationError as exc:
@@ -415,7 +445,11 @@ def review_resume(document: ResumeDocument, job_description: str, language: str)
         after = recommendation["suggestedText"]
         recommendation["edit"] = (
             {**field, "after": after, "documentId": document.metadata.id}
-            if field and after.strip() and after != field["before"]
+            if field
+            and field["before"].strip()
+            and after.strip()
+            and not re.search(r"\[[^\]]+\]|<[^>]+>", after)
+            and after != field["before"]
             else None
         )
     return {

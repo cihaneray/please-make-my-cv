@@ -20,6 +20,12 @@ def cover_letter(
                 "position": job.position,
                 "language": language,
             },
+            None,
+            {
+                "type": "object",
+                "properties": {"text": {"type": "string", "minLength": 1, "maxLength": 20000}},
+                "required": ["text"],
+            },
         )
         text = raw.get("text")
         if not isinstance(text, str) or not text.strip() or len(text) > 20000:

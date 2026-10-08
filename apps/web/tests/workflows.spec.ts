@@ -995,6 +995,76 @@ test("AI edits follow stable entry IDs and reject changed or missing fields", as
   ).toBe(doc);
 });
 
+test("Turkish suggestion actions stay separated and support skip, apply, undo and a tab icon", async ({
+  page,
+  request,
+}) => {
+  let doc = await create(request);
+  doc.summary = "Built reliable services.";
+  doc = await (
+    await request.put(`http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`, {
+      data: { revision: doc.metadata.revision, document: doc },
+    })
+  ).json();
+  await mockCoach(page, doc.metadata.id);
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page.getByRole("button", { name: "Türkçeye geç", exact: true }).click();
+  await page.getByRole("button", { name: "İnceleme", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Taslağı yapay zeka ile incele", exact: true })
+    .click();
+  const suggestion = page.getByRole("article", { name: "Özet" });
+  await expect(
+    suggestion.getByRole("heading", { name: "Önce", exact: true }),
+  ).toBeVisible();
+  for (const width of [1280, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect
+      .poll(async () => {
+        const apply = await suggestion
+          .getByRole("button", { name: "Öneriyi uygula", exact: true })
+          .boundingBox();
+        const skip = await suggestion
+          .getByRole("button", { name: "Öneriyi atla", exact: true })
+          .boundingBox();
+        if (!apply || !skip) return false;
+        const sameRow = Math.abs(skip.y - apply.y) < 1;
+        return (
+          apply.height >= 44 &&
+          (!sameRow || Math.abs(skip.height - apply.height) < 1) &&
+          (skip.x >= apply.x + apply.width + 8 ||
+            skip.y >= apply.y + apply.height + 8)
+        );
+      })
+      .toBe(true);
+  }
+  await suggestion
+    .getByRole("button", { name: "Öneriyi atla", exact: true })
+    .click();
+  await expect(
+    suggestion.getByText("Öneri atlandı.", { exact: true }),
+  ).toBeVisible();
+  await suggestion
+    .getByRole("button", { name: "Öneriyi yeniden göster", exact: true })
+    .click();
+  await suggestion
+    .getByRole("button", { name: "Öneriyi uygula", exact: true })
+    .click();
+  await expect(suggestion.getByRole("status")).toHaveText("Taslağa uygulandı.");
+  await suggestion
+    .getByRole("button", { name: "Uygulamayı geri al", exact: true })
+    .click();
+  await expect(
+    suggestion.getByRole("button", { name: "Öneriyi uygula", exact: true }),
+  ).toBeEnabled();
+  const href = await page.locator('link[rel="icon"]').getAttribute("href");
+  const icon = await request.get(href!);
+  expect(icon.ok()).toBeTruthy();
+  expect(icon.headers()["content-type"]).toContain("image/svg+xml");
+  await suggestion.screenshot({ path: "test-results/suggestion-card.png" });
+});
+
 test("Gemini can be configured and tested without exposing the stored key", async ({
   page,
 }) => {
@@ -1055,4 +1125,84 @@ test("Gemini can be configured and tested without exposing the stored key", asyn
     "gemini",
   );
   await expect(page.getByLabel("Gemini API key")).toHaveValue("");
+});
+
+test("career library form preserves variants and fits mobile", async ({
+  page,
+  request,
+}) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto("/library");
+  await page.getByRole("button", { name: "Add Snippet", exact: true }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(
+    page.getByRole("textbox", { name: "Snippet title", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Add Snippet", exact: true }),
+  ).toBeFocused();
+  await page.getByRole("button", { name: "Add Snippet", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "Snippet title", exact: true })
+    .fill("Library layout QA");
+  await page
+    .getByRole("textbox", { name: "Achievement", exact: true })
+    .fill("Reduced response time by 35%.");
+  await page
+    .getByRole("textbox", { name: "Technical variant (optional)", exact: true })
+    .fill("Reduced response time by 35% using PostgreSQL indexes.");
+  await page
+    .getByRole("textbox", { name: "Concise variant (optional)", exact: true })
+    .fill("Improved response time by 35%.");
+  await page
+    .getByRole("textbox", { name: "Tags", exact: true })
+    .fill("UniqueLibrarySearchTag");
+  await page.screenshot({
+    path: "test-results/library-desktop.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(390);
+  const category = await page
+    .getByRole("textbox", { name: "Category", exact: true })
+    .boundingBox();
+  expect(category!.height).toBeGreaterThanOrEqual(44);
+  await page.screenshot({
+    path: "test-results/library-mobile.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Save Snippet", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const card = page
+    .locator(".library-snippet-card")
+    .filter({ hasText: "Library layout QA" });
+  await expect(card).toBeVisible();
+  await card.getByRole("button", { name: "Edit snippet", exact: true }).click();
+  await expect(
+    page.getByRole("textbox", {
+      name: "Technical variant (optional)",
+      exact: true,
+    }),
+  ).toHaveValue("Reduced response time by 35% using PostgreSQL indexes.");
+  await page
+    .getByRole("textbox", { name: "Achievement", exact: true })
+    .fill("Reduced response time by 40%.");
+  await page.getByRole("button", { name: "Save Snippet", exact: true }).click();
+  await expect(
+    card.getByText("Reduced response time by 40%.", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("searchbox").fill("UniqueLibrarySearchTag");
+  await expect(card).toBeVisible();
+  const records = await (
+    await request.get("http://127.0.0.1:8101/api/library")
+  ).json();
+  const record = records.find(
+    (item: any) => item.title === "Library layout QA",
+  );
+  expect(record.variants).toHaveLength(2);
+  await request.delete(`http://127.0.0.1:8101/api/library/${record.id}`);
 });
