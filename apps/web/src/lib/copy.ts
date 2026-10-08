@@ -1,6 +1,11 @@
 "use client";
 import { useI18n } from "./i18n";
 export const copyTranslations: Record<string, string> = {
+  "AI enabled": "Yapay zeka etkin",
+  "AI disabled": "Yapay zeka kapalı",
+  "Gemini API key": "Gemini API anahtarı",
+  "Saved keys are encrypted on the backend and excluded from workspace backups. Leave the key field blank to keep it. Changing provider or URL clears the old key unless you enter a replacement. In Docker, use http://host.docker.internal:11434 for host Ollama.":
+    "Kayıtlı anahtarlar API'de şifrelenir ve çalışma alanı yedeklerine eklenmez. Korumak için anahtar alanını boş bırakın. Sağlayıcı veya adres değiştiğinde yeni anahtar girilmezse eskisi silinir. Docker'da bilgisayarınızdaki Ollama için http://host.docker.internal:11434 kullanın.",
   "Maximum backup size": "En büyük yedek boyutu",
   "Tailor CV to this job": "İlana göre CV düzenleme",
   "Highlight existing evidence in a new CV copy. No skills or achievements are invented; the original stays unchanged.":

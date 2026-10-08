@@ -18,18 +18,25 @@ export function AISettings() {
   }, []);
   return (
     <section
-      className="workspace-tools bg-surface-container-lowest rounded-xl border p-6 mb-6 space-y-4"
+      className="workspace-tools ai-settings"
       aria-label={copy("LLM connection settings")}
     >
-      <h2 className="text-lg font-semibold">{copy("LLM connection")}</h2>
-      <p className="text-sm">
+      <header className="ai-settings-header">
+        <h2>{copy("LLM connection")}</h2>
+        {config && (
+          <span className="ai-connection-state">
+            {copy(config.enabled ? "AI enabled" : "AI disabled")}
+          </span>
+        )}
+      </header>
+      <p className="ai-settings-description">
         {copy(
           "Connect Gemini, an OpenAI-compatible API, or local Ollama. Resume reviews run only when you request them in Review. The selected server receives resume content and optional job text; cloud providers may charge for requests.",
         )}
       </p>
       {config && (
-        <>
-          <label className="flex gap-2">
+        <fieldset className="ai-settings-form" disabled={busy}>
+          <label className="ai-settings-toggle">
             <input
               type="checkbox"
               checked={config.enabled}
@@ -40,93 +47,97 @@ export function AISettings() {
             />
             {copy("Enable AI reviews")}
           </label>
-          <label className="block">
-            {copy("Provider")}
-            <select
-              aria-label="Provider"
-              className="block w-full"
-              value={config.provider}
-              onChange={(e) => {
-                const provider = e.target.value as AIConnection["provider"];
-                setConfig({
-                  ...config,
-                  provider,
-                  baseUrl:
-                    provider === "ollama"
-                      ? "http://localhost:11434"
-                      : provider === "gemini"
-                        ? "https://generativelanguage.googleapis.com/v1beta"
-                        : "https://api.openai.com/v1",
-                  model: "",
-                  hasApiKey: false,
-                });
-                setKey("");
-                setClear(false);
-                setDirty(true);
-              }}
-            >
-              <option value="openai-compatible">OpenAI-compatible</option>
-              <option value="ollama">Ollama</option>
-              <option value="gemini">Google Gemini</option>
-            </select>
-          </label>
-          <label className="block">
-            {copy("API base URL")}
-            <input
-              className="block w-full"
-              value={config.baseUrl}
-              onChange={(e) => {
-                setConfig({ ...config, baseUrl: e.target.value });
-                setDirty(true);
-              }}
-            />
-          </label>
-          <label className="block">
-            {copy("Model ID")}
-            <input
-              className="block w-full"
-              placeholder={copy(
-                config.provider === "gemini"
-                  ? "Enter your Gemini model ID"
-                  : "Enter an available model ID",
-              )}
-              value={config.model}
-              onChange={(e) => {
-                setConfig({ ...config, model: e.target.value });
-                setDirty(true);
-              }}
-            />
-          </label>
-          <label className="block">
-            {copy(
-              config.provider === "gemini"
-                ? "Gemini API key"
-                : "API key (optional for local servers)",
-            )}
-            <input
-              className="block w-full"
-              type="password"
-              autoComplete="new-password"
-              value={key}
-              placeholder={copy(
-                config.hasApiKey
-                  ? "Stored on backend; leave blank to keep"
-                  : "No key stored",
-              )}
-              onChange={(e) => {
-                setKey(e.target.value);
-                setDirty(true);
-              }}
-            />
-          </label>
+          <div className="ai-settings-fields">
+            <label className="ai-settings-field">
+              <span>{copy("Provider")}</span>
+              <select
+                aria-label="Provider"
+                className="block w-full"
+                value={config.provider}
+                onChange={(e) => {
+                  const provider = e.target.value as AIConnection["provider"];
+                  setConfig({
+                    ...config,
+                    provider,
+                    baseUrl:
+                      provider === "ollama"
+                        ? "http://localhost:11434"
+                        : provider === "gemini"
+                          ? "https://generativelanguage.googleapis.com/v1beta"
+                          : "https://api.openai.com/v1",
+                    model: "",
+                    hasApiKey: false,
+                  });
+                  setKey("");
+                  setClear(false);
+                  setDirty(true);
+                }}
+              >
+                <option value="openai-compatible">OpenAI-compatible</option>
+                <option value="ollama">Ollama</option>
+                <option value="gemini">Google Gemini</option>
+              </select>
+            </label>
+            <label className="ai-settings-field">
+              <span>{copy("Model ID")}</span>
+              <input
+                className="block w-full"
+                placeholder={copy(
+                  config.provider === "gemini"
+                    ? "Enter your Gemini model ID"
+                    : "Enter an available model ID",
+                )}
+                value={config.model}
+                onChange={(e) => {
+                  setConfig({ ...config, model: e.target.value });
+                  setDirty(true);
+                }}
+              />
+            </label>
+            <label className="ai-settings-field ai-settings-wide">
+              <span>{copy("API base URL")}</span>
+              <input
+                className="block w-full"
+                value={config.baseUrl}
+                onChange={(e) => {
+                  setConfig({ ...config, baseUrl: e.target.value });
+                  setDirty(true);
+                }}
+              />
+            </label>
+            <label className="ai-settings-field ai-settings-wide">
+              <span>
+                {copy(
+                  config.provider === "gemini"
+                    ? "Gemini API key"
+                    : "API key (optional for local servers)",
+                )}
+              </span>
+              <input
+                className="block w-full"
+                type="password"
+                autoComplete="new-password"
+                value={key}
+                placeholder={copy(
+                  config.hasApiKey
+                    ? "Stored on backend; leave blank to keep"
+                    : "No key stored",
+                )}
+                onChange={(e) => {
+                  setKey(e.target.value);
+                  setDirty(true);
+                }}
+              />
+            </label>
+          </div>
           {config.provider === "gemini" && (
-            <p className="text-sm">
+            <p className="ai-settings-hint">
               {copy(
                 "Use a Gemini API key and model ID from Google AI Studio. The default URL connects to the Gemini Developer API.",
               )}
             </p>
           )}
-          <label className="flex gap-2">
+          <label className="ai-settings-toggle">
             <input
               type="checkbox"
               checked={clear}
@@ -137,13 +148,14 @@ export function AISettings() {
             />
             {copy("Remove stored key")}
           </label>
-          <p className="text-xs">
+          <p className="ai-settings-hint">
             {copy(
-              "Keys are stored in the backend settings file, excluded from workspace backups, and never returned to this page. Protect that file with your OS account permissions. Changing provider or URL clears the old key unless you enter a replacement. In Docker, use http://host.docker.internal:11434 for host Ollama.",
+              "Saved keys are encrypted on the backend and excluded from workspace backups. Leave the key field blank to keep it. Changing provider or URL clears the old key unless you enter a replacement. In Docker, use http://host.docker.internal:11434 for host Ollama.",
             )}
           </p>
-          <div className="flex flex-wrap gap-3">
+          <div className="ai-settings-actions">
             <button
+              className="ai-save-connection"
               disabled={busy}
               onClick={async () => {
                 setBusy(true);
@@ -190,9 +202,11 @@ export function AISettings() {
           {dirty && (
             <p className="text-xs">{copy("Save changes before testing.")}</p>
           )}
-        </>
+        </fieldset>
       )}
-      <p role="status">{copy(busy ? "Working…" : message)}</p>
+      <p className="ai-settings-status" role="status">
+        {copy(busy ? "Working…" : message)}
+      </p>
     </section>
   );
 }
