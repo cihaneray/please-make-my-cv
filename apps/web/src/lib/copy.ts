@@ -1,11 +1,6 @@
 "use client";
 import { useI18n } from "./i18n";
 export const copyTranslations: Record<string, string> = {
-  "AI enabled": "Yapay zeka etkin",
-  "AI disabled": "Yapay zeka kapalı",
-  "Gemini API key": "Gemini API anahtarı",
-  "Saved keys are encrypted on the backend and excluded from workspace backups. Leave the key field blank to keep it. Changing provider or URL clears the old key unless you enter a replacement. In Docker, use http://host.docker.internal:11434 for host Ollama.":
-    "Kayıtlı anahtarlar API'de şifrelenir ve çalışma alanı yedeklerine eklenmez. Korumak için anahtar alanını boş bırakın. Sağlayıcı veya adres değiştiğinde yeni anahtar girilmezse eskisi silinir. Docker'da bilgisayarınızdaki Ollama için http://host.docker.internal:11434 kullanın.",
   "Apply suggestion": "Öneriyi uygula",
   "Skip suggestion": "Öneriyi atla",
   "Undo this suggestion": "Uygulamayı geri al",
@@ -24,6 +19,12 @@ export const copyTranslations: Record<string, string> = {
     "Bu alan incelemeden sonra değişti. Düzenlemeleriniz korunuyor; güncel öneri için yeniden inceleme yapın.",
   "Advice only: no safe field replacement was identified.":
     "Bu bir tavsiyedir. Güvenli bir alan değişikliği belirlenemediği için otomatik uygulanmaz.",
+  "Download a backup": "Yedek indir",
+  "Restore a backup": "Yedeği geri yükle",
+  "Choose a JSON backup. For an encrypted backup, enter its password in the password field.":
+    "JSON yedek dosyasını seçin. Şifreli yedek için parola alanına yedeğin parolasını girin.",
+  "Add the backup contents as new records? Existing records will remain unchanged.":
+    "Yedek içeriği yeni kayıtlar olarak eklensin mi? Mevcut kayıtlar korunacaktır.",
   "Local rule checks": "Yerel kural kontrolleri",
   "Rule findings": "Yerel kural bulguları",
   "How are these scores calculated?": "Bu puanlar nasıl hesaplanıyor?",
@@ -79,12 +80,11 @@ export const copyTranslations: Record<string, string> = {
     "Aşağıdaki ilan açıklaması kullanılır. Kopya oluşturmak için pozisyon ve açıklama gereklidir.",
   "Creating copy…": "Kopya oluşturuluyor…",
   "Create job-specific copy": "İlana özel kopya oluştur",
-  "Download a backup": "Yedek indir",
-  "Restore a backup": "Yedeği geri yükle",
-  "Choose a JSON backup. For an encrypted backup, enter its password in the password field.":
-    "JSON yedek dosyasını seçin. Şifreli yedek için parola alanına yedeğin parolasını girin.",
-  "Add the backup contents as new records? Existing records will remain unchanged.":
-    "Yedek içeriği yeni kayıtlar olarak eklensin mi? Mevcut kayıtlar korunacaktır.",
+  "AI enabled": "Yapay zeka etkin",
+  "AI disabled": "Yapay zeka kapalı",
+  "Gemini API key": "Gemini API anahtarı",
+  "Saved keys are encrypted on the backend and excluded from workspace backups. Leave the key field blank to keep it. Changing provider or URL clears the old key unless you enter a replacement. In Docker, use http://host.docker.internal:11434 for host Ollama.":
+    "Kayıtlı anahtarlar API'de şifrelenir ve çalışma alanı yedeklerine eklenmez. Korumak için anahtar alanını boş bırakın. Sağlayıcı veya adres değiştiğinde yeni anahtar girilmezse eskisi silinir. Docker'da bilgisayarınızdaki Ollama için http://host.docker.internal:11434 kullanın.",
   "Maximum backup size": "En büyük yedek boyutu",
   "Tailor CV to this job": "İlana göre CV düzenleme",
   "Highlight existing evidence in a new CV copy. No skills or achievements are invented; the original stays unchanged.":
@@ -556,3 +556,32 @@ export function useCopy() {
   return (text: string) =>
     language === "tr" ? copyTranslations[text] || text : text;
 }
+Object.assign(copyTranslations, {
+  "Your career archive": "Kariyer arşiviniz",
+  "Search and filter snippets": "Maddeleri ara ve filtrele",
+  "Keep verified achievements here, then reuse them in your resumes.":
+    "Doğrulanmış başarılarınızı burada saklayın, özgeçmişlerinizde yeniden kullanın.",
+  "e.g. Reduced API response time": "Örn. API yanıt süresini azalttım",
+  "e.g. Backend development": "Örn. Backend geliştirme",
+  "Describe what you did, how you did it, and the measurable result.":
+    "Ne yaptığınızı, nasıl yaptığınızı ve ölçülebilir sonucunu yazın.",
+  "Alternative wording": "Alternatif anlatımlar",
+  "Optional versions of the same achievement. Add only details you can verify.":
+    "Aynı başarının isteğe bağlı anlatımları. Yalnızca doğrulayabileceğiniz ayrıntıları ekleyin.",
+  "Emphasize the tools, methods, and technical impact.":
+    "Araçları, yöntemleri ve teknik etkiyi öne çıkarın.",
+  "Summarize the achievement in one short sentence.":
+    "Başarıyı kısa bir cümlede özetleyin.",
+  "Separate tags with commas. Use them to find this achievement later.":
+    "Etiketleri virgülle ayırın. Bu maddeyi daha sonra bulmak için kullanın.",
+  "Loading snippets…": "Maddeler yükleniyor…",
+  "Could not save the snippet.": "Madde kaydedilemedi.",
+  "Enter an achievement before saving.":
+    "Kaydetmeden önce başarı maddesini yazın.",
+  "Career Achievement": "Kariyer başarısı",
+  "Delete snippet": "Maddeyi sil",
+  "Delete this career snippet from the library?":
+    "Bu kariyer maddesi kütüphaneden silinsin mi?",
+  technical: "Teknik",
+  concise: "Kısa",
+});

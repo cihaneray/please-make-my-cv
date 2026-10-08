@@ -1121,3 +1121,83 @@ test("Gemini can be configured and tested without exposing the stored key", asyn
   );
   await expect(page.getByLabel("Gemini API key")).toHaveValue("");
 });
+
+test("career library form preserves variants and fits mobile", async ({
+  page,
+  request,
+}) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto("/library");
+  await page.getByRole("button", { name: "Add Snippet", exact: true }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(
+    page.getByRole("textbox", { name: "Snippet title", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Add Snippet", exact: true }),
+  ).toBeFocused();
+  await page.getByRole("button", { name: "Add Snippet", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "Snippet title", exact: true })
+    .fill("Library layout QA");
+  await page
+    .getByRole("textbox", { name: "Achievement", exact: true })
+    .fill("Reduced response time by 35%.");
+  await page
+    .getByRole("textbox", { name: "Technical variant (optional)", exact: true })
+    .fill("Reduced response time by 35% using PostgreSQL indexes.");
+  await page
+    .getByRole("textbox", { name: "Concise variant (optional)", exact: true })
+    .fill("Improved response time by 35%.");
+  await page
+    .getByRole("textbox", { name: "Tags", exact: true })
+    .fill("UniqueLibrarySearchTag");
+  await page.screenshot({
+    path: "test-results/library-desktop.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(390);
+  const category = await page
+    .getByRole("textbox", { name: "Category", exact: true })
+    .boundingBox();
+  expect(category!.height).toBeGreaterThanOrEqual(44);
+  await page.screenshot({
+    path: "test-results/library-mobile.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Save Snippet", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const card = page
+    .locator(".library-snippet-card")
+    .filter({ hasText: "Library layout QA" });
+  await expect(card).toBeVisible();
+  await card.getByRole("button", { name: "Edit snippet", exact: true }).click();
+  await expect(
+    page.getByRole("textbox", {
+      name: "Technical variant (optional)",
+      exact: true,
+    }),
+  ).toHaveValue("Reduced response time by 35% using PostgreSQL indexes.");
+  await page
+    .getByRole("textbox", { name: "Achievement", exact: true })
+    .fill("Reduced response time by 40%.");
+  await page.getByRole("button", { name: "Save Snippet", exact: true }).click();
+  await expect(
+    card.getByText("Reduced response time by 40%.", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("searchbox").fill("UniqueLibrarySearchTag");
+  await expect(card).toBeVisible();
+  const records = await (
+    await request.get("http://127.0.0.1:8101/api/library")
+  ).json();
+  const record = records.find(
+    (item: any) => item.title === "Library layout QA",
+  );
+  expect(record.variants).toHaveLength(2);
+  await request.delete(`http://127.0.0.1:8101/api/library/${record.id}`);
+});
