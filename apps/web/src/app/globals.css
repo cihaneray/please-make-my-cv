@@ -539,6 +539,22 @@ button:disabled {
   outline-offset: -2px;
 }
 
+.workspace-backup { display: grid; gap: 20px; padding: 28px; border: 1px solid rgb(var(--color-outline-variant)); border-radius: 12px; background: rgb(var(--color-surface-container-lowest)); min-width: 0; }
+.workspace-backup h2 { font: 26px var(--desk-serif); line-height: 1.3; }
+.workspace-backup h3 { font-weight: 600; font-size: 14px; }
+.workspace-backup p { font-size: 13px; line-height: 1.6; color: rgb(var(--color-secondary)); overflow-wrap: anywhere; }
+.backup-columns { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; }
+.backup-export, .backup-import { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 20px; border: 1px solid rgb(var(--color-outline-variant)); border-radius: 8px; }
+.backup-field { display: grid; gap: 9px; font-size: 13px; min-width: 0; }
+.workspace-backup input { width: 100%; min-width: 0; min-height: 44px; }
+.workspace-backup input:focus { outline: 2px solid rgb(var(--color-primary)); outline-offset: -2px; }
+.workspace-backup input[type=file] { font-size: 12px; overflow: hidden; }
+.workspace-backup input::file-selector-button { padding: 8px 12px; border: 1px solid rgb(var(--color-outline-variant)); border-radius: 4px; background: rgb(var(--color-surface-container)); color: rgb(var(--color-on-surface)); margin-right: 10px; cursor: pointer; }
+.workspace-backup .backup-download { padding: 10px 16px; min-height: 44px; background: rgb(var(--color-primary)); color: rgb(var(--color-on-primary)); border-color: rgb(var(--color-primary)); margin-top: auto; }
+.workspace-backup [role=status]:empty { display: none; }
+@media (max-width: 640px) { .workspace-backup { padding: 20px; } .backup-columns { grid-template-columns: minmax(0,1fr); } }
+
+.workspace-tools.workspace-backup button.backup-download:hover:not(:disabled) { background: rgb(var(--color-primary) / .88); color: rgb(var(--color-on-primary)); border-color: rgb(var(--color-primary)); }
 
 /* Editorial workspace: warm paper, ink, and a restrained botanical accent. */
 :root {

@@ -79,6 +79,12 @@ export const copyTranslations: Record<string, string> = {
     "Aşağıdaki ilan açıklaması kullanılır. Kopya oluşturmak için pozisyon ve açıklama gereklidir.",
   "Creating copy…": "Kopya oluşturuluyor…",
   "Create job-specific copy": "İlana özel kopya oluştur",
+  "Download a backup": "Yedek indir",
+  "Restore a backup": "Yedeği geri yükle",
+  "Choose a JSON backup. For an encrypted backup, enter its password in the password field.":
+    "JSON yedek dosyasını seçin. Şifreli yedek için parola alanına yedeğin parolasını girin.",
+  "Add the backup contents as new records? Existing records will remain unchanged.":
+    "Yedek içeriği yeni kayıtlar olarak eklensin mi? Mevcut kayıtlar korunacaktır.",
   "Maximum backup size": "En büyük yedek boyutu",
   "Tailor CV to this job": "İlana göre CV düzenleme",
   "Highlight existing evidence in a new CV copy. No skills or achievements are invented; the original stays unchanged.":
