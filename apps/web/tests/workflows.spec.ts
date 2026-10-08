@@ -1020,19 +1020,24 @@ test("Turkish suggestion actions stay separated and support skip, apply, undo an
   ).toBeVisible();
   for (const width of [1280, 390]) {
     await page.setViewportSize({ width, height: 900 });
-    const apply = await suggestion
-      .getByRole("button", { name: "Öneriyi uygula", exact: true })
-      .boundingBox();
-    const skip = await suggestion
-      .getByRole("button", { name: "Öneriyi atla", exact: true })
-      .boundingBox();
-    expect(apply!.height).toBeGreaterThanOrEqual(44);
-    if (Math.abs(skip!.y - apply!.y) < 1)
-      expect(skip!.height).toBe(apply!.height);
-    expect(
-      skip!.x >= apply!.x + apply!.width + 8 ||
-        skip!.y >= apply!.y + apply!.height + 8,
-    ).toBe(true);
+    await expect
+      .poll(async () => {
+        const apply = await suggestion
+          .getByRole("button", { name: "Öneriyi uygula", exact: true })
+          .boundingBox();
+        const skip = await suggestion
+          .getByRole("button", { name: "Öneriyi atla", exact: true })
+          .boundingBox();
+        if (!apply || !skip) return false;
+        const sameRow = Math.abs(skip.y - apply.y) < 1;
+        return (
+          apply.height >= 44 &&
+          (!sameRow || Math.abs(skip.height - apply.height) < 1) &&
+          (skip.x >= apply.x + apply.width + 8 ||
+            skip.y >= apply.y + apply.height + 8)
+        );
+      })
+      .toBe(true);
   }
   await suggestion
     .getByRole("button", { name: "Öneriyi atla", exact: true })
