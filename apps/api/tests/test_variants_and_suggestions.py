@@ -1,3 +1,4 @@
+import pytest
 from test_llm import configure, feedback
 
 from app.schemas.resume import ExperienceItem, ResumeDocument
@@ -98,3 +99,21 @@ def test_redacted_fields_are_never_replaceable():
     fields = llm.editable_fields(doc)
     assert len(fields) == 1
     assert fields["field-0"]["before"] == "Safe text"
+
+
+@pytest.mark.parametrize(
+    "before,after",
+    [
+        ("", "Built scalable services."),
+        ("Built an API.", "Built an API for [Product/Industry]."),
+        ("Built an API.", "Built an API for <company>."),
+    ],
+)
+def test_empty_or_placeholder_suggestions_remain_advice_only(monkeypatch, before, after):
+    configure()
+    raw = feedback()
+    raw["recommendations"][0].update(fieldId="field-0", suggestedText=after)
+    monkeypatch.setattr(llm, "completion", lambda *args: raw)
+    result = llm.review_resume(ResumeDocument(summary=before), "", "en")
+    assert result["recommendations"][0]["edit"] is None
+    assert result["recommendations"][0]["suggestedText"] == after

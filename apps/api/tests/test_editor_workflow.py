@@ -119,7 +119,8 @@ def test_local_cover_letter_quotes_only_visible_cv_evidence(client):
 def test_ai_cover_letter_minimizes_contact_data_and_validates_result(client, monkeypatch):
     captured = {}
 
-    def completion(system, payload):
+    def completion(system, payload, config, schema):
+        assert schema["required"] == ["text"]
         captured.update(payload)
         return {"text": "An editable evidence-based draft"}
 
