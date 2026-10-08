@@ -1641,6 +1641,29 @@ export default function ResumeStudioPage() {
                   </div>
                 ) : analysisReport ? (
                   <div className="flex flex-col gap-space-lg">
+                    <div className="local-review-explanation">
+                      <h3>{copy("Local rule checks")}</h3>
+                      <p>
+                        {copy(
+                          "These checks run locally without AI. They check document structure, contact details, duplicate or long bullets and other predefined rules. AI wording suggestions above are separate.",
+                        )}
+                      </p>
+                      <details>
+                        <summary>
+                          {copy("How are these scores calculated?")}
+                        </summary>
+                        <p>
+                          {copy(
+                            "ATS score = earned points ÷ 80 × 100. Job relevance is excluded here. Missing email subtracts 10 contact points; missing phone subtracts 5. Other rule findings reduce their related dimension.",
+                          )}
+                        </p>
+                        <p>
+                          {copy(
+                            "Content quality starts at 100 and deducts 15/10/5/2 for critical/important/warning/info findings in experience, projects or summary. A score of 100 only means these rules found no issues; it does not mean the text cannot be improved.",
+                          )}
+                        </p>
+                      </details>
+                    </div>
                     {/* Score Pill Row */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="p-3 rounded-lg bg-surface-container-low flex flex-col">
@@ -1705,7 +1728,7 @@ export default function ResumeStudioPage() {
                             </span>
                             <span className="font-semibold text-on-surface">
                               {analysisReport.atsBreakdown.job_relevance == null
-                                ? "Not assessed"
+                                ? copy("Not assessed")
                                 : `${analysisReport.atsBreakdown.job_relevance} / 20`}
                             </span>
                           </div>
@@ -1720,7 +1743,7 @@ export default function ResumeStudioPage() {
                         </div>
                         {analysisReport.heuristicNotice && (
                           <p className="text-[11px] text-secondary italic pt-1">
-                            {analysisReport.heuristicNotice}
+                            {copy(analysisReport.heuristicNotice)}
                           </p>
                         )}
                       </div>
@@ -1748,9 +1771,15 @@ export default function ResumeStudioPage() {
                     {/* Issues */}
                     <div className="flex flex-col gap-2">
                       <span className="font-label-sm text-secondary uppercase tracking-wider">
-                        {t("suggestionsAndIssues")} (
-                        {analysisReport.issues.length})
+                        {copy("Rule findings")} ({analysisReport.issues.length})
                       </span>
+                      {analysisReport.issues.length === 0 && (
+                        <p className="text-xs text-secondary">
+                          {copy(
+                            "No local rule findings. AI may still suggest wording improvements or ask for missing context.",
+                          )}
+                        </p>
+                      )}
                       {analysisReport.issues.map(
                         (issue: AnalysisIssue, idx: number) => (
                           <div

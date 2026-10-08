@@ -5,6 +5,7 @@ import { AISuggestion } from "./AISuggestion";
 import { JobVariantBuilder } from "./JobVariantBuilder";
 import { aiApi, AIConnection, AIReview, AIEdit } from "@/lib/api";
 import { ResumeDocument } from "@/lib/types";
+import { useCopy } from "@/lib/copy";
 export function AIResumeReview({
   document,
   onApply,
@@ -14,6 +15,7 @@ export function AIResumeReview({
   onApply: (edit: AIEdit) => void;
   disabled?: boolean;
 }) {
+  const copy = useCopy();
   const [config, setConfig] = useState<AIConnection | null>(null);
   const [target, setTarget] = useState(
     document.metadata.targetJob || {
@@ -43,19 +45,21 @@ export function AIResumeReview({
   }, []);
   return (
     <section
-      className="workspace-tools border rounded-xl p-4 space-y-3"
+      className="workspace-tools ai-review"
       aria-label="AI resume review"
     >
-      <h2 className="font-semibold text-lg">AI resume coach</h2>
-      <p className="text-sm">
-        Get an explained score, strengths, gaps, and suggested wording for this
-        draft. Suggestions never change your resume automatically.
+      <h2>{copy("AI resume coach")}</h2>
+      <p className="ai-review-description">
+        {copy(
+          "Get an explained score, strengths, gaps, and suggested wording for this draft. Suggestions never change your resume automatically.",
+        )}
       </p>
       {config?.enabled ? (
-        <p className="text-xs">
-          Using {config.model} at {config.baseUrl}. Clicking Review sends career
-          content to this server. Contact fields are omitted, but free text can
-          still identify you.
+        <p className="ai-review-provider">
+          <span>{config.model}</span>
+          {copy(
+            "Review sends career content to the configured provider. Contact fields are omitted; free text may still identify you.",
+          )}
         </p>
       ) : (
         <p>
@@ -72,23 +76,25 @@ export function AIResumeReview({
         onTarget={setTarget}
         disabled={disabled || busy}
       />
-      <label className="block text-sm">
-        Target job description (optional)
+      <label className="ai-review-field">
+        <span>{copy("Target job description (optional)")}</span>
         <textarea
           aria-label="Target job description (optional)"
           className="block w-full min-h-24"
           maxLength={20000}
+          disabled={busy}
           value={job}
           onChange={(e) =>
             setTarget({ ...target, description: e.target.value })
           }
         />
       </label>
-      <label className="block text-sm">
-        Feedback language
+      <label className="ai-review-field">
+        <span>{copy("Feedback language")}</span>
         <select
           aria-label="Feedback language"
           className="block"
+          disabled={busy}
           value={language}
           onChange={(e) => setLanguage(e.target.value as "en" | "tr")}
         >
@@ -96,59 +102,78 @@ export function AIResumeReview({
           <option value="tr">Türkçe</option>
         </select>
       </label>
-      <button
-        disabled={busy || !config?.enabled}
-        onClick={async () => {
-          controller.current?.abort();
-          const pending = new AbortController();
-          controller.current = pending;
-          setBusy(true);
-          setError("");
-          try {
-            const value = await aiApi.review(
-              document,
-              job.trim()
-                ? `Target role: ${target.position}\nCompany: ${target.company}\n${job}`
-                : "",
-              language,
-              pending.signal,
-            );
-            if (!pending.signal.aborted) {
-              setResult(value);
-              setReviewedInput(input);
-              setReviewContext(JSON.stringify({ target, language }));
-              setReviewNumber((value) => value + 1);
-            }
-          } catch (e) {
-            if (!pending.signal.aborted) setError((e as Error).message);
-          } finally {
-            if (!pending.signal.aborted) setBusy(false);
-          }
-        }}
-      >
-        {busy ? "Reviewing…" : "Review current draft with AI"}
-      </button>
-      {busy && (
+      <div className="ai-review-actions">
         <button
-          onClick={() => {
+          className="ai-review-primary"
+          disabled={busy || !config?.enabled}
+          onClick={async () => {
             controller.current?.abort();
-            setBusy(false);
+            const pending = new AbortController();
+            controller.current = pending;
+            setBusy(true);
+            setError("");
+            try {
+              const value = await aiApi.review(
+                document,
+                job.trim()
+                  ? `Target role: ${target.position}\nCompany: ${target.company}\n${job}`
+                  : "",
+                language,
+                pending.signal,
+              );
+              if (!pending.signal.aborted) {
+                setResult(value);
+                setReviewedInput(input);
+                setReviewContext(JSON.stringify({ target, language }));
+                setReviewNumber((value) => value + 1);
+              }
+            } catch (e) {
+              if (!pending.signal.aborted) setError((e as Error).message);
+            } finally {
+              if (!pending.signal.aborted) setBusy(false);
+            }
           }}
         >
-          Cancel
+          {copy(busy ? "Reviewing…" : "Review current draft with AI")}
         </button>
+        {busy && (
+          <button
+            onClick={() => {
+              controller.current?.abort();
+              setBusy(false);
+            }}
+          >
+            {copy("Cancel")}
+          </button>
+        )}
+      </div>
+      {error && (
+        <div className="ai-review-error" role="alert">
+          <strong>{copy("Review could not be completed")}</strong>
+          <p>
+            {copy(
+              error.includes("HTTP 429")
+                ? "The AI provider's request limit or quota was reached. Wait and try again, or check your quota in the provider dashboard."
+                : error.includes("HTTP 503")
+                  ? "The AI provider is temporarily unavailable. Try again shortly."
+                  : error.includes("timed out")
+                    ? "The AI provider did not respond in time. Try again or select a faster model in Settings."
+                    : error,
+            )}
+          </p>
+        </div>
       )}
-      {error && <p role="alert">{error}</p>}
       {result && (
-        <div className="space-y-4">
+        <div className="ai-review-result space-y-4">
           {input !== reviewedInput && (
             <p role="status" className="font-semibold">
-              Draft or review options changed. Run a new review for an updated
-              score.
+              {copy(
+                "Draft or review options changed. Run a new review for an updated score.",
+              )}
             </p>
           )}
           <h3 className="font-semibold">
-            AI editorial score: {result.score}/100
+            {copy("AI editorial score")}: {result.score}/100
           </h3>
           <p>{result.summary}</p>
           <p className="text-xs">{result.notice}</p>
@@ -156,27 +181,30 @@ export function AIResumeReview({
             (key) => (
               <div key={key}>
                 <h4 className="font-semibold capitalize">
-                  {key}:{" "}
-                  {result[key] ? `${result[key]!.score}/25` : "Not assessed"}
+                  {copy(key)}:{" "}
+                  {result[key]
+                    ? `${result[key]!.score}/25`
+                    : copy("Not assessed")}
                 </h4>
                 <p className="text-sm">
                   {result[key]?.rationale ||
-                    "Add a target job to assess relevance."}
+                    copy("Add a target job to assess relevance.")}
                 </p>
               </div>
             ),
           )}
           <p className="text-xs">
-            Overall = earned points ÷ assessed maximum × 100. Without a target
-            job, relevance is excluded.
+            {copy(
+              "Overall = earned points ÷ assessed maximum × 100. Without a target job, relevance is excluded.",
+            )}
           </p>
-          <h3 className="font-semibold">Strengths</h3>
+          <h3 className="font-semibold">{copy("Strengths")}</h3>
           <ul className="list-disc pl-5">
             {result.strengths.map((text, i) => (
               <li key={i}>{text}</li>
             ))}
           </ul>
-          <h3 className="font-semibold">Recommended improvements</h3>
+          <h3 className="font-semibold">{copy("Recommended improvements")}</h3>
           {result.recommendations.map((item, i) => (
             <AISuggestion
               key={`${reviewNumber}-${i}`}
@@ -190,7 +218,7 @@ export function AIResumeReview({
               }
             />
           ))}
-          <h3 className="font-semibold">Details to add or verify</h3>
+          <h3 className="font-semibold">{copy("Details to add or verify")}</h3>
           <ul className="list-disc pl-5">
             {result.questions.map((text, i) => (
               <li key={i}>{text}</li>

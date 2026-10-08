@@ -995,6 +995,71 @@ test("AI edits follow stable entry IDs and reject changed or missing fields", as
   ).toBe(doc);
 });
 
+test("Turkish suggestion actions stay separated and support skip, apply, undo and a tab icon", async ({
+  page,
+  request,
+}) => {
+  let doc = await create(request);
+  doc.summary = "Built reliable services.";
+  doc = await (
+    await request.put(`http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`, {
+      data: { revision: doc.metadata.revision, document: doc },
+    })
+  ).json();
+  await mockCoach(page, doc.metadata.id);
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page.getByRole("button", { name: "Türkçeye geç", exact: true }).click();
+  await page.getByRole("button", { name: "İnceleme", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Taslağı yapay zeka ile incele", exact: true })
+    .click();
+  const suggestion = page.getByRole("article", { name: "Özet" });
+  await expect(
+    suggestion.getByRole("heading", { name: "Önce", exact: true }),
+  ).toBeVisible();
+  for (const width of [1280, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    const apply = await suggestion
+      .getByRole("button", { name: "Öneriyi uygula", exact: true })
+      .boundingBox();
+    const skip = await suggestion
+      .getByRole("button", { name: "Öneriyi atla", exact: true })
+      .boundingBox();
+    expect(apply!.height).toBeGreaterThanOrEqual(44);
+    if (Math.abs(skip!.y - apply!.y) < 1)
+      expect(skip!.height).toBe(apply!.height);
+    expect(
+      skip!.x >= apply!.x + apply!.width + 8 ||
+        skip!.y >= apply!.y + apply!.height + 8,
+    ).toBe(true);
+  }
+  await suggestion
+    .getByRole("button", { name: "Öneriyi atla", exact: true })
+    .click();
+  await expect(
+    suggestion.getByText("Öneri atlandı.", { exact: true }),
+  ).toBeVisible();
+  await suggestion
+    .getByRole("button", { name: "Öneriyi yeniden göster", exact: true })
+    .click();
+  await suggestion
+    .getByRole("button", { name: "Öneriyi uygula", exact: true })
+    .click();
+  await expect(suggestion.getByRole("status")).toHaveText("Taslağa uygulandı.");
+  await suggestion
+    .getByRole("button", { name: "Uygulamayı geri al", exact: true })
+    .click();
+  await expect(
+    suggestion.getByRole("button", { name: "Öneriyi uygula", exact: true }),
+  ).toBeEnabled();
+  const href = await page.locator('link[rel="icon"]').getAttribute("href");
+  const icon = await request.get(href!);
+  expect(icon.ok()).toBeTruthy();
+  expect(icon.headers()["content-type"]).toContain("image/svg+xml");
+  await suggestion.screenshot({ path: "test-results/suggestion-card.png" });
+});
+
 test("Gemini can be configured and tested without exposing the stored key", async ({
   page,
 }) => {

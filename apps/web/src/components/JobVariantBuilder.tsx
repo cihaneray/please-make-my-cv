@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { JobApplication, ResumeDocument, TargetJob } from "@/lib/types";
+import { useCopy } from "@/lib/copy";
 export function JobVariantBuilder({
   document,
   target,
@@ -14,6 +15,7 @@ export function JobVariantBuilder({
   onTarget: (target: TargetJob) => void;
   disabled: boolean;
 }) {
+  const copy = useCopy();
   const [jobs, setJobs] = useState<JobApplication[]>([]);
   const [selected, setSelected] = useState("");
   const [busy, setBusy] = useState(false);
@@ -37,12 +39,9 @@ export function JobVariantBuilder({
     };
   }, []);
   return (
-    <details
-      className="border rounded p-3 space-y-3"
-      open={!!document.metadata.targetJob}
-    >
+    <details className="ai-review-variant" open={!!document.metadata.targetJob}>
       <summary className="cursor-pointer font-semibold">
-        Job-specific resume copy
+        {copy("Job-specific resume copy")}
       </summary>
       {document.metadata.parentResumeId && (
         <p className="text-xs">
@@ -63,12 +62,12 @@ export function JobVariantBuilder({
         </p>
       )}
       <p className="text-sm">
-        Create a separate copy of this draft for a target job, then review and
-        accept tailored suggestions in the copy. Your original and job tracker
-        links stay unchanged.
+        {copy(
+          "Create a separate copy of this draft for a target job, then review and accept tailored suggestions in the copy. Your original and job tracker links stay unchanged.",
+        )}
       </p>
-      <label className="block text-sm">
-        Use a saved job
+      <label className="ai-review-field">
+        <span>{copy("Use a saved job")}</span>
         <select
           aria-label="Use a saved job"
           className="block w-full"
@@ -85,7 +84,7 @@ export function JobVariantBuilder({
               });
           }}
         >
-          <option value="">Enter manually</option>
+          <option value="">{copy("Enter manually")}</option>
           {jobs.map((job) => (
             <option key={job.id} value={job.id}>
               {job.position} — {job.company}
@@ -93,11 +92,12 @@ export function JobVariantBuilder({
           ))}
         </select>
       </label>
-      <label className="block text-sm">
-        Target company
+      <label className="ai-review-field">
+        <span>{copy("Target company")}</span>
         <input
           className="block w-full"
           maxLength={255}
+          disabled={busy || disabled}
           value={target.company}
           onChange={(e) => {
             setSelected("");
@@ -105,11 +105,12 @@ export function JobVariantBuilder({
           }}
         />
       </label>
-      <label className="block text-sm">
-        Target role
+      <label className="ai-review-field">
+        <span>{copy("Target role")}</span>
         <input
           className="block w-full"
           maxLength={255}
+          disabled={busy || disabled}
           value={target.position}
           onChange={(e) => {
             setSelected("");
@@ -118,8 +119,9 @@ export function JobVariantBuilder({
         />
       </label>
       <p className="text-xs">
-        Uses the target job description below. A role and description are
-        required.
+        {copy(
+          "Uses the target job description below. A role and description are required.",
+        )}
       </p>
       <button
         disabled={
@@ -141,7 +143,7 @@ export function JobVariantBuilder({
           }
         }}
       >
-        {busy ? "Creating copy…" : "Create job-specific copy"}
+        {copy(busy ? "Creating copy…" : "Create job-specific copy")}
       </button>
       {error && <p role="alert">{error}</p>}
       {created && (
