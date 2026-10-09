@@ -79,4 +79,3 @@ html.dark .editor-icon-button.danger:hover:not(:disabled) {
   background: rgb(var(--color-error) / 0.08);
   border-color: rgb(var(--color-error) / 0.45);
 }
-
