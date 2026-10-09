@@ -63,9 +63,7 @@ export function rankLibraryEvidence(
   snippets: LibrarySnippet[],
   job: JobApplication,
 ) {
-  const terms = job.requirements.filter((term) => term.trim()).length
-    ? job.requirements.map((term) => normalize(term.trim()))
-    : (
+    ? job.requirements.map((term) => normalize(term.trim())).filter(Boolean)
         normalize(`${job.position} ${job.description}`).match(
           /[\p{L}\p{N}+#.]+/gu,
         ) || []
