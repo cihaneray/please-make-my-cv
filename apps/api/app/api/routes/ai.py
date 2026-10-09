@@ -12,8 +12,14 @@ from app.services.llm_service import (
     review_resume,
     save_connection,
 )
+from app.services.translation_service import TranslationRequest, translate_document
 
 router = APIRouter(prefix="/ai", tags=["AI Assistance"])
+
+
+@router.post("/translate")
+def translate(request: TranslationRequest):
+    return translate_document(request.document, request.targetLanguage)
 
 
 class RewriteBulletRequest(BaseModel):
