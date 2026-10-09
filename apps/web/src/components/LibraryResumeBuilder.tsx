@@ -63,11 +63,14 @@ export function rankLibraryEvidence(
   snippets: LibrarySnippet[],
   job: JobApplication,
 ) {
-    ? job.requirements.map((term) => normalize(term.trim())).filter(Boolean)
-        normalize(`${job.position} ${job.description}`).match(
-          /[\p{L}\p{N}+#.]+/gu,
-        ) || []
-      ).filter((term) => term.length >= 3 && !stopWords.has(term));
+  const terms =
+    job.requirements.length > 0
+      ? job.requirements.map((term) => normalize(term.trim())).filter(Boolean)
+      : (
+          normalize(`${job.position} ${job.description}`).match(
+            /[\p{L}\p{N}+#.]+/gu,
+          ) || []
+        ).filter((term) => term.length >= 3 && !stopWords.has(term));
   const uniqueTerms = [...new Set(terms)];
   return snippets
     .filter((snippet) => snippet.content.trim())
