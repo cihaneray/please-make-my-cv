@@ -15,9 +15,15 @@ from app.schemas.job import (
     UpdateJobRequest,
 )
 from app.services.job_service import JobService
+from app.services.job_url_service import JobUrlRequest, import_job_url
 from app.services.resume_service import ResumeService
 
 router = APIRouter(prefix="/jobs", tags=["Job Applications"])
+
+
+@router.post("/import-url")
+def preview_job_url(request: JobUrlRequest):
+    return import_job_url(request.url)
 
 
 @router.post("/{job_id}/tailoring/{resume_id}", response_model=TailoringPlan)

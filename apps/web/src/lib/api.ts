@@ -14,6 +14,25 @@ import {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 
+export interface EmailDraft {
+  subject: string;
+  body: string;
+  notice: string;
+}
+export interface TranslationPreview {
+  document: ResumeDocument;
+  changes: { path: string; original: string; translated: string }[];
+  targetLanguage: "en" | "tr";
+}
+export interface ImportedJobListing {
+  sourceUrl: string;
+  company: string;
+  position: string;
+  description: string;
+  extraction: "structured" | "text";
+  warnings: string[];
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -416,6 +435,51 @@ export const api = {
 
   async deleteJob(id: string): Promise<void> {
     await fetchJson<void>(`${API_BASE}/jobs/${id}`, { method: "DELETE" });
+  },
+
+  emailDraft: (
+    jobId: string,
+    options: {
+      kind: "follow-up" | "thank-you" | "negotiation";
+      language: "en" | "tr";
+      recipientName: string;
+      requestedTerms: string;
+    },
+  ) =>
+    fetchJson<EmailDraft>(`${API_BASE}/jobs/${jobId}/email-draft`, {
+      method: "POST",
+      body: JSON.stringify(options),
+    }),
+  translateResume: (document: ResumeDocument, targetLanguage: "en" | "tr") =>
+    fetchJson<TranslationPreview>(`${API_BASE}/ai/translate`, {
+      method: "POST",
+      body: JSON.stringify({ document, targetLanguage }),
+    }),
+  importJobUrl: (url: string) =>
+    fetchJson<ImportedJobListing>(`${API_BASE}/jobs/import-url`, {
+      method: "POST",
+      body: JSON.stringify({ url }),
+    }),
+  anonymousPreview: (document: ResumeDocument) =>
+    fetchJson<ResumeDocument>(
+      `${API_BASE}/resumes/${document.metadata.id}/export/anonymous/preview`,
+      { method: "POST", body: JSON.stringify(document) },
+    ),
+  async anonymousPdfBlob(document: ResumeDocument): Promise<Blob> {
+    const response = await fetch(
+      `${API_BASE}/resumes/${document.metadata.id}/export/anonymous/pdf`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(document),
+        signal: AbortSignal.timeout(120000),
+      },
+    );
+    if (!response.ok) {
+      const value = await response.json();
+      throw new Error(value.error?.message || "Anonymous PDF export failed.");
+    }
+    return response.blob();
   },
 
   async matchJob(

@@ -5,6 +5,8 @@ from typing import Any
 
 from app.rules.ats import ATSParseabilityRule
 from app.rules.base import BaseRule, IssueSeverity, RuleCategory, RuleResult
+from app.rules.career_timeline import CareerTimelineRule
+from app.rules.content_quality import ExperienceContentQualityRule, OutcomeDetailRule
 from app.rules.facts import FactIntegrityRule
 from app.rules.job_match import JobKeywordMatchRule
 from app.rules.privacy import KVKKPrivacyRule
@@ -39,6 +41,9 @@ class RuleRegistry:
         self.register(KVKKPrivacyRule())
         self.register(FactIntegrityRule())
         self.register(JobKeywordMatchRule())
+        self.register(ExperienceContentQualityRule())
+        self.register(OutcomeDetailRule())
+        self.register(CareerTimelineRule())
 
     def evaluate_all(
         self, resume: ResumeDocument, context: dict[str, Any] | None = None

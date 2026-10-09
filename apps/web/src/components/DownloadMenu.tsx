@@ -8,10 +8,12 @@ export function DownloadMenu({
   disabled,
   download,
   onError,
+  onAnonymous,
 }: {
   disabled: boolean;
   download: (format: "pdf" | "docx") => Promise<void>;
   onError: (message: string) => void;
+  onAnonymous?: () => void;
 }) {
   const copy = useCopy();
   const [open, setOpen] = useState(false);
@@ -122,6 +124,20 @@ export function DownloadMenu({
               {copy("Editable document with matching template styling")}
             </span>
           </button>
+          {onAnonymous && (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                trigger.current?.focus();
+                onAnonymous();
+              }}
+            >
+              <strong>{copy("Anonymous PDF")}</strong>
+              <span>{copy("Review a copy with personal details removed")}</span>
+            </button>
+          )}
         </div>
       )}
     </div>

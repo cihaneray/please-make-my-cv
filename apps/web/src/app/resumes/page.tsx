@@ -1,5 +1,6 @@
 "use client";
 import { ResumeDeleteDialog } from "@/components/ResumeDeleteDialog";
+import { ResumeQuickReviewDialog } from "@/components/ResumeQuickReviewDialog";
 import { useCopy } from "@/lib/copy";
 import { notify } from "@/components/Notifications";
 
@@ -18,6 +19,7 @@ export default function ResumesPage() {
   const copy = useCopy();
   const [showDeleted, setShowDeleted] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ResumeSummary | null>(null);
+  const [reviewTarget, setReviewTarget] = useState<ResumeSummary | null>(null);
   const { t } = useI18n();
   const [resumes, setResumes] = useState<ResumeSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -66,6 +68,12 @@ export default function ResumesPage() {
 
   return (
     <div className="flex flex-col w-full">
+      {reviewTarget && (
+        <ResumeQuickReviewDialog
+          resume={reviewTarget}
+          onClose={() => setReviewTarget(null)}
+        />
+      )}
       {deleteTarget && (
         <ResumeDeleteDialog
           resume={deleteTarget}
@@ -219,6 +227,17 @@ export default function ResumesPage() {
                 <div className="resume-card-footer pt-space-md mt-space-md border-t border-surface-container-high text-secondary font-body-sm">
                   <span>{new Date(r.updatedAt).toLocaleDateString()}</span>
                   <div className="resume-card-actions">
+                    {!r.isArchived && (
+                      <button
+                        type="button"
+                        className="resume-card-review"
+                        onClick={() => setReviewTarget(r)}
+                        aria-label={`${copy("Review CV")}: ${r.title}`}
+                      >
+                        <Icons.Sparkles size={16} />
+                        {copy("Review")}
+                      </button>
+                    )}
                     <Link
                       href={`/resumes/${r.id}`}
                       className="px-2.5 py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm transition-colors"

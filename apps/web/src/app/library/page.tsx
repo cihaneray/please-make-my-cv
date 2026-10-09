@@ -7,6 +7,7 @@ import { Icons } from "@/components/Icons";
 import { api, errorMessage } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { LibraryItemType, LibrarySnippet } from "@/lib/types";
+import LibraryResumeBuilder from "@/components/LibraryResumeBuilder";
 
 export default function LibraryPage() {
   const { t } = useI18n();
@@ -136,7 +137,9 @@ export default function LibraryPage() {
       setNewTitle("");
       setNewContent("");
     } catch (err: unknown) {
-      setFormError(`${copy("Could not save the snippet.")} ${errorMessage(err)}`);
+      setFormError(
+        `${copy("Could not save the snippet.")} ${errorMessage(err)}`,
+      );
     } finally {
       setSaving(false);
     }
@@ -227,6 +230,7 @@ export default function LibraryPage() {
       {/* Main Body */}
       <div className="library-body w-full max-w-7xl mx-auto px-margin-desktop py-space-xl">
         <div className="flex flex-col gap-space-md">
+          {!loading && <LibraryResumeBuilder snippets={snippets} />}
           <section
             className="library-toolbar"
             aria-label={copy("Search and filter snippets")}
