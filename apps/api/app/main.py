@@ -8,7 +8,17 @@ from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from app.api.routes import ai, export, imports, jobs, library, resumes, source, workspace
+from app.api.routes import (
+    ai,
+    communications,
+    export,
+    imports,
+    jobs,
+    library,
+    resumes,
+    source,
+    workspace,
+)
 from app.core.body_limit import BodyLimitMiddleware
 from app.core.config import settings
 from app.core.exceptions import AppException
@@ -143,6 +153,7 @@ app.include_router(source.router, prefix=settings.api_prefix)
 app.include_router(imports.router, prefix=settings.api_prefix)
 app.include_router(export.router, prefix=settings.api_prefix)
 app.include_router(jobs.router, prefix=settings.api_prefix)
+app.include_router(communications.router, prefix=settings.api_prefix)
 app.include_router(library.router, prefix=settings.api_prefix)
 app.include_router(ai.router, prefix=settings.api_prefix)
 app.include_router(workspace.router, prefix=settings.api_prefix)
