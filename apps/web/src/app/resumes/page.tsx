@@ -1,29 +1,35 @@
 "use client";
+import { ResumeDeleteDialog } from "@/components/ResumeDeleteDialog";
+import { useCopy } from "@/lib/copy";
 import { notify } from "@/components/Notifications";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { Icons } from "@/components/Icons";
-import { api } from "@/lib/api";
+import { api, errorMessage } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { ResumeSummary } from "@/lib/types";
 
 export default function ResumesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const query = searchParams.get("q") || "";
+  const copy = useCopy();
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ResumeSummary | null>(null);
   const { t } = useI18n();
   const [resumes, setResumes] = useState<ResumeSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [filterQuery, setFilterQuery] = useState<string>("");
 
   useEffect(() => {
-    setFilterQuery(new URLSearchParams(window.location.search).get("q") || "");
     async function load() {
       try {
         setLoading(true);
         const list = await api.listResumes(true);
         setResumes(list);
-      } catch (err: any) {
+      } catch (err: unknown) {
         notify(
           "Could not load data. Check the API connection and reload to retry.",
         );
@@ -34,26 +40,53 @@ export default function ResumesPage() {
     load();
   }, []);
 
+  useEffect(() => {
+    setFilterQuery(query);
+  }, [query]);
+
   async function handleCreateNew() {
     try {
       const doc = await api.createResume({
         title: t("newResume"),
-        targetRole: "Software Engineer",
+        targetRole: "",
       });
       router.push(`/resumes/${doc.metadata.id}`);
-    } catch (err: any) {
-      notify(`Could not create resume: ${err.message}`);
+    } catch (err: unknown) {
+      notify(`Could not create resume: ${errorMessage(err)}`);
     }
   }
 
-  const filtered = resumes.filter(
-    (r) =>
-      r.title.toLowerCase().includes(filterQuery.toLowerCase()) ||
-      r.targetRole.toLowerCase().includes(filterQuery.toLowerCase()),
-  );
+  const filtered = resumes
+    .filter((r) => r.isArchived === showDeleted)
+    .filter(
+      (r) =>
+        r.title.toLowerCase().includes(filterQuery.toLowerCase()) ||
+        r.targetRole.toLowerCase().includes(filterQuery.toLowerCase()),
+    );
 
   return (
     <div className="flex flex-col w-full">
+      {deleteTarget && (
+        <ResumeDeleteDialog
+          resume={deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          onDeleted={(id) => {
+            setResumes((current) =>
+              deleteTarget.isArchived
+                ? current.filter((r) => r.id !== id)
+                : current.map((r) =>
+                    r.id === id
+                      ? { ...r, isArchived: true, revision: r.revision + 1 }
+                      : r,
+                  ),
+            );
+            api
+              .listResumes(true)
+              .then(setResumes)
+              .catch((error) => notify(error.message));
+          }}
+        />
+      )}
       <div className="max-w-[1120px] w-full mx-auto px-space-lg py-margin-desktop space-y-space-xl">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-lg border-b border-surface-container-high">
           <div className="flex flex-col gap-space-xs">
@@ -68,13 +101,14 @@ export default function ResumesPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-space-sm">
+          <div className="resume-list-controls flex items-center gap-space-sm">
             <div className="relative">
               <span className="absolute left-2.5 top-2 text-secondary">
                 <Icons.Search size={15} />
               </span>
               <input
-                type="text"
+                type="search"
+                aria-label={t("filterResumes")}
                 placeholder={t("filterResumes")}
                 value={filterQuery}
                 onChange={(e) => setFilterQuery(e.target.value)}
@@ -93,6 +127,29 @@ export default function ResumesPage() {
           </div>
         </header>
 
+        <div
+          className="resume-list-tabs"
+          role="group"
+          aria-label={copy("Document list")}
+        >
+          <button
+            type="button"
+            aria-pressed={!showDeleted}
+            onClick={() => setShowDeleted(false)}
+          >
+            {copy("Active CVs")}{" "}
+            <span>{resumes.filter((r) => !r.isArchived).length}</span>
+          </button>
+          <button
+            type="button"
+            data-empty={!resumes.some((r) => r.isArchived)}
+            aria-pressed={showDeleted}
+            onClick={() => setShowDeleted(true)}
+          >
+            {copy("Deleted documents")}{" "}
+            <span>{resumes.filter((r) => r.isArchived).length}</span>
+          </button>
+        </div>
         {loading ? (
           <div className="p-space-xl text-center text-secondary">
             {t("loadingResumes")}
@@ -106,11 +163,11 @@ export default function ResumesPage() {
             {filtered.map((r) => (
               <div
                 key={r.id}
-                className="group flex flex-col justify-between p-space-lg rounded-lg bg-surface-container-lowest border border-surface-container-highest hover:shadow-md transition-all relative"
+                className="resume-list-card group flex flex-col justify-between p-space-lg rounded-lg bg-surface-container-lowest border border-surface-container-highest hover:shadow-md transition-all relative"
               >
                 {r.isArchived && (
                   <div className="text-sm">
-                    Archived{" "}
+                    {copy("Deleted document")}{" "}
                     <button
                       onClick={async () => {
                         try {
@@ -124,7 +181,7 @@ export default function ResumesPage() {
                         }
                       }}
                     >
-                      Restore
+                      {copy("Restore")}
                     </button>
                   </div>
                 )}
@@ -132,13 +189,14 @@ export default function ResumesPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container text-secondary uppercase font-semibold">
-                        {r.templateId}
+                        {copy("Template")}: {r.templateId}
                       </span>
                       <span className="font-label-sm text-[11px] px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface uppercase font-medium">
+                        {copy("CV language")}:{" "}
                         {(r.language || "en").toUpperCase()}
                       </span>
                       <span className="font-label-sm text-[11px] px-1.5 py-0.5 rounded bg-surface-container-highest text-primary font-semibold">
-                        {r.targetMarket || "TR"}
+                        {copy("Market")}: {r.targetMarket || "TR"}
                       </span>
                     </div>
                     <span className="font-body-sm text-body-sm text-secondary">
@@ -158,9 +216,9 @@ export default function ResumesPage() {
                   </span>
                 </div>
 
-                <div className="pt-space-md mt-space-md border-t border-surface-container-high flex items-center justify-between text-secondary font-body-sm">
+                <div className="resume-card-footer pt-space-md mt-space-md border-t border-surface-container-high text-secondary font-body-sm">
                   <span>{new Date(r.updatedAt).toLocaleDateString()}</span>
-                  <div className="flex items-center gap-space-xs">
+                  <div className="resume-card-actions">
                     <Link
                       href={`/resumes/${r.id}`}
                       className="px-2.5 py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm transition-colors"
@@ -173,6 +231,14 @@ export default function ResumesPage() {
                     >
                       {t("pdfAction")}
                     </a>
+                    <button
+                      type="button"
+                      className="resume-card-delete"
+                      aria-label={`${copy(r.isArchived ? "Delete permanently" : "Delete CV")}: ${r.title}`}
+                      onClick={() => setDeleteTarget(r)}
+                    >
+                      <Icons.Delete size={16} />
+                    </button>
                   </div>
                 </div>
               </div>

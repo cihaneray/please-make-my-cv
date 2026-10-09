@@ -86,9 +86,7 @@ test("revision comparison and PDF checks use the current draft", async ({
   await page
     .getByRole("textbox", { name: "First Name", exact: true })
     .fill("Draft difference");
-  await page
-    .getByText("Compare revisions and variants", { exact: true })
-    .click();
+  await page.getByText("Compare versions", { exact: true }).click();
   await page.getByRole("button", { name: "Load comparison choices" }).click();
   await page.getByRole("button", { name: "Türkçeye geç", exact: true }).click();
   for (const width of [320, 390, 1280]) {
@@ -115,9 +113,7 @@ test("revision comparison and PDF checks use the current draft", async ({
   await page
     .getByRole("button", { name: "Switch to English", exact: true })
     .click();
-  await page
-    .getByText("Compare revisions and variants", { exact: true })
-    .click();
+  await page.getByText("Compare versions", { exact: true }).click();
 
   await page
     .getByLabel("Compare current draft with")
@@ -319,7 +315,11 @@ test("draft survives reload and can be explicitly recovered", async ({
   await expect
     .poll(() =>
       page.evaluate(
-        (id) => localStorage.getItem(`cv-draft-${id}`),
+        (id) =>
+          Object.keys(localStorage)
+            .filter((key) => key.startsWith(`cv-draft-${id}-`))
+            .map((key) => localStorage.getItem(key))
+            .join(""),
         doc.metadata.id,
       ),
     )
@@ -363,7 +363,13 @@ test("failed deletion remains visible and displays feedback", async ({
   const item = await response.json();
   await page.goto("/library");
   await page.route(`**/api/library/${item.id}`, (route) =>
-    route.fulfill({ status: 500, body: "Server unavailable" }),
+    route.fulfill({
+      status: 500,
+      contentType: "application/json",
+      body: JSON.stringify({
+        error: { code: "SERVER_UNAVAILABLE", message: "Server unavailable" },
+      }),
+    }),
   );
   page.on("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Delete snippet" }).first().click();
@@ -410,9 +416,7 @@ test("complete field editor saves nested skill strings", async ({
 }) => {
   const doc = await create(request);
   await page.goto(`/resumes/${doc.metadata.id}`);
-  await page
-    .getByText("All fields, history, library and backups", { exact: true })
-    .click();
+  await page.getByText("Document tools", { exact: true }).click();
   const details = page
     .locator("details")
     .filter({ has: page.locator("summary", { hasText: /^Skills$/ }) })
@@ -450,9 +454,7 @@ test("revision history restores content as a new draft", async ({
     data: { revision: 1, document: doc },
   });
   await page.goto(`/resumes/${doc.metadata.id}`);
-  await page
-    .getByText("All fields, history, library and backups", { exact: true })
-    .click();
+  await page.getByText("Document tools", { exact: true }).click();
   await page
     .getByRole("button", { name: "Load revision history", exact: true })
     .click();
@@ -870,9 +872,7 @@ test("AI suggestion cannot overwrite a field edited after review", async ({
   await expect(
     page.getByRole("button", { name: "Apply suggestion", exact: true }),
   ).toBeEnabled();
-  await page
-    .getByText("All fields, history, library and backups", { exact: true })
-    .click();
+  await page.getByText("Document tools", { exact: true }).click();
   await page
     .locator("summary")
     .filter({ hasText: /^Summary$/ })

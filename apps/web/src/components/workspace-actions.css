@@ -1,0 +1,152 @@
+.resume-list-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.resume-list-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 8px;
+  font-size: 13px;
+}
+.resume-list-tabs button[aria-pressed="true"] {
+  border-color: rgb(var(--color-primary));
+  color: rgb(var(--color-primary));
+  background: rgb(var(--color-primary) / 0.08);
+}
+.resume-list-tabs span {
+  font-size: 11px;
+  color: rgb(var(--color-secondary));
+}
+.resume-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.resume-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.resume-card-actions > :is(a, button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 7px;
+  font-size: 12px;
+}
+.resume-card-actions .resume-card-delete {
+  width: 44px;
+  padding: 10px;
+  color: rgb(var(--color-secondary));
+}
+.resume-card-delete:hover {
+  background: rgb(var(--color-error) / 0.08);
+  color: rgb(var(--color-error));
+}
+.resume-delete-dialog {
+  width: min(480px, calc(100vw - 32px));
+  margin: auto;
+  padding: 0;
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 14px;
+  background: rgb(var(--color-surface-container-lowest));
+  color: rgb(var(--color-on-surface));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+}
+.resume-delete-dialog::backdrop {
+  background: rgb(0 0 0 / 0.6);
+  backdrop-filter: blur(3px);
+}
+.resume-delete-content {
+  display: grid;
+  gap: 16px;
+  padding: 26px;
+}
+.resume-delete-symbol {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: rgb(var(--color-error) / 0.08);
+  color: rgb(var(--color-error));
+  border-radius: 8px;
+}
+.resume-delete-content h2 {
+  font: 24px var(--desk-serif);
+}
+.resume-delete-name {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.resume-delete-content p {
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgb(var(--color-secondary));
+}
+.resume-delete-content [role="alert"] {
+  color: rgb(var(--color-error));
+}
+.resume-delete-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid rgb(var(--color-outline-variant));
+}
+.resume-delete-actions button {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 7px;
+  font-size: 13px;
+}
+.resume-delete-actions .resume-delete-confirm {
+  background: rgb(var(--color-error));
+  color: rgb(var(--color-on-error));
+  border-color: rgb(var(--color-error));
+}
+.resume-delete-actions button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.resume-delete-dialog button:focus-visible,
+.resume-card-actions :is(a, button):focus-visible,
+.resume-list-tabs button:focus-visible {
+  outline: 2px solid rgb(var(--color-primary));
+  outline-offset: -2px;
+}
+
+.conflict-panel {
+  padding: 20px;
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 10px;
+  background: rgb(var(--color-surface-container-lowest));
+  margin: 16px;
+}
+.conflict-panel h2 {
+  font: 22px var(--desk-serif);
+  margin-bottom: 12px;
+}
+.conflict-panel p,
+.conflict-panel li {
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+.conflict-panel pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

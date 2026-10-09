@@ -184,7 +184,9 @@ export function DocumentTools({
   }
   return (
     <details className="workspace-tools bg-surface-container-lowest border-b px-4 py-2 no-print shrink-0 max-h-[65vh] overflow-auto">
-      <summary> {copy("All fields, history, library and backups")} </summary>
+      <summary aria-label={copy("All fields, history, library and backups")}>
+        {copy("Document tools")}
+      </summary>
       <div className="document-popover">
         <button
           className="document-popover-close"

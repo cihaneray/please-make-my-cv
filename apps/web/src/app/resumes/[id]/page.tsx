@@ -1,19 +1,19 @@
 "use client";
-import { PageFitAssistant } from "@/components/PageFitAssistant";
+import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { DownloadMenu } from "@/components/DownloadMenu";
 import { EditorCommands } from "@/components/EditorCommands";
 import { useDraftHistory } from "@/lib/draft-history";
 import { sectionOrder, moveItem } from "@/lib/section-order";
 import { ReorderControls } from "@/components/ReorderControls";
-import { SectionOrderEditor } from "@/components/SectionOrderEditor";
+import { ResumeDesignPanel } from "@/components/ResumeDesignPanel";
 import { SlidingIndicator } from "@/components/SlidingIndicator";
 import { MotionList } from "@/components/MotionList";
 import { notify } from "@/components/Notifications";
 import { useParams } from "next/navigation";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { A4ResumePreview } from "@/components/A4ResumePreview";
 import { Icons } from "@/components/Icons";
-import { AIResumeReview } from "@/components/AIResumeReview";
+import { ResumeReviewPanel } from "@/components/ResumeReviewPanel";
 import {
   BulletListEditor,
   EditorField,
@@ -22,14 +22,16 @@ import {
 import { DateFields } from "@/components/DateFields";
 import { StructuredSectionEditor } from "@/components/StructuredSectionEditor";
 import { ResumeChanges } from "@/components/ResumeChanges";
+import { useUnsavedNavigation } from "@/lib/unsaved-navigation";
+import { SuggestionDialog } from "@/components/SuggestionDialog";
+import { ResumeConflict } from "@/components/ResumeConflict";
+import { useResumeRecovery } from "@/lib/resume-recovery";
 import { useCopy } from "@/lib/copy";
 import { DocumentTools } from "@/components/DocumentTools";
 import { SourceEditor } from "@/components/SourceEditor";
-import { api } from "@/lib/api";
-import { applyAIEdit } from "@/lib/ai-edits";
+import { api, ApiError, errorMessage } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import {
-  AnalysisIssue,
   EducationItem,
   ExperienceItem,
   ProjectItem,
@@ -55,6 +57,13 @@ export default function ResumeStudioPage() {
   } = useDraftHistory();
   const [savedSnapshot, setSavedSnapshot] = useState("");
   const [notice, setNotice] = useState("");
+  const [conflict, setConflict] = useState(false);
+  const [suggestion, setSuggestion] = useState<{
+    before: string;
+    after: string;
+    experienceId?: string;
+    bulletIndex?: number;
+  } | null>(null);
   const [sourcePending, setSourcePending] = useState(false);
   const [recovery, setRecovery] = useState<ResumeDocument | null>(null);
   const [searchTarget, setSearchTarget] = useState<{
@@ -88,44 +97,25 @@ export default function ResumeStudioPage() {
     };
   }, []);
   const saveInFlight = useRef(false);
-  const dirty = !!doc && JSON.stringify(doc) !== savedSnapshot;
+  const documentSnapshot = useMemo(
+    () => (doc ? JSON.stringify(doc) : ""),
+    [doc],
+  );
+  const dirty = !!doc && documentSnapshot !== savedSnapshot;
+  const recoveryState = useResumeRecovery(
+    doc,
+    dirty,
+    resumeId,
+    !!savedSnapshot,
+    setNotice,
+  );
   useEffect(() => {
-    if (!doc || doc.metadata.id !== resumeId || !savedSnapshot || recovery)
-      return;
-    try {
-      if (dirty)
-        localStorage.setItem(`cv-draft-${resumeId}`, JSON.stringify(doc));
-      else localStorage.removeItem(`cv-draft-${resumeId}`);
-    } catch {
-      setNotice("Local draft recovery is unavailable. Save regularly.");
-    }
-  }, [doc, dirty, savedSnapshot, resumeId, recovery]);
-  useEffect(() => {
-    const guard = (event: BeforeUnloadEvent) => {
-      if (dirty || sourcePending) {
-        event.preventDefault();
-        event.returnValue = "";
-      }
-    };
-    const navigation = (event: MouseEvent) => {
-      const anchor = (event.target as HTMLElement).closest("a");
-      if (
-        anchor &&
-        anchor.target !== "_blank" &&
-        (dirty || sourcePending) &&
-        !confirm(
-          "Leave with unsaved changes? Drafts are recoverable on this device.",
-        )
-      )
-        event.preventDefault();
-    };
-    window.addEventListener("beforeunload", guard);
-    document.addEventListener("click", navigation, true);
-    return () => {
-      window.removeEventListener("beforeunload", guard);
-      document.removeEventListener("click", navigation, true);
-    };
-  }, [dirty, sourcePending]);
+    if (recoveryState.recovery) setRecovery(recoveryState.recovery);
+  }, [recoveryState.recovery]);
+  useUnsavedNavigation(
+    dirty || sourcePending,
+    copy("Leave with unsaved changes? Drafts are recoverable on this device."),
+  );
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<
@@ -134,6 +124,9 @@ export default function ResumeStudioPage() {
   useEffect(() => {
     const shortcuts = (event: KeyboardEvent) => {
       if (
+        (event.target instanceof HTMLElement &&
+          (event.target.isContentEditable ||
+            ["INPUT", "TEXTAREA", "SELECT"].includes(event.target.tagName))) ||
         sourcePending ||
         saving ||
         activeTab === "source" ||
@@ -198,25 +191,16 @@ export default function ResumeStudioPage() {
     let cancelled = false;
     async function load() {
       try {
-        console.log("START LOADING RESUME:", resumeId);
         setLoading(true);
         const data = await api.getResume(resumeId);
         if (cancelled) return;
-        console.log("RESUME LOADED SUCCESSFULLY:", data?.metadata?.id);
         setDoc(data);
         setActiveTab(data.metadata.targetJob ? "review" : "content");
         setSavedSnapshot(JSON.stringify(data));
-        try {
-          const raw = localStorage.getItem(`cv-draft-${resumeId}`);
-          if (raw && raw !== JSON.stringify(data)) setRecovery(JSON.parse(raw));
-        } catch {
-          setNotice("Could not read the recovered draft.");
-        }
-      } catch (err: any) {
-        console.error("RESUME LOAD ERROR:", err);
-        setNotice(`Failed to load resume: ${err.message}`);
+      } catch (err: unknown) {
+        if (!cancelled) setNotice(errorMessage(err));
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     load();
@@ -224,28 +208,32 @@ export default function ResumeStudioPage() {
       cancelled = true;
     };
   }, [resumeId, setDoc]);
-  // Load ATS analysis when review tab is activated
   useEffect(() => {
-    let cancelled = false;
-    if (activeTab === "review" && resumeId) {
-      async function fetchAnalysis() {
-        try {
-          setAnalyzing(true);
-          const report = await api.getAnalysis(resumeId, doc || undefined);
-          if (!cancelled) setAnalysisReport(report);
-        } catch (err) {
-          if (!cancelled) {
-            setAnalysisReport(null);
-            setNotice(
-              "Could not analyze this draft. Retry by reopening Review.",
-            );
-          }
-        } finally {
-          if (!cancelled) setAnalyzing(false);
-        }
-      }
-      fetchAnalysis();
+    if (activeTab !== "review" || !doc || doc.metadata.id !== resumeId) {
+      setAnalyzing(false);
+      return;
     }
+    const controller = new AbortController();
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setAnalyzing(true);
+      try {
+        const report = await api.getAnalysis(resumeId, doc, controller.signal);
+        if (!cancelled) setAnalysisReport(report);
+      } catch (error) {
+        if (!cancelled) {
+          setAnalysisReport(null);
+          setNotice(errorMessage(error));
+        }
+      } finally {
+        if (!cancelled) setAnalyzing(false);
+      }
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [activeTab, resumeId, doc]);
   // Save changes to backend
   async function handleSave(newDoc = doc) {
@@ -274,13 +262,14 @@ export default function ResumeStudioPage() {
             : updated,
       );
       setNotice("");
-    } catch (err: any) {
-      if (err.status === 409) {
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.status === 409) {
+        setConflict(true);
         setNotice(
           "Conflict: your draft is preserved. Export JSON before reloading to compare with the newer server revision.",
         );
       } else {
-        setNotice(`Save failed: ${err.message}`);
+        setNotice(`Save failed: ${errorMessage(err)}`);
       }
     } finally {
       setSaving(false);
@@ -298,9 +287,9 @@ export default function ResumeStudioPage() {
       [section]: value,
     });
   }
-  function updateProfileField(
-    field: keyof ResumeDocument["profile"],
-    val: any,
+  function updateProfileField<K extends keyof ResumeDocument["profile"]>(
+    field: K,
+    val: ResumeDocument["profile"][K],
   ) {
     if (!doc) return;
     setDoc({
@@ -315,7 +304,7 @@ export default function ResumeStudioPage() {
   function addExperience() {
     if (!doc) return;
     const newExp: ExperienceItem = {
-      id: `exp-${Date.now()}`,
+      id: crypto.randomUUID(),
       company: "",
       position: "",
       location: "",
@@ -349,7 +338,7 @@ export default function ResumeStudioPage() {
   function addEducation() {
     if (!doc) return;
     const newEdu: EducationItem = {
-      id: `edu-${Date.now()}`,
+      id: crypto.randomUUID(),
       institution: "",
       degree: "",
       fieldOfStudy: "",
@@ -377,7 +366,7 @@ export default function ResumeStudioPage() {
   function addProject() {
     if (!doc) return;
     const newProj: ProjectItem = {
-      id: `proj-${Date.now()}`,
+      id: crypto.randomUUID(),
       name: "",
       role: "",
       url: "",
@@ -405,11 +394,9 @@ export default function ResumeStudioPage() {
     try {
       setAiLoading(true);
       const res = await api.improveSummary(doc.summary, doc.profile.headline);
-      if (confirm(`Apply AI Suggested Summary?\n\n"${res.suggestion}"`)) {
-        updateField("summary", res.suggestion);
-      }
-    } catch (err: any) {
-      notify(`AI suggestion error: ${err.message}`);
+      setSuggestion({ before: doc.summary, after: res.suggestion });
+    } catch (err: unknown) {
+      notify(`AI suggestion error: ${errorMessage(err)}`);
     } finally {
       setAiLoading(false);
     }
@@ -425,13 +412,14 @@ export default function ResumeStudioPage() {
     try {
       setAiLoading(true);
       const res = await api.rewriteBullet(bullet, tone);
-      if (
-        confirm(`Apply AI Suggested Bullet (${tone})?\n\n"${res.suggestion}"`)
-      ) {
-        updateBullet(expIndex, bulletIndex, res.suggestion);
-      }
-    } catch (err: any) {
-      notify(`AI error: ${err.message}`);
+      setSuggestion({
+        before: bullet,
+        after: res.suggestion,
+        experienceId: doc.experience[expIndex].id,
+        bulletIndex,
+      });
+    } catch (err: unknown) {
+      notify(`AI error: ${errorMessage(err)}`);
     } finally {
       setAiLoading(false);
     }
@@ -445,6 +433,50 @@ export default function ResumeStudioPage() {
   }
   return (
     <div className="editorial-studio">
+      {suggestion && (
+        <SuggestionDialog
+          before={suggestion.before}
+          after={suggestion.after}
+          current={
+            suggestion.experienceId
+              ? doc.experience.find(
+                  (entry) => entry.id === suggestion.experienceId,
+                )?.bullets[suggestion.bulletIndex ?? 0]
+              : doc.summary
+          }
+          onClose={() => setSuggestion(null)}
+          onApply={() => {
+            if (suggestion.experienceId) {
+              const index = doc.experience.findIndex(
+                (entry) => entry.id === suggestion.experienceId,
+              );
+              if (
+                index >= 0 &&
+                doc.experience[index].bullets[suggestion.bulletIndex ?? 0] ===
+                  suggestion.before
+              )
+                updateBullet(
+                  index,
+                  suggestion.bulletIndex ?? 0,
+                  suggestion.after,
+                );
+            } else if (doc.summary === suggestion.before)
+              updateField("summary", suggestion.after);
+            setSuggestion(null);
+          }}
+        />
+      )}
+      {conflict && (
+        <ResumeConflict
+          draft={doc}
+          onResolved={(value) => {
+            setDoc(value);
+            setSavedSnapshot(JSON.stringify(value));
+            setConflict(false);
+            setNotice("");
+          }}
+        />
+      )}
       <div className="studio-ribbon no-print">
         <div className="studio-document-title">
           <span className="editorial-eyebrow">
@@ -524,6 +556,7 @@ export default function ResumeStudioPage() {
               onClick={() => {
                 setDoc(recovery);
                 setRecovery(null);
+                recoveryState.dismiss();
                 setNotice(
                   "Recovered draft loaded. If another revision exists, saving will report a conflict.",
                 );
@@ -534,7 +567,7 @@ export default function ResumeStudioPage() {
             <button
               onClick={() => {
                 setRecovery(null);
-                localStorage.removeItem(`cv-draft-${resumeId}`);
+                recoveryState.dismiss();
               }}
             >
               Discard recovered draft
@@ -622,17 +655,21 @@ export default function ResumeStudioPage() {
           className="studio-undo"
           disabled={sourcePending || saving || !canUndo}
           onClick={undo}
+          aria-label={copy("Undo last draft edit")}
+          title={copy("Undo last draft edit")}
         >
           <Icons.Undo size={14} />
-          {copy("Undo last draft edit")}
+          {copy("Undo")}
         </button>
         <button
           className="studio-undo"
           disabled={sourcePending || saving || !canRedo}
           onClick={redo}
+          aria-label={copy("Redo last draft edit")}
+          title={copy("Redo last draft edit")}
         >
           <Icons.Redo size={14} />
-          {copy("Redo last draft edit")}
+          {copy("Redo")}
         </button>
         <DocumentTools
           document={doc}
@@ -690,7 +727,7 @@ export default function ResumeStudioPage() {
           aria-hidden={!inspectorOpen}
         >
           <header className="inspector-heading">
-            <span className="editorial-eyebrow">{copy("MAKE IT YOURS")}</span>
+            <span className="editorial-eyebrow">{copy("Editing panel")}</span>
             <button
               aria-label={copy("Close tools")}
               disabled={sourcePending}
@@ -797,6 +834,11 @@ export default function ResumeStudioPage() {
                         <button
                           key={s.id}
                           type="button"
+                          aria-label={`${s.label}${s.count === undefined ? "" : ` ${s.count}`}`}
+                          title={
+                            s.count === 0 ? copy("Nothing added yet") : s.label
+                          }
+                          data-empty={s.count === 0}
                           aria-pressed={activeSection === s.id}
                           onClick={() => setActiveSection(s.id)}
                           className={`flex items-center justify-between px-space-md py-1.5 rounded-lg font-label-md text-label-md transition-colors text-left ${
@@ -811,7 +853,7 @@ export default function ResumeStudioPage() {
                           </div>
                           {s.count !== undefined && (
                             <span className="font-label-sm px-1.5 py-0.2 rounded bg-surface-container-high text-secondary">
-                              {s.count}
+                              {s.count === 0 ? copy("Add") : s.count}
                             </span>
                           )}
                         </button>
@@ -848,6 +890,17 @@ export default function ResumeStudioPage() {
                         {t("core")}
                       </span>
                     </div>
+                    <ProfilePhoto
+                      value={doc.profile.photo}
+                      visible={doc.visibility.showPhoto}
+                      onChange={(photo) => updateProfileField("photo", photo)}
+                      onVisibilityChange={(showPhoto) =>
+                        setDoc({
+                          ...doc,
+                          visibility: { ...doc.visibility, showPhoto },
+                        })
+                      }
+                    />
                     <div className="grid grid-cols-2 gap-space-md">
                       <div className="flex flex-col gap-1">
                         <label className="font-label-sm text-secondary font-medium">
@@ -1350,7 +1403,7 @@ export default function ResumeStudioPage() {
                         type="button"
                         onClick={() => {
                           const newGroup: SkillGroup = {
-                            id: `skill-${Date.now()}`,
+                            id: crypto.randomUUID(),
                             category: "",
                             skills: [],
                           };
@@ -1443,374 +1496,21 @@ export default function ResumeStudioPage() {
           )}
           {/* 3. DESIGN SETTINGS MODE */}
           {activeTab === "design" && (
-            <div className="inspector-mode flex flex-1 w-full overflow-hidden">
-              <div className="studio-form w-[420px] bg-surface-container-lowest p-space-xl flex flex-col gap-space-lg overflow-y-auto border-r border-surface-container-high no-print">
-                <SectionOrderEditor document={doc} onChange={setDoc} />
-                <PageFitAssistant document={doc} onChange={setDoc} />
-                <span className="font-headline-md text-headline-md text-on-surface font-semibold">
-                  {t("designAndTypography")}
-                </span>
-                {/* Localization & Target Market (Decoupled Variables) */}
-                <div className="flex flex-col gap-3 p-3.5 rounded-lg bg-surface-container-low border border-surface-container-highest">
-                  <span className="font-headline-sm font-semibold text-on-surface flex items-center gap-1.5">
-                    <Icons.Language size={16} />
-                    <span>{t("localizationTitle")}</span>
-                  </span>
-                  <p className="text-[11px] text-on-surface-variant leading-relaxed bg-surface-container p-2 rounded border border-surface-container-high">
-                    {t("marketNotice")}
-                  </p>
-                  {/* CV Content Language */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="font-label-sm text-secondary">
-                      {t("cvLanguageLabel")}
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { code: "en", label: "English" },
-                        { code: "tr", label: "Türkçe" },
-                      ].map((lang) => (
-                        <button
-                          key={lang.code}
-                          type="button"
-                          onClick={() => {
-                            setDoc({
-                              ...doc,
-                              metadata: {
-                                ...doc.metadata,
-                                language: lang.code,
-                              },
-                            });
-                          }}
-                          className={`p-2 rounded border text-label-md transition-all ${
-                            (doc.metadata.language || "en") === lang.code
-                              ? "border-primary bg-primary text-on-primary font-semibold"
-                              : "border-surface-container-highest bg-surface-container text-on-surface hover:bg-surface-container-high"
-                          }`}
-                        >
-                          {lang.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  {/* Target Market */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="font-label-sm text-secondary">
-                      {t("targetMarketLabel")}
-                    </label>
-                    <select
-                      aria-label={t("targetMarketLabel")}
-                      value={doc.metadata.targetMarket || "TR"}
-                      onChange={(e) => {
-                        setDoc({
-                          ...doc,
-                          metadata: {
-                            ...doc.metadata,
-                            targetMarket: e.target.value as any,
-                          },
-                        });
-                      }}
-                      className="h-9 px-3 rounded-lg bg-surface-container-lowest text-body-md border border-surface-container-highest outline-none focus:border-primary"
-                    >
-                      <option value="TR">{t("marketTR")}</option>
-                      <option value="US">{t("marketUS")}</option>
-                      <option value="UK">{t("marketUK")}</option>
-                      <option value="EU">{t("marketEU")}</option>
-                      <option value="GLOBAL">{t("marketGlobal")}</option>
-                      <option value="OTHER">{t("marketOther")}</option>
-                    </select>
-                  </div>
-                </div>
-                {/* Template */}
-                <div className="flex flex-col gap-2">
-                  <label className="font-label-sm text-secondary">
-                    {t("visualTemplate")}
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {(["minimal", "technical", "professional"] as const).map(
-                      (tCode) => (
-                        <button
-                          key={tCode}
-                          type="button"
-                          onClick={() => {
-                            updateField("design", {
-                              ...doc.design,
-                              template: tCode,
-                            });
-                          }}
-                          className={`p-2.5 rounded-lg border text-label-md capitalize transition-all ${
-                            doc.design.template === tCode
-                              ? "border-primary bg-primary text-on-primary font-semibold"
-                              : "border-surface-container-highest bg-surface-container-low text-on-surface hover:bg-surface-container"
-                          }`}
-                        >
-                          {tCode}
-                        </button>
-                      ),
-                    )}
-                  </div>
-                </div>
-                {/* Accent Color */}
-                <div className="flex flex-col gap-2">
-                  <label className="font-label-sm text-secondary">
-                    {t("accentColor")}
-                  </label>
-                  <div className="flex items-center gap-3">
-                    {[
-                      "#0F172A",
-                      "#16A34A",
-                      "#2563EB",
-                      "#7C3AED",
-                      "#DC2626",
-                      "#B45309",
-                    ].map((col) => (
-                      <button
-                        key={col}
-                        aria-label={`${t("accentColor")} ${col}`}
-                        aria-pressed={doc.design.accentColor === col}
-                        type="button"
-                        onClick={() =>
-                          updateField("design", {
-                            ...doc.design,
-                            accentColor: col,
-                          })
-                        }
-                        className={`w-7 h-7 rounded-full transition-transform ${
-                          doc.design.accentColor === col
-                            ? "scale-125 ring-2 ring-primary ring-offset-2"
-                            : ""
-                        }`}
-                        style={{ backgroundColor: col }}
-                      />
-                    ))}
-                  </div>
-                </div>
-                {/* Font Family */}
-                <div className="flex flex-col gap-2">
-                  <label className="font-label-sm text-secondary">
-                    {t("fontFamily")}
-                  </label>
-                  <select
-                    aria-label={t("fontFamily")}
-                    value={doc.design.fontFamily}
-                    onChange={(e) =>
-                      updateField("design", {
-                        ...doc.design,
-                        fontFamily: e.target.value,
-                      })
-                    }
-                    className="h-9 px-3 rounded-lg bg-surface-container-low text-body-md border border-surface-container-highest"
-                  >
-                    <option value="Inter">Inter (Swiss Clean)</option>
-                    <option value="Helvetica Neue">
-                      Helvetica Neue (Modernist)
-                    </option>
-                    <option value="Georgia">Georgia (Editorial Serif)</option>
-                    <option value="Menlo">Menlo (Monospace / Tech)</option>
-                  </select>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleSave()}
-                  className="mt-4 h-9 rounded bg-primary text-on-primary font-label-md hover:bg-inverse-surface transition-colors"
-                >
-                  {t("saveDesign")}
-                </button>
-              </div>
-            </div>
+            <ResumeDesignPanel
+              doc={doc}
+              setDoc={setDoc}
+              onSave={() => handleSave()}
+            />
           )}
           {/* 4. REVIEW & ATS ANALYSIS MODE */}
           {activeTab === "review" && (
-            <div className="inspector-mode flex flex-1 w-full overflow-hidden">
-              <div className="studio-form w-[450px] bg-surface-container-lowest p-space-xl flex flex-col gap-space-lg overflow-y-auto border-r border-surface-container-high no-print">
-                <span className="font-headline-md text-headline-md text-on-surface font-semibold">
-                  {t("atsReview")}
-                </span>
-                <AIResumeReview
-                  key={doc.metadata.id}
-                  document={doc}
-                  disabled={sourcePending || saving}
-                  onApply={(edit) =>
-                    setDoc((current) =>
-                      current ? applyAIEdit(current, edit) : current,
-                    )
-                  }
-                />
-                {analyzing ? (
-                  <div className="text-secondary text-sm">
-                    {t("evaluatingRules")}
-                  </div>
-                ) : analysisReport ? (
-                  <div className="flex flex-col gap-space-lg">
-                    <div className="local-review-explanation">
-                      <h3>{copy("Local rule checks")}</h3>
-                      <p>
-                        {copy(
-                          "These checks run locally without AI. They check document structure, contact details, duplicate or long bullets and other predefined rules. AI wording suggestions above are separate.",
-                        )}
-                      </p>
-                      <details>
-                        <summary>
-                          {copy("How are these scores calculated?")}
-                        </summary>
-                        <p>
-                          {copy(
-                            "ATS score = earned points ÷ 80 × 100. Job relevance is excluded here. Missing email subtracts 10 contact points; missing phone subtracts 5. Other rule findings reduce their related dimension.",
-                          )}
-                        </p>
-                        <p>
-                          {copy(
-                            "Content quality starts at 100 and deducts 15/10/5/2 for critical/important/warning/info findings in experience, projects or summary. A score of 100 only means these rules found no issues; it does not mean the text cannot be improved.",
-                          )}
-                        </p>
-                      </details>
-                    </div>
-                    {/* Score Pill Row */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 rounded-lg bg-surface-container-low flex flex-col">
-                        <span className="text-[11px] text-secondary uppercase font-semibold">
-                          {t("atsCompatibility")}
-                        </span>
-                        <span className="text-[22px] font-bold text-on-tertiary-container">
-                          {analysisReport.atsCompatibilityScore}%
-                        </span>
-                      </div>
-                      <div className="p-3 rounded-lg bg-surface-container-low flex flex-col">
-                        <span className="text-[11px] text-secondary uppercase font-semibold">
-                          {t("contentQuality")}
-                        </span>
-                        <span className="text-[22px] font-bold text-primary">
-                          {analysisReport.contentQualityScore}%
-                        </span>
-                      </div>
-                    </div>
-                    {/* Transparent ATS Heuristic Score Breakdown */}
-                    {analysisReport.atsBreakdown && (
-                      <div className="flex flex-col gap-2 p-3 rounded-lg bg-surface-container-low border border-surface-container-highest">
-                        <span className="font-label-sm text-secondary uppercase tracking-wider font-semibold">
-                          {t("scoreBreakdownTitle")}
-                        </span>
-                        <div className="grid grid-cols-2 gap-2 text-[12px]">
-                          <div className="flex justify-between p-1.5 rounded bg-surface-container-lowest">
-                            <span className="text-secondary">
-                              {t("breakdownStructure")}
-                            </span>
-                            <span className="font-semibold text-on-surface">
-                              {analysisReport.atsBreakdown.structure} / 20
-                            </span>
-                          </div>
-                          <div className="flex justify-between p-1.5 rounded bg-surface-container-lowest">
-                            <span className="text-secondary">
-                              {t("breakdownReadability")}
-                            </span>
-                            <span className="font-semibold text-on-surface">
-                              {analysisReport.atsBreakdown.readability} / 20
-                            </span>
-                          </div>
-                          <div className="flex justify-between p-1.5 rounded bg-surface-container-lowest">
-                            <span className="text-secondary">
-                              {t("breakdownContact")}
-                            </span>
-                            <span className="font-semibold text-on-surface">
-                              {analysisReport.atsBreakdown.contact} / 15
-                            </span>
-                          </div>
-                          <div className="flex justify-between p-1.5 rounded bg-surface-container-lowest">
-                            <span className="text-secondary">
-                              {t("breakdownConsistency")}
-                            </span>
-                            <span className="font-semibold text-on-surface">
-                              {analysisReport.atsBreakdown.consistency} / 15
-                            </span>
-                          </div>
-                          <div className="flex justify-between p-1.5 rounded bg-surface-container-lowest">
-                            <span className="text-secondary">
-                              {t("breakdownJobRelevance")}
-                            </span>
-                            <span className="font-semibold text-on-surface">
-                              {analysisReport.atsBreakdown.job_relevance == null
-                                ? copy("Not assessed")
-                                : `${analysisReport.atsBreakdown.job_relevance} / 20`}
-                            </span>
-                          </div>
-                          <div className="flex justify-between p-1.5 rounded bg-surface-container-lowest">
-                            <span className="text-secondary">
-                              {t("breakdownParseability")}
-                            </span>
-                            <span className="font-semibold text-on-surface">
-                              {analysisReport.atsBreakdown.parseability} / 10
-                            </span>
-                          </div>
-                        </div>
-                        {analysisReport.heuristicNotice && (
-                          <p className="text-[11px] text-secondary italic pt-1">
-                            {copy(analysisReport.heuristicNotice)}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                    {/* Strengths */}
-                    {analysisReport.strengths.length > 0 && (
-                      <div className="flex flex-col gap-1.5">
-                        <span className="font-label-sm text-secondary uppercase tracking-wider">
-                          {t("strengths")}
-                        </span>
-                        {analysisReport.strengths.map((str, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-center gap-2 text-[12px] text-on-surface"
-                          >
-                            <Icons.CheckCircle
-                              size={15}
-                              className="text-on-tertiary-container"
-                            />
-                            <span>{str}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {/* Issues */}
-                    <div className="flex flex-col gap-2">
-                      <span className="font-label-sm text-secondary uppercase tracking-wider">
-                        {copy("Rule findings")} ({analysisReport.issues.length})
-                      </span>
-                      {analysisReport.issues.length === 0 && (
-                        <p className="text-xs text-secondary">
-                          {copy(
-                            "No local rule findings. AI may still suggest wording improvements or ask for missing context.",
-                          )}
-                        </p>
-                      )}
-                      {analysisReport.issues.map(
-                        (issue: AnalysisIssue, idx: number) => (
-                          <div
-                            key={idx}
-                            className={`p-3 rounded-lg text-[12px] flex flex-col gap-1 border ${
-                              issue.severity === "critical"
-                                ? "bg-error-container border-error/20 text-on-error-container"
-                                : issue.severity === "warning"
-                                  ? "bg-amber-50 border-amber-200 text-amber-900"
-                                  : "bg-surface-container-low border-surface-container-highest text-on-surface"
-                            }`}
-                          >
-                            <div className="font-semibold flex items-center justify-between">
-                              <span>{issue.message}</span>
-                              <span className="text-[10px] uppercase font-bold">
-                                {issue.severity}
-                              </span>
-                            </div>
-                            {issue.suggestion && (
-                              <div className="text-[11px] opacity-80 pt-0.5">
-                                Tip: {issue.suggestion}
-                              </div>
-                            )}
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            </div>
+            <ResumeReviewPanel
+              doc={doc}
+              setDoc={setDoc}
+              disabled={sourcePending || saving}
+              analyzing={analyzing}
+              analysisReport={analysisReport}
+            />
           )}
         </section>
       </div>

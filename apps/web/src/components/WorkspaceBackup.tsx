@@ -7,6 +7,10 @@ export function WorkspaceBackup() {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [restorePassword, setRestorePassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRestorePassword, setShowRestorePassword] = useState(false);
   const [maxBytes, setMaxBytes] = useState(5 * 1024 * 1024);
   useEffect(() => {
     let active = true;
@@ -20,11 +24,18 @@ export function WorkspaceBackup() {
         )
           setMaxBytes(value.maxUploadSizeBytes);
       })
-      .catch(() => {});
+      .catch(() => {
+        if (active)
+          setStatus(
+            copy(
+              "Could not read the backup size limit. Using the default 5 MB limit.",
+            ),
+          );
+      });
     return () => {
       active = false;
     };
-  }, []);
+  }, [copy]);
   return (
     <section
       aria-label={copy("Workspace backup and restore")}
@@ -43,7 +54,7 @@ export function WorkspaceBackup() {
           <label className="backup-field">
             <span>{copy("Backup password (at least 12 characters)")}</span>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               autoComplete="new-password"
               maxLength={1024}
               value={password}
@@ -51,6 +62,39 @@ export function WorkspaceBackup() {
               disabled={busy}
             />
           </label>
+          <button
+            type="button"
+            className="password-visibility"
+            aria-pressed={showPassword}
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {copy(showPassword ? "Hide password" : "Show password")}
+          </button>
+          {password && (
+            <>
+              <label className="backup-field">
+                <span>{copy("Confirm backup password")}</span>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  maxLength={1024}
+                  value={confirmation}
+                  onChange={(e) => setConfirmation(e.target.value)}
+                  disabled={busy}
+                  aria-invalid={!!confirmation && confirmation !== password}
+                />
+              </label>
+              <p className="backup-password-hint" role="status">
+                {copy(
+                  password.length < 12
+                    ? "Use at least 12 characters."
+                    : confirmation && confirmation !== password
+                      ? "Passwords do not match."
+                      : "",
+                )}
+              </p>
+            </>
+          )}
           <p>
             {copy(
               "A password encrypts the backup. Keep it safe: it cannot be recovered. Leave empty for a plain JSON backup.",
@@ -58,7 +102,11 @@ export function WorkspaceBackup() {
           </p>
           <button
             className="backup-download"
-            disabled={busy || (!!password && password.length < 12)}
+            disabled={
+              busy ||
+              (!!password &&
+                (password.length < 12 || password !== confirmation))
+            }
             onClick={async () => {
               setBusy(true);
               try {
@@ -100,6 +148,25 @@ export function WorkspaceBackup() {
         </div>
         <div className="backup-import">
           <h3>{copy("Restore a backup")}</h3>
+          <label className="backup-field">
+            <span>{copy("Restore password (encrypted backups only)")}</span>
+            <input
+              type={showRestorePassword ? "text" : "password"}
+              autoComplete="off"
+              maxLength={1024}
+              value={restorePassword}
+              onChange={(e) => setRestorePassword(e.target.value)}
+              disabled={busy}
+            />
+          </label>
+          <button
+            type="button"
+            className="password-visibility"
+            aria-pressed={showRestorePassword}
+            onClick={() => setShowRestorePassword(!showRestorePassword)}
+          >
+            {copy(showRestorePassword ? "Hide password" : "Show password")}
+          </button>
           <p>
             {copy(
               "Choose a JSON backup. For an encrypted backup, enter its password in the password field.",
@@ -131,10 +198,36 @@ export function WorkspaceBackup() {
                 setBusy(true);
                 try {
                   const text = await file.text();
+                  const digest = [
+                    ...new Uint8Array(
+                      await crypto.subtle.digest(
+                        "SHA-256",
+                        new TextEncoder().encode(text),
+                      ),
+                    ),
+                  ]
+                    .map((value) => value.toString(16).padStart(2, "0"))
+                    .join("");
+                  let previous = false;
+                  try {
+                    previous =
+                      localStorage.getItem(`cv-restored-${digest}`) === "yes";
+                  } catch {
+                    /* Optional duplicate warning. */
+                  }
+                  if (
+                    previous &&
+                    !confirm(
+                      copy(
+                        "This backup was already restored in this browser. Add another copy?",
+                      ),
+                    )
+                  )
+                    return;
                   const envelope = JSON.parse(text);
                   const encrypted =
                     envelope.format === "cv-workspace-encrypted-v1";
-                  if (encrypted && password.length < 12)
+                  if (encrypted && restorePassword.length < 12)
                     throw new Error(
                       copy("Enter the backup password before restoring."),
                     );
@@ -146,7 +239,10 @@ export function WorkspaceBackup() {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: encrypted
-                        ? JSON.stringify({ password, envelope })
+                        ? JSON.stringify({
+                            password: restorePassword,
+                            envelope,
+                          })
                         : text,
                     },
                   );
@@ -156,6 +252,11 @@ export function WorkspaceBackup() {
                       result.error?.message ||
                         JSON.stringify(result.detail || result),
                     );
+                  try {
+                    localStorage.setItem(`cv-restored-${digest}`, "yes");
+                  } catch {
+                    /* The restore succeeded even if local storage is unavailable. */
+                  }
                   setStatus(result.message);
                 } catch (err) {
                   setStatus((err as Error).message);
@@ -171,7 +272,9 @@ export function WorkspaceBackup() {
           </p>
         </div>
       </div>
-      <p role="status">{copy(busy ? "Working…" : status)}</p>
+      <p className="backup-status" role="status">
+        {copy(busy ? "Working…" : status)}
+      </p>
     </section>
   );
 }

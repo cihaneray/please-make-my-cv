@@ -218,7 +218,26 @@ export interface PdfCheckReport {
   issues: Array<PdfCheckIssue>;
   notice: string;
 }
+export interface PdfImportCheck {
+  code: string;
+  points: number;
+  maximum: number;
+  message: string;
+}
+export interface PdfImportReport {
+  valid: boolean;
+  filename: string;
+  pageCount: number;
+  extractedText: string;
+  wordCount: number;
+  detectedSections: Array<string>;
+  atsScore: number | null;
+  checks: Array<PdfImportCheck>;
+  warnings: Array<string>;
+  previewDocument: ResumeDocument | null;
+}
 export interface Profile {
+  photo: string;
   firstName: string;
   lastName: string;
   headline: string;
@@ -376,6 +395,7 @@ export interface UpdateResumeRequest {
   document: ResumeDocument;
 }
 export interface VisibilitySettings {
+  showPhoto: boolean;
   showSummary: boolean;
   showExperience: boolean;
   showEducation: boolean;

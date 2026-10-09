@@ -1,8 +1,9 @@
 "use client";
 import { useCopy } from "@/lib/copy";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import yaml from "js-yaml";
-import { api } from "@/lib/api";
+import { currentDraftTabId } from "@/lib/resume-recovery";
+import { api, errorMessage } from "@/lib/api";
 import { ResumeDocument } from "@/lib/types";
 export function SourceEditor({
   document,
@@ -21,10 +22,43 @@ export function SourceEditor({
     format: "yaml" | "json";
     code: string;
   } | null>(null);
+  const ownKey = useRef("");
+  const recoveredKey = useRef("");
   useEffect(() => {
+    ownKey.current = `cv-source-${document.metadata.id}-${currentDraftTabId()}`;
+    setRecovered(null);
     try {
-      const value = localStorage.getItem(`cv-source-${document.metadata.id}`);
-      if (value) setRecovered(JSON.parse(value));
+      const keys = Object.keys(localStorage).filter(
+        (key) =>
+          key === `cv-source-${document.metadata.id}` ||
+          key.startsWith(`cv-source-${document.metadata.id}-`),
+      );
+      let newest = 0;
+      for (const key of keys) {
+        const value = localStorage.getItem(key);
+        if (
+          value &&
+          sessionStorage.getItem(`cv-source-dismissed-${key}`) !== value
+        ) {
+          const parsed: unknown = JSON.parse(value);
+          if (
+            parsed &&
+            typeof parsed === "object" &&
+            "format" in parsed &&
+            "code" in parsed &&
+            (parsed.format === "yaml" || parsed.format === "json") &&
+            typeof parsed.code === "string"
+          ) {
+            const timestamp =
+              "updatedAt" in parsed ? Number(parsed.updatedAt) || 0 : 0;
+            if (timestamp >= newest) {
+              newest = timestamp;
+              recoveredKey.current = key;
+              setRecovered({ format: parsed.format, code: parsed.code });
+            }
+          }
+        }
+      }
     } catch {
       /* Recovery is optional. */
     }
@@ -41,6 +75,32 @@ export function SourceEditor({
       );
   }, [document, format, pending]);
 
+  const sourceDraft = useRef<string | null>(null);
+  const flushSource = () => {
+    if (!sourceDraft.current || !ownKey.current) return;
+    try {
+      localStorage.setItem(ownKey.current, sourceDraft.current);
+    } catch {
+      setError(copy("Draft storage unavailable; keep a copy before leaving."));
+    }
+  };
+  useEffect(() => {
+    sourceDraft.current = pending
+      ? JSON.stringify({ format, code, updatedAt: Date.now() })
+      : null;
+    const timer = setTimeout(flushSource, 400);
+    return () => clearTimeout(timer);
+    // The callback reads the latest draft from a ref.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pending, format, code]);
+  useEffect(() => {
+    window.addEventListener("pagehide", flushSource);
+    return () => {
+      flushSource();
+      window.removeEventListener("pagehide", flushSource);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   async function validate(apply: boolean) {
     setBusy(true);
     if (apply) onPendingChange(true);
@@ -65,11 +125,12 @@ export function SourceEditor({
         onDocumentUpdated(updated);
         setPending(false);
         onPendingChange(false);
-        localStorage.removeItem(`cv-source-${document.metadata.id}`);
+        localStorage.removeItem(ownKey.current);
+        sourceDraft.current = null;
       }
     } catch (e) {
       if (apply) onPendingChange(pending);
-      setError((e as Error).message);
+      setError(errorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -98,7 +159,12 @@ export function SourceEditor({
           <button
             onClick={() => {
               setRecovered(null);
-              localStorage.removeItem(`cv-source-${document.metadata.id}`);
+              const raw = localStorage.getItem(recoveredKey.current);
+              if (raw)
+                sessionStorage.setItem(
+                  `cv-source-dismissed-${recoveredKey.current}`,
+                  raw,
+                );
             }}
           >
             {" "}
@@ -149,14 +215,6 @@ export function SourceEditor({
           setPending(true);
           onPendingChange(true);
           setError("Not yet validated");
-          try {
-            localStorage.setItem(
-              `cv-source-${document.metadata.id}`,
-              JSON.stringify({ format, code: e.target.value }),
-            );
-          } catch {
-            setError("Draft storage unavailable; keep a copy before leaving.");
-          }
         }}
         className="flex-1 min-h-[400px] font-mono text-sm p-3"
       />

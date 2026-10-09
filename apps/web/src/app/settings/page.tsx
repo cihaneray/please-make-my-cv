@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ThemePicker } from "@/components/ThemeProvider";
 import { AISettings } from "@/components/AISettings";
 import { WorkspaceBackup } from "@/components/WorkspaceBackup";
@@ -7,225 +7,205 @@ import { Icons } from "@/components/Icons";
 import { useI18n } from "@/lib/i18n";
 import { useCopy } from "@/lib/copy";
 import { version } from "../../../package.json";
+
 export default function SettingsPage() {
   const { language, setLanguage, t } = useI18n();
   const copy = useCopy();
+  const [active, setActive] = useState("language");
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((entry) => entry.isIntersecting);
+        if (visible.length) setActive(visible[visible.length - 1].target.id);
+      },
+      { rootMargin: "-90px 0px -50% 0px", threshold: 0 },
+    );
+    [
+      "language",
+      "theme",
+      "privacy",
+      "ai-connection",
+      "workspace-backup",
+    ].forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) observer.observe(element);
+    });
+    return () => observer.disconnect();
+  }, []);
+  const sections = [
+    { id: "language", label: t("navGeneral"), icon: Icons.Globe },
+    { id: "theme", label: t("navAesthetic"), icon: Icons.Settings },
+    { id: "privacy", label: t("navPrivacy"), icon: Icons.Shield },
+    {
+      id: "ai-connection",
+      label: copy("LLM connection"),
+      icon: Icons.Sparkles,
+    },
+    {
+      id: "workspace-backup",
+      label: copy("Workspace backup"),
+      icon: Icons.Document,
+    },
+  ];
   return (
-    <div className="flex flex-col w-full max-w-5xl mx-auto px-space-lg py-margin-desktop space-y-space-xl">
-      {/* Settings Header */}
-      <header className="flex flex-col gap-space-xs pb-space-lg border-b border-surface-container-high">
-        <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary">
-          {t("settings")}
-        </span>
-        <h1 className="font-headline-xl text-headline-xl text-on-surface">
-          {t("settingsTitle")}
-        </h1>
-        <p className="font-body-md text-body-md text-on-surface-variant">
-          {t("settingsSubtitle")}
-        </p>
+    <div className="settings-page">
+      <header className="settings-page-heading">
+        <span>{t("settings")}</span>
+        <h1>{t("settingsTitle")}</h1>
+        <p>{t("settingsSubtitle")}</p>
       </header>
-      <AISettings />
-      <WorkspaceBackup />
-      {/* Main Settings Sections */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-space-xl">
-        {/* Left Column: Navigation & System Status */}
-        <div className="flex flex-col gap-space-md md:col-span-1">
-          {/* Quick Nav Panel */}
-          <div className="p-space-md rounded-xl bg-surface-container-lowest border border-surface-container-highest shadow-xs flex flex-col gap-2">
-            <span className="font-label-sm uppercase tracking-wider text-secondary font-semibold px-2 pt-1">
-              {t("settings")}
+      <div className="settings-layout">
+        <aside className="settings-navigation">
+          <h2>{copy("On this page")}</h2>
+          <nav aria-label={copy("Settings sections")}>
+            {sections.map(({ id, label, icon: Icon }) => (
+              <a
+                key={id}
+                href={`#${id}`}
+                aria-current={active === id ? "location" : undefined}
+                onClick={() => setActive(id)}
+              >
+                <Icon size={17} aria-hidden="true" />
+                <span>{label}</span>
+              </a>
+            ))}
+          </nav>
+          <div className="settings-navigation-footer">
+            <p>
+              <Icons.CheckCircle size={15} />
+              {copy("Language and theme are saved in this browser.")}
+            </p>
+            <span>
+              {copy("Version")} <code>v{version}</code>
             </span>
-            <nav className="flex flex-col gap-1">
-              <a
-                href="#language"
-                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-body-sm font-medium text-on-surface hover:bg-surface-container transition-colors"
-              >
-                <Icons.Globe size={16} className="text-secondary" />
-                <span>{t("navGeneral")}</span>
-              </a>
-              <a
-                href="#privacy"
-                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-body-sm font-medium text-on-surface hover:bg-surface-container transition-colors"
-              >
-                <Icons.Shield size={16} className="text-secondary" />
-                <span>{t("navPrivacy")}</span>
-              </a>
-              <a
-                href="#theme"
-                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-body-sm font-medium text-on-surface hover:bg-surface-container transition-colors"
-              >
-                <Icons.Sparkles size={16} className="text-secondary" />
-                <span>{t("navAesthetic")}</span>
-              </a>
-            </nav>
-            <div className="mt-2 pt-3 border-t border-surface-container-high flex flex-col gap-2">
-              {/* Autosave Pill */}
-              <div className="flex items-center gap-2 text-[11px] text-emerald-800 bg-emerald-50/90 px-2.5 py-1.5 rounded-lg border border-emerald-200/60 leading-tight">
-                <Icons.CheckCircle
-                  size={14}
-                  className="text-emerald-600 shrink-0"
-                />
-                <span>{t("saveSettings")}</span>
-              </div>
-              {/* Status info */}
-              <div className="flex items-center justify-between text-[11px] text-secondary px-1 pt-1">
-                <span>{t("systemStatus")}</span>
-                <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-surface-container">
-                  v{version}
-                </span>
-              </div>
-            </div>
           </div>
-        </div>
-        {/* Right Column: Settings Cards */}
-        <div className="flex flex-col gap-space-lg md:col-span-2">
-          {/* 1. Language & Localization Card */}
-          <div
+        </aside>
+        <div className="settings-sections">
+          <section
             id="language"
-            className="p-space-xl rounded-xl bg-surface-container-lowest border border-surface-container-highest shadow-xs flex flex-col gap-space-md"
+            className="settings-card"
+            aria-labelledby="settings-language-title"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-container-high pb-4">
-              <div className="flex flex-col gap-0.5 min-w-0 pr-2">
-                <span className="font-headline-md text-headline-md font-semibold text-on-surface">
+            <div className="settings-card-heading">
+              <div>
+                <h2 id="settings-language-title">
                   {t("languageSectionTitle")}
-                </span>
-                <span className="text-[12.5px] text-secondary leading-normal">
-                  {t("languageSectionDesc")}
-                </span>
+                </h2>
+                <p>{t("languageSectionDesc")}</p>
               </div>
-              <span className="shrink-0 font-label-sm px-2.5 py-1 rounded-full bg-surface-container font-semibold uppercase text-secondary tracking-wider text-[11px] self-start sm:self-center border border-surface-container-highest">
-                {language.toUpperCase()}
-              </span>
+              <span className="settings-badge">{language.toUpperCase()}</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              {/* English Option */}
-              <button
-                type="button"
-                onClick={() => setLanguage("en")}
-                className={`p-4 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-                  language === "en"
-                    ? "border-primary bg-primary/5 ring-1 ring-primary shadow-xs"
-                    : "border-surface-container-highest bg-surface-container-low hover:bg-surface-container hover:border-surface-container-highest"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-surface-container-lowest border border-surface-container-high flex items-center justify-center text-sm shadow-xs">
-                    🇬🇧
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-label-md text-label-md font-semibold text-on-surface">
-                      {t("englishLang")}
-                    </span>
-                    <span className="text-[11px] text-secondary">English</span>
-                  </div>
-                </div>
-                {language === "en" && (
-                  <div className="w-5 h-5 rounded-full bg-primary text-on-primary flex items-center justify-center shrink-0">
-                    <Icons.Check size={12} />
-                  </div>
-                )}
-              </button>
-              {/* Turkish Option */}
-              <button
-                type="button"
-                onClick={() => setLanguage("tr")}
-                className={`p-4 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-                  language === "tr"
-                    ? "border-primary bg-primary/5 ring-1 ring-primary shadow-xs"
-                    : "border-surface-container-highest bg-surface-container-low hover:bg-surface-container hover:border-surface-container-highest"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-surface-container-lowest border border-surface-container-high flex items-center justify-center text-sm shadow-xs">
-                    🇹🇷
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-label-md text-label-md font-semibold text-on-surface">
-                      {t("turkishLang")}
-                    </span>
-                    <span className="text-[11px] text-secondary">Türkçe</span>
-                  </div>
-                </div>
-                {language === "tr" && (
-                  <div className="w-5 h-5 rounded-full bg-primary text-on-primary flex items-center justify-center shrink-0">
-                    <Icons.Check size={12} />
-                  </div>
-                )}
-              </button>
-            </div>
-          </div>
-          {/* 2. Privacy & Data Architecture Card */}
-          <div
-            id="privacy"
-            className="p-space-xl rounded-xl bg-surface-container-lowest border border-surface-container-highest shadow-xs flex flex-col gap-space-md"
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-container-high pb-4">
-              <div className="flex flex-col gap-0.5 min-w-0 pr-2">
-                <span className="font-headline-md text-headline-md font-semibold text-on-surface">
-                  {t("privacySectionTitle")}
-                </span>
-                <span className="text-[12.5px] text-secondary leading-normal">
-                  {t("privacySectionDesc")}
-                </span>
-              </div>
-              {/* Refined 'Aktif ve Güvenli' Badge */}
-              <div className="shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[12px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/80 shadow-xs self-start sm:self-center whitespace-nowrap">
-                <span className="relative flex h-2 w-2 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span>{t("privacyStatus")}</span>
-              </div>
-            </div>
-            {/* Privacy Architecture Callout Box */}
-            <div className="p-4 rounded-xl bg-surface-container-low border border-surface-container-high flex flex-col sm:flex-row items-start gap-3.5">
-              <div className="w-9 h-9 rounded-lg bg-emerald-100/80 text-emerald-800 flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
-                <Icons.Shield size={18} />
-              </div>
-              <div className="flex flex-col gap-1.5 text-[12.5px] text-on-surface-variant leading-relaxed">
-                <span className="font-semibold text-on-surface text-[13px]">
-                  {t("localDataPromiseTitle")}
-                </span>
-                <p>{t("privacyDetails")}</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1 text-[11.5px] text-secondary font-medium">
-                  <span className="flex items-center gap-1.5">
-                    <Icons.CheckCircle
-                      size={13}
-                      className="text-emerald-600 shrink-0"
-                    />
-                    <span>
-                      {copy(
-                        "Local processing · no legal compliance certification",
-                      )}
-                    </span>
+            <div className="settings-language-options">
+              {(
+                [
+                  {
+                    value: "en",
+                    code: "EN",
+                    title: t("englishLang"),
+                    subtitle: "English",
+                  },
+                  {
+                    value: "tr",
+                    code: "TR",
+                    title: t("turkishLang"),
+                    subtitle: "Türkçe",
+                  },
+                ] as const
+              ).map((option) => (
+                <button
+                  type="button"
+                  key={option.value}
+                  aria-pressed={language === option.value}
+                  onClick={() => setLanguage(option.value)}
+                  className="settings-language-option"
+                >
+                  <span className="settings-language-code" aria-hidden="true">
+                    {option.code}
                   </span>
-                  <span className="flex items-center gap-1.5">
-                    <Icons.CheckCircle
-                      size={13}
-                      className="text-emerald-600 shrink-0"
-                    />
-                    <span>{copy("Storage configured by your local API")}</span>
+                  <span>
+                    <strong>{option.title}</strong>
+                    <small>{option.subtitle}</small>
                   </span>
-                </div>
-              </div>
+                  <span className="settings-selection-mark" aria-hidden="true">
+                    {language === option.value && <Icons.Check size={14} />}
+                  </span>
+                </button>
+              ))}
             </div>
-          </div>
-          {/* 3. Theme & Workspace Aesthetic Card */}
-          <div
+          </section>
+          <section
             id="theme"
-            className="p-space-xl rounded-xl bg-surface-container-lowest border border-surface-container-highest shadow-xs flex flex-col gap-space-md"
+            className="settings-card"
+            aria-labelledby="settings-theme-title"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-container-high pb-4">
-              <div className="flex flex-col gap-0.5 min-w-0 pr-2">
-                <span className="font-headline-md text-headline-md font-semibold text-on-surface">
-                  {t("themeSectionTitle")}
-                </span>
-                <span className="text-[12.5px] text-secondary leading-normal">
-                  {t("themeSectionDesc")}
-                </span>
+            <div className="settings-card-heading">
+              <div>
+                <h2 id="settings-theme-title">
+                  {copy("Workspace appearance")}
+                </h2>
+                <p>
+                  {copy(
+                    "Choose the appearance that feels comfortable while editing.",
+                  )}
+                </p>
               </div>
             </div>
             <ThemePicker />
+          </section>
+          <section
+            id="privacy"
+            className="settings-card"
+            aria-labelledby="settings-privacy-title"
+          >
+            <div className="settings-card-heading">
+              <div>
+                <h2 id="settings-privacy-title">{copy("Your data and AI")}</h2>
+                <p>
+                  {copy(
+                    "Where your documents are stored and when content is shared.",
+                  )}
+                </p>
+              </div>
+              <Icons.Shield
+                size={22}
+                className="settings-heading-icon"
+                aria-hidden="true"
+              />
+            </div>
+            <div className="settings-privacy-items">
+              <div>
+                <span className="settings-privacy-icon">
+                  <Icons.Document size={19} />
+                </span>
+                <div>
+                  <h3>{copy("Workspace storage")}</h3>
+                  <p>
+                    {copy(
+                      "CVs and photos are stored by your configured API. Protect the database and exported backup files.",
+                    )}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <span className="settings-privacy-icon">
+                  <Icons.Sparkles size={19} />
+                </span>
+                <div>
+                  <h3>{copy("AI on request")}</h3>
+                  <p>
+                    {copy(
+                      "When AI is enabled, requested reviews send career content to the selected provider. CV photos and contact fields are excluded; free text may still contain personal details.",
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+          <div id="ai-connection">
+            <AISettings />
+          </div>
+          <div id="workspace-backup">
+            <WorkspaceBackup />
           </div>
         </div>
       </div>

@@ -209,14 +209,14 @@ export function A4ResumePreview({
         )}
         {!pdf && (
           <label>
-            {copy("Preview zoom")}{" "}
+            {copy("Zoom")}{" "}
             <select
               aria-label="Preview zoom"
               value={zoom}
               onChange={(e) => setZoom(e.target.value)}
             >
               <option value="fit">
-                {copy("Fit width")} (
+                {copy("Fit")} (
                 {Math.round(Math.min(1, availableWidth / sheetWidth) * 100)}%)
               </option>
               <option value="0.75">75%</option>

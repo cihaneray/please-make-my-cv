@@ -1,0 +1,82 @@
+/* Warm charcoal surfaces keep the document in focus; amber marks actions and selection. */
+html.dark ::selection {
+  background: rgb(var(--color-primary) / 0.28);
+  color: rgb(var(--color-on-surface));
+}
+html.dark input[type="checkbox"],
+html.dark input[type="radio"],
+html.dark input[type="range"] {
+  accent-color: rgb(var(--color-primary));
+}
+html.dark .workspace-rail,
+html.dark .workspace-header,
+html.dark .studio-ribbon {
+  background: rgb(var(--color-surface));
+}
+html.dark .studio-inspector {
+  background: rgb(var(--color-surface-container-lowest));
+}
+html.dark .document-canvas {
+  background-color: rgb(var(--color-surface-dim));
+  background-image: radial-gradient(
+    ellipse at 25% 0%,
+    rgb(var(--color-primary) / 0.055),
+    transparent 70%
+  );
+}
+html.dark .editor-entry,
+html.dark .workflow-tool {
+  background: rgb(var(--color-surface-container-low));
+  border-color: rgb(var(--color-outline-variant) / 0.65);
+  box-shadow: 0 2px 10px #00000018;
+}
+html.dark .sliding-rail {
+  background: rgb(var(--color-primary) / 0.12);
+}
+html.dark .sliding-section {
+  background: rgb(var(--color-surface-container));
+}
+html.dark .sliding-tab {
+  background: linear-gradient(
+    to top,
+    rgb(var(--color-primary) / 0.08),
+    transparent
+  );
+}
+html.dark .command-dialog,
+html.dark .document-popover,
+html.dark .draft-removal-feedback {
+  border-color: rgb(var(--color-outline-variant));
+  box-shadow: 0 24px 64px #00000080;
+}
+html.dark .command-dialog::backdrop {
+  background: #090b0dcc;
+  backdrop-filter: blur(4px);
+}
+html.dark .command-dialog kbd,
+html.dark .studio-undo kbd {
+  padding: 2px 5px;
+  border: 1px solid rgb(var(--color-outline-variant) / 0.6);
+  border-radius: 4px;
+  color: rgb(var(--color-on-surface-variant));
+  background: rgb(var(--color-surface-container-low));
+}
+html.dark .editorial-button.primary {
+  box-shadow: 0 2px 8px rgb(var(--color-primary) / 0.12);
+}
+html.dark .editorial-button.primary:hover:not(:disabled) {
+  background: rgb(var(--color-on-primary-container));
+  border-color: rgb(var(--color-on-primary-container));
+  opacity: 1;
+}
+html.dark .workflow-tool button:hover:not(:disabled),
+html.dark .reorder-controls button:hover:not(:disabled) {
+  background: rgb(var(--color-primary) / 0.1);
+  border-color: rgb(var(--color-primary) / 0.55);
+}
+html.dark .editor-action.danger:hover:not(:disabled),
+html.dark .editor-icon-button.danger:hover:not(:disabled) {
+  background: rgb(var(--color-error) / 0.08);
+  border-color: rgb(var(--color-error) / 0.45);
+}
+

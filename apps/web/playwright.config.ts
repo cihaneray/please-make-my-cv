@@ -16,6 +16,7 @@ export default defineConfig({
       env: {
         DATABASE_URL: "sqlite:///./e2e.db",
         SEED_DEMO: "false",
+        CORS_ORIGINS: '["http://127.0.0.1:3101"]',
         AI_CONFIG_PATH: "data/e2e-ai-settings.json",
       },
       reuseExistingServer: false,

@@ -71,6 +71,7 @@ test("password protected backups download encrypted data and restore with a pass
   });
   await expect(downloadButton).toBeDisabled();
   await password.fill("a-long-test-password");
+  await page.getByLabel("Confirm backup password").fill("a-long-test-password");
   const downloadPromise = page.waitForEvent("download");
   await downloadButton.click();
   const download = await downloadPromise;
@@ -81,16 +82,20 @@ test("password protected backups download encrypted data and restore with a pass
   const envelope = JSON.parse(await readFile(path, "utf8"));
   expect(envelope.format).toBe("cv-workspace-encrypted-v1");
   expect(envelope.resumes).toBeUndefined();
-  await password.fill("wrong-test-password");
+  await page
+    .getByLabel("Restore password (encrypted backups only)")
+    .fill("wrong-test-password");
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByLabel("Restore backup").setInputFiles(path);
-  await expect(backupRegion.getByRole("status")).toContainText(
+  await expect(backupRegion.locator(".backup-status")).toContainText(
     "Incorrect backup password",
   );
-  await password.fill("a-long-test-password");
+  await page
+    .getByLabel("Restore password (encrypted backups only)")
+    .fill("a-long-test-password");
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByLabel("Restore backup").setInputFiles(path);
-  await expect(backupRegion.getByRole("status")).toContainText(
+  await expect(backupRegion.locator(".backup-status")).toContainText(
     "Restored as new records",
   );
 });
@@ -869,9 +874,14 @@ test("typing history coalesces, deletion is recoverable, and redo cannot overwri
   const first = page.getByRole("textbox", { name: "First Name", exact: true });
   await first.fill("");
   await first.pressSequentially("Edited Alex");
-  await first.press("Control+z");
+  // Document history is explicit while text fields keep their native undo.
+  await page
+    .getByRole("button", { name: "Undo last draft edit", exact: true })
+    .click();
   await expect(first).toHaveValue("Alex");
-  await first.press("Control+Shift+z");
+  await page
+    .getByRole("button", { name: "Redo last draft edit", exact: true })
+    .click();
   await expect(first).toHaveValue("Edited Alex");
   await page.getByRole("button", { name: "Save Draft", exact: true }).click();
   await expect(page.locator(".studio-status")).toContainText("Saved");

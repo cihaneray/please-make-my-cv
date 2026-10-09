@@ -1,0 +1,124 @@
+/* Readable controls for the document list, editor and settings. */
+.resume-list-controls {
+  flex-wrap: wrap;
+}
+.resume-list-controls input,
+.resume-list-controls button {
+  min-height: 44px;
+  font-size: 13px;
+}
+.resume-list-controls .absolute {
+  top: 14px;
+}
+.resume-list-tabs button[data-empty="true"][aria-pressed="false"] {
+  background: transparent;
+  border-color: transparent;
+}
+.resume-list-card .font-label-sm {
+  font-size: 12px;
+  text-transform: none;
+}
+.studio-aux-tools {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.studio-aux-tools .studio-undo,
+.studio-aux-tools > details > summary {
+  min-height: 44px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 8px;
+  background: rgb(var(--color-surface-container-lowest));
+  color: rgb(var(--color-on-surface));
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.studio-aux-tools .studio-undo:disabled {
+  opacity: 1;
+  color: rgb(var(--color-secondary));
+  cursor: default;
+  background: rgb(var(--color-surface-container));
+}
+.studio-undo kbd {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.studio-outline button {
+  min-height: 44px;
+  font-size: 13px;
+  padding: 8px;
+  gap: 5px;
+}
+.studio-outline button > div {
+  gap: 7px;
+}
+.studio-outline button > span {
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.studio-outline button[data-empty="true"] > span {
+  background: transparent;
+}
+.workspace-backup .backup-download {
+  background: rgb(var(--color-surface-container));
+  color: rgb(var(--color-on-surface));
+  border: 1px solid rgb(var(--color-outline-variant));
+}
+.workspace-backup .backup-download:hover:not(:disabled) {
+  background: rgb(var(--color-surface-container-high));
+  color: rgb(var(--color-on-surface));
+}
+.workspace-backup .password-visibility {
+  min-height: 36px;
+  font-size: 12px;
+  align-self: flex-start;
+  padding: 6px 10px;
+}
+.backup-password-hint {
+  font-size: 12px;
+}
+.ai-settings-field small {
+  font-size: 12px;
+  color: rgb(var(--color-on-surface-variant));
+}
+.workspace-page-transition {
+  animation: workspace-slide-in 180ms ease-out;
+}
+@keyframes workspace-slide-in {
+  from {
+    transform: translateY(4px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace-page-transition {
+    animation: none;
+  }
+}
+@media (max-width: 600px) {
+  .resume-list-controls {
+    width: 100%;
+  }
+  .resume-list-controls > div,
+  .resume-list-controls input {
+    width: 100%;
+  }
+  .studio-aux-tools {
+    padding-inline: 12px;
+  }
+  .studio-aux-tools > details[open] > .document-popover {
+    left: 12px;
+    width: calc(100vw - 24px);
+  }
+}
+@media (min-width: 601px) and (max-width: 1280px) {
+  .studio-outline {
+    max-height: 240px;
+  }
+}

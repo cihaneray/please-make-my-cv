@@ -1,4 +1,13 @@
 import "./globals.css";
+import "@/styles/editorial.css";
+import "@/styles/theme.css";
+import "@/styles/applications.css";
+import "@/styles/controls.css";
+
+import "@/components/workspace-actions.css";
+import "@/styles/workspace-polish.css";
+import { headers } from "next/headers";
+export const dynamic = "force-dynamic";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { themeScript } from "@/lib/theme-script";
 import type { Metadata } from "next";
@@ -14,15 +23,19 @@ export const metadata: Metadata = {
     "Structured personal CV workspace for creating, editing, and optimizing resumes.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const nonce = (await headers()).get("x-nonce") || undefined;
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script
+          nonce={nonce}
+          dangerouslySetInnerHTML={{ __html: themeScript }}
+        />
       </head>
       <body className="bg-surface font-body-md text-on-surface antialiased selection:bg-secondary-container">
         <I18nProvider>
