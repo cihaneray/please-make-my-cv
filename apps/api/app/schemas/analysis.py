@@ -5,6 +5,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from app.schemas.resume import ResumeDocument
+
 
 class IssueSeverity(str, Enum):
     INFO = "info"
@@ -62,3 +64,23 @@ class PdfCheckReport(BaseModel):
     pageCount: int
     issues: list[PdfCheckIssue]
     notice: str = "Automated checks are advisory. Inspect Exact PDF pages before sending."
+
+
+class PdfImportCheck(BaseModel):
+    code: str
+    points: int
+    maximum: int
+    message: str
+
+
+class PdfImportReport(BaseModel):
+    valid: bool
+    filename: str
+    pageCount: int
+    extractedText: str
+    wordCount: int
+    detectedSections: list[str]
+    atsScore: int | None
+    checks: list[PdfImportCheck]
+    warnings: list[str]
+    previewDocument: ResumeDocument | None

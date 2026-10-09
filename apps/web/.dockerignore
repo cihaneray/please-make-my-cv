@@ -8,3 +8,6 @@ __pycache__
 test-results
 
 .next-e2e/
+
+**/*.key
+**/secrets/

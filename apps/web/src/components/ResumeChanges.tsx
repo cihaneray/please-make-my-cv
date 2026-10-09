@@ -45,7 +45,9 @@ export function ResumeChanges({
   }
   return (
     <details className="workspace-tools border-b p-3 no-print shrink-0 max-h-[50vh] overflow-auto">
-      <summary>{copy("Compare revisions and variants")}</summary>
+      <summary aria-label={copy("Compare revisions and variants")}>
+        {copy("Compare versions")}
+      </summary>
       <div className="document-popover">
         <button
           className="document-popover-close"

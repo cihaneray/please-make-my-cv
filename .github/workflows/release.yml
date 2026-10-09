@@ -19,7 +19,7 @@ jobs:
       sha: ${{ steps.release.outputs.sha }}
       prerelease: ${{ steps.release.outputs.prerelease }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -36,11 +36,12 @@ jobs:
     permissions:
       contents: write
       packages: write
+      id-token: write
     concurrency:
       group: release-${{ needs.plan.outputs.tag }}
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ needs.plan.outputs.sha }}
           fetch-depth: 0
@@ -91,6 +92,8 @@ jobs:
           target: production
           platforms: linux/amd64
           push: true
+          sbom: true
+          provenance: mode=max
           tags: ${{ steps.images.outputs.api }}:${{ steps.images.outputs.version }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
@@ -108,6 +111,8 @@ jobs:
           platforms: linux/amd64
           build-args: API_INTERNAL_URL=http://api:8000
           push: true
+          sbom: true
+          provenance: mode=max
           tags: ${{ steps.images.outputs.web }}:${{ steps.images.outputs.version }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
@@ -115,6 +120,18 @@ jobs:
             org.opencontainers.image.version=${{ needs.plan.outputs.tag }}
           cache-from: type=gha,scope=release-web
           cache-to: type=gha,mode=max,scope=release-web
+      - uses: sigstore/cosign-installer@f713795cb21599bc4e5c4b58cbad1da852d7eeb9 # v3
+        if: steps.existing.outputs.published != 'true'
+      - name: Sign published image digests
+        if: steps.existing.outputs.published != 'true'
+        env:
+          API_IMAGE: ${{ steps.images.outputs.api }}
+          API_DIGEST: ${{ steps.api.outputs.digest }}
+          WEB_IMAGE: ${{ steps.images.outputs.web }}
+          WEB_DIGEST: ${{ steps.web.outputs.digest }}
+        run: |
+          cosign sign --yes "$API_IMAGE@$API_DIGEST"
+          cosign sign --yes "$WEB_IMAGE@$WEB_DIGEST"
       - name: Package build-free Compose installation
         if: steps.existing.outputs.published != 'true'
         id: bundle

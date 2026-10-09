@@ -16,7 +16,14 @@ class BodyLimitMiddleware:
             size += len(message.get("body", b""))
             if size > self.limit:
                 return await JSONResponse(
-                    {"detail": "Request exceeds the 5 MB limit."}, status_code=413
+                    {
+                        "error": {
+                            "code": "REQUEST_TOO_LARGE",
+                            "message": "Request exceeds the configured size limit.",
+                            "details": [],
+                        }
+                    },
+                    status_code=413,
                 )(scope, receive, send)
             chunks.append(message)
             if not message.get("more_body", False):

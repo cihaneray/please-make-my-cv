@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from app.db.session import get_db
+from app.schemas.analysis import PdfImportReport
 from app.schemas.import_export import (
     ImportApplyRequest,
     ImportPreviewResult,
@@ -10,6 +12,7 @@ from app.schemas.import_export import (
 )
 from app.schemas.resume import CreateResumeRequest, ResumeDocument
 from app.services.conversion_service import ConversionService
+from app.services.pdf_import_service import review_pdf
 from app.services.resume_service import ResumeService
 
 router = APIRouter(prefix="/import", tags=["Import"])
@@ -63,7 +66,8 @@ def apply_import(request: ImportApplyRequest, db: Session = Depends(get_db)):
         raise ValidationException(
             "Import creates a new resume. Use revision-protected updates to replace an existing document."
         )
-    doc = request.document
+    doc = request.document.model_copy(deep=True)
+    doc.metadata.parentResumeId = None
     title = request.targetTitle or doc.metadata.title or "Imported Resume"
 
     create_req = CreateResumeRequest(
@@ -75,3 +79,11 @@ def apply_import(request: ImportApplyRequest, db: Session = Depends(get_db)):
         initialData=doc,
     )
     return ResumeService.create_resume(db, create_req)
+
+
+@router.post("/pdf", response_model=PdfImportReport)
+async def preview_pdf_import(file: UploadFile = File(...)):
+    data = await file.read(4 * 1024 * 1024 + 1)
+    await file.close()
+    # PDF parsing runs in a bounded child process, outside the async request loop.
+    return await run_in_threadpool(review_pdf, data, (file.filename or "resume.pdf")[:255])

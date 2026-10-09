@@ -25,7 +25,7 @@ def mock_transport(monkeypatch, handler):
     monkeypatch.setattr(
         llm.httpx,
         "Client",
-        lambda **kwargs: original(transport=httpx.MockTransport(handler), **kwargs),
+        lambda **kwargs: original(**{**kwargs, "transport": httpx.MockTransport(handler)}),
     )
 
 

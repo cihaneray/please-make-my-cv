@@ -6,7 +6,7 @@ import { JobTools } from "@/components/JobTools";
 import { useCopy } from "@/lib/copy";
 import React, { useEffect, useRef, useState } from "react";
 import { Icons } from "@/components/Icons";
-import { api } from "@/lib/api";
+import { api, errorMessage } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import {
   JobApplication,
@@ -52,7 +52,7 @@ export default function JobsPage() {
         if (jobList.length > 0) {
           setSelectedJob(jobList[0]);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         notify(
           "Could not load data. Check the API connection and reload to retry.",
         );
@@ -112,12 +112,12 @@ export default function JobsPage() {
       setNewPosition("");
       setNewDesc("");
       setNewLocation("");
-    } catch (err: any) {
-      notify(`Create job failed: ${err.message}`);
+    } catch (err: unknown) {
+      notify(`Create job failed: ${errorMessage(err)}`);
     }
   }
 
-  async function handleStatusChange(status: any) {
+  async function handleStatusChange(status: JobApplication["status"]) {
     if (!selectedJob) return;
     try {
       const updated = await api.updateJob(selectedJob.id, { status });
@@ -125,8 +125,8 @@ export default function JobsPage() {
         previous?.id === updated.id ? updated : previous,
       );
       setJobs((items) => items.map((j) => (j.id === updated.id ? updated : j)));
-    } catch (err: any) {
-      notify(`Status update failed: ${err.message}`);
+    } catch (err: unknown) {
+      notify(`Status update failed: ${errorMessage(err)}`);
     }
   }
 

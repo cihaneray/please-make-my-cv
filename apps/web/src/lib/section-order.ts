@@ -11,19 +11,20 @@ export const sections = [
 ] as const;
 export type SectionKey = (typeof sections)[number];
 export function sectionOrder(doc: ResumeDocument): SectionKey[] {
-  const defaults: SectionKey[] =
-    (doc.design.template || doc.metadata.templateId) === "technical"
-      ? [
-          "summary",
-          "skills",
-          "experience",
-          "projects",
-          "education",
-          "certifications",
-          "languages",
-          "customSections",
-        ]
-      : [...sections];
+  const defaults: SectionKey[] = ["technical", "classic"].includes(
+    doc.design.template || doc.metadata.templateId,
+  )
+    ? [
+        "summary",
+        "skills",
+        "experience",
+        "projects",
+        "education",
+        "certifications",
+        "languages",
+        "customSections",
+      ]
+    : [...sections];
   return Array.from(new Set([...(doc.design.sectionOrder || []), ...defaults]));
 }
 export function moveItem<T>(items: T[], from: number, to: number): T[] {

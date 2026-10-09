@@ -69,6 +69,7 @@ export const SAMPLE_PREVIEW_RESUME: ResumeDocument = {
     targetJob: null,
   },
   profile: {
+    photo: "",
     firstName: "Alex",
     lastName: "Vance",
     headline: "Staff Systems Architect & Tech Lead",
@@ -201,6 +202,7 @@ export const SAMPLE_PREVIEW_RESUME: ResumeDocument = {
     accentColor: "#0F172A",
   },
   visibility: {
+    showPhoto: true,
     showSummary: true,
     showExperience: true,
     showEducation: true,

@@ -4,8 +4,8 @@ from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import EntityNotFoundException
-from app.db.models import ApplicationSnapshotModel, JobModel
+from app.core.exceptions import EntityNotFoundException, ValidationException
+from app.db.models import ApplicationSnapshotModel, JobModel, ResumeModel
 from app.schemas.job import CreateJobRequest, JobApplication, JobEvent, JobStatus, UpdateJobRequest
 from app.services.resume_service import ResumeService
 
@@ -66,6 +66,8 @@ class JobService:
 
     @staticmethod
     def create_job(db: Session, request: CreateJobRequest) -> JobApplication:
+        if request.linkedResumeId and not db.get(ResumeModel, request.linkedResumeId):
+            raise ValidationException("The linked CV does not exist in this workspace.")
         new_id = str(uuid.uuid4())
         model = JobModel(
             id=new_id,
@@ -105,6 +107,8 @@ class JobService:
         if not m:
             raise EntityNotFoundException("Job", job_id)
 
+        if request.linkedResumeId and not db.get(ResumeModel, request.linkedResumeId):
+            raise ValidationException("The linked CV does not exist in this workspace.")
         planning = json.loads(m.planning_json or "{}")
         for key in ("interviewAt", "followUpDate", "coverLetter"):
             if key in request.model_fields_set:

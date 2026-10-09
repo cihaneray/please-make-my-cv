@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { canNavigate } from "@/lib/unsaved-navigation";
 import { api } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { useCopy } from "@/lib/copy";
@@ -14,6 +15,7 @@ export function Header() {
   const { t, language, setLanguage } = useI18n();
   const copy = useCopy();
   const [creating, setCreating] = useState(false);
+  const listPage = pathname === "/resumes";
   const studio = /^\/resumes\/[^/]+$/.test(pathname);
   const pages = [
     ["/", t("home")],
@@ -24,7 +26,7 @@ export function Header() {
     ["/settings", t("settings")],
   ];
   async function create() {
-    if (creating) return;
+    if (creating || !canNavigate()) return;
     setCreating(true);
     try {
       const doc = await api.createResume({
@@ -51,7 +53,9 @@ export function Header() {
                 ? pathname
                 : "/"
           }
-          onChange={(e) => router.push(e.target.value)}
+          onChange={(e) => {
+            if (canNavigate()) router.push(e.target.value);
+          }}
         >
           {pages.map(([url, label]) => (
             <option key={url} value={url}>
@@ -70,7 +74,7 @@ export function Header() {
         </span>
       </div>
       <div className="header-actions">
-        {!studio && (
+        {!studio && !listPage && (
           <label className="header-search">
             <Icons.Search size={16} />
             <input
@@ -97,7 +101,7 @@ export function Header() {
           <Link className="editorial-link" href="/resumes">
             {copy("All documents")} <Icons.ArrowRight size={14} />
           </Link>
-        ) : (
+        ) : !listPage ? (
           <button
             className="header-create"
             onClick={create}
@@ -106,7 +110,7 @@ export function Header() {
             <Icons.Add size={16} />
             {creating ? t("saving") : t("newDocument")}
           </button>
-        )}
+        ) : null}
       </div>
     </header>
   );

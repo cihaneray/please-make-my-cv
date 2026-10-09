@@ -4,7 +4,7 @@ import { notify } from "@/components/Notifications";
 
 import React, { useEffect, useRef, useState } from "react";
 import { Icons } from "@/components/Icons";
-import { api } from "@/lib/api";
+import { api, errorMessage } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { LibraryItemType, LibrarySnippet } from "@/lib/types";
 
@@ -56,7 +56,7 @@ export default function LibraryPage() {
         setLoading(true);
         const data = await api.listSnippets();
         setSnippets(data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         notify(
           "Could not load data. Check the API connection and reload to retry.",
         );
@@ -135,8 +135,8 @@ export default function LibraryPage() {
       setShowAddBox(false);
       setNewTitle("");
       setNewContent("");
-    } catch (err: any) {
-      setFormError(`${copy("Could not save the snippet.")} ${err.message}`);
+    } catch (err: unknown) {
+      setFormError(`${copy("Could not save the snippet.")} ${errorMessage(err)}`);
     } finally {
       setSaving(false);
     }
@@ -147,8 +147,8 @@ export default function LibraryPage() {
       try {
         await api.deleteSnippet(id);
         setSnippets(snippets.filter((s) => s.id !== id));
-      } catch (err: any) {
-        notify(`Delete failed: ${err.message}`);
+      } catch (err: unknown) {
+        notify(`Delete failed: ${errorMessage(err)}`);
       }
     }
   }

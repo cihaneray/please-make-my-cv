@@ -16,6 +16,7 @@ export function AISettings() {
       .then(setConfig)
       .catch((e) => setMessage(e.message));
   }, []);
+  const modelMissing = !!config?.enabled && !config.model.trim();
   return (
     <section
       className="workspace-tools ai-settings"
@@ -87,12 +88,19 @@ export function AISettings() {
                     ? "Enter your Gemini model ID"
                     : "Enter an available model ID",
                 )}
+                aria-invalid={modelMissing}
+                aria-describedby={modelMissing ? "ai-model-hint" : undefined}
                 value={config.model}
                 onChange={(e) => {
                   setConfig({ ...config, model: e.target.value });
                   setDirty(true);
                 }}
               />
+              {modelMissing && (
+                <small id="ai-model-hint">
+                  {copy("Enter a model ID to enable AI reviews.")}
+                </small>
+              )}
             </label>
             <label className="ai-settings-field ai-settings-wide">
               <span>{copy("API base URL")}</span>
@@ -100,7 +108,12 @@ export function AISettings() {
                 className="block w-full"
                 value={config.baseUrl}
                 onChange={(e) => {
-                  setConfig({ ...config, baseUrl: e.target.value });
+                  setConfig({
+                    ...config,
+                    baseUrl: e.target.value,
+                    hasApiKey: false,
+                  });
+                  setClear(false);
                   setDirty(true);
                 }}
               />
@@ -137,17 +150,19 @@ export function AISettings() {
               )}
             </p>
           )}
-          <label className="ai-settings-toggle">
-            <input
-              type="checkbox"
-              checked={clear}
-              onChange={(e) => {
-                setClear(e.target.checked);
-                setDirty(true);
-              }}
-            />
-            {copy("Remove stored key")}
-          </label>
+          {config.hasApiKey && (
+            <label className="ai-settings-toggle">
+              <input
+                type="checkbox"
+                checked={clear}
+                onChange={(e) => {
+                  setClear(e.target.checked);
+                  setDirty(true);
+                }}
+              />
+              {copy("Remove stored key")}
+            </label>
+          )}
           <p className="ai-settings-hint">
             {copy(
               "Saved keys are encrypted on the backend and excluded from workspace backups. Leave the key field blank to keep it. Changing provider or URL clears the old key unless you enter a replacement. In Docker, use http://host.docker.internal:11434 for host Ollama.",
@@ -156,7 +171,7 @@ export function AISettings() {
           <div className="ai-settings-actions">
             <button
               className="ai-save-connection"
-              disabled={busy}
+              disabled={busy || modelMissing}
               onClick={async () => {
                 setBusy(true);
                 setMessage("");

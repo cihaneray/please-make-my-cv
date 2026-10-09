@@ -1,12 +1,12 @@
-FROM python:3.12-slim AS dependencies
+FROM python:3.12-slim-bookworm@sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258 AS dependencies
 WORKDIR /app
-COPY --from=ghcr.io/astral-sh/uv:0.12.23 /uv /bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.12.23@sha256:61d393e44e249f2e4b526b6c7ddcecce245946826e608e11c93ad4f5bba55b21 /uv /bin/uv
 COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev --link-mode=copy
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN .venv/bin/playwright install --only-shell chromium
 
-FROM python:3.12-slim-bookworm AS runtime
+FROM python:3.12-slim-bookworm@sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258 AS runtime
 WORKDIR /app
 ENV PATH="/app/.venv/bin:$PATH" \
     PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
@@ -31,7 +31,7 @@ EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 FROM runtime AS development
-COPY --from=ghcr.io/astral-sh/uv:0.12.23 /uv /bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.12.23@sha256:61d393e44e249f2e4b526b6c7ddcecce245946826e608e11c93ad4f5bba55b21 /uv /bin/uv
 COPY --chown=app:app pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/home/app/.cache/uv,uid=10001,gid=10001 uv sync --frozen --link-mode=copy
 COPY --chown=app:app scripts/ ./scripts/

@@ -1,6 +1,128 @@
 "use client";
+import { useCallback } from "react";
 import { useI18n } from "./i18n";
 export const copyTranslations: Record<string, string> = {
+  Search: "Ara",
+  Redo: "Yinele",
+  "CV language": "CV dili",
+  Market: "Pazar",
+  "Editing panel": "Düzenleme paneli",
+  "Nothing added yet": "Henüz eklenmedi",
+  "Compare versions": "Sürümleri karşılaştır",
+  Zoom: "Yakınlaştır",
+  Fit: "Sığdır",
+  "Enter a model ID to enable AI reviews.":
+    "AI incelemelerini etkinleştirmek için model kimliğini girin.",
+  "Confirm backup password": "Yedek parolasını tekrar girin",
+  "Restore password (encrypted backups only)":
+    "Geri yükleme parolası (yalnızca şifreli yedekler)",
+  "Show password": "Parolayı göster",
+  "Hide password": "Parolayı gizle",
+  "Passwords do not match.": "Parolalar eşleşmiyor.",
+  "Use at least 12 characters.": "En az 12 karakter kullanın.",
+
+  "Settings sections": "Ayar bölümleri",
+  "On this page": "Bu sayfada",
+  "Workspace backup": "Çalışma alanı yedeği",
+  "Workspace appearance": "Çalışma alanı görünümü",
+  "Workspace storage": "Çalışma alanı depolaması",
+  "Your data and AI": "Verileriniz ve yapay zeka",
+  "AI on request": "İstek üzerine AI",
+  Version: "Sürüm",
+  "Language and theme are saved in this browser.":
+    "Dil ve tema bu tarayıcıda kaydedilir.",
+  "Choose the appearance that feels comfortable while editing.":
+    "Düzenlerken rahat ettiğiniz görünümü seçin.",
+  "Where your documents are stored and when content is shared.":
+    "Belgelerinizin nerede saklandığını ve içeriğin ne zaman paylaşıldığını görün.",
+  "CVs and photos are stored by your configured API. Protect the database and exported backup files.":
+    "Özgeçmişler ve fotoğraflar yapılandırdığınız API tarafından saklanır. Veritabanını ve yedek dosyalarını koruyun.",
+  "When AI is enabled, requested reviews send career content to the selected provider. CV photos and contact fields are excluded; free text may still contain personal details.":
+    "AI etkinleştirildiğinde istediğiniz incelemeler kariyer içeriğini seçilen sağlayıcıya gönderir. CV fotoğrafı ve iletişim alanları gönderilmez; serbest metinde kişisel bilgiler bulunabilir.",
+  "CV photo (optional)": "CV fotoğrafı (isteğe bağlı)",
+  "Choose CV photo": "CV fotoğrafı seç",
+  Photo: "Fotoğraf",
+  "Upload photo": "Fotoğraf yükle",
+  "Change photo": "Fotoğrafı değiştir",
+  "Remove photo": "Fotoğrafı kaldır",
+  "Show photo on CV": "Fotoğrafı CV üzerinde göster",
+  "Selected CV photo": "Seçilen CV fotoğrafı",
+  "Choose a PNG, JPEG or WebP image up to 5 MB.":
+    "En fazla 5 MB boyutunda PNG, JPEG veya WebP görseli seçin.",
+  "This image could not be read. Try another photo.":
+    "Görsel okunamadı. Başka bir fotoğraf deneyin.",
+  "Upload a portrait if you want to include one. The image is cropped to a square and stored with this CV.":
+    "İsterseniz bir portre yükleyin. Görsel kare olarak kırpılır ve bu CV ile saklanır.",
+  "PNG, JPEG or WebP · up to 5 MB. Save the draft to keep your changes.":
+    "PNG, JPEG veya WebP · en fazla 5 MB. Değişiklikleri saklamak için taslağı kaydedin.",
+  "Active CVs": "Aktif özgeçmişler",
+  "Deleted documents": "Silinen belgeler",
+  "Deleted document": "Silinen belge",
+  "Document list": "Belge listesi",
+  "Delete this CV?": "Bu özgeçmiş silinsin mi?",
+  "Move to deleted documents": "Silinen belgelere taşı",
+  "Delete CV permanently?": "Özgeçmiş kalıcı olarak silinsin mi?",
+  "Delete permanently": "Kalıcı olarak sil",
+  "The CV will move to deleted documents. You can restore it there, and its history will be kept.":
+    "Özgeçmiş silinen belgelere taşınır. Oradan geri yükleyebilirsiniz; sürüm geçmişi korunur.",
+  "This removes the CV and its revision history permanently. Linked jobs will be unlinked; submitted copies stay unchanged.":
+    "Özgeçmiş ve sürüm geçmişi kalıcı olarak silinir. İlan bağlantıları kaldırılır; gönderilmiş kopyalar korunur.",
+  "Could not delete CV.": "Özgeçmiş silinemedi.",
+  "PDF · ATS review and import": "PDF · ATS inceleme ve içe aktarma",
+  "Import method": "İçe aktarma yöntemi",
+  "Existing PDF CV": "Mevcut PDF özgeçmiş",
+  "Review a PDF, then make it editable":
+    "PDF dosyasını inceleyin, ardından düzenlenebilir hale getirin",
+  "Check the original PDF with local ATS heuristics. Preview extracted content before creating a new CV. No AI provider is used.":
+    "Orijinal PDF dosyasını yerel ATS kurallarıyla kontrol edin. Yeni CV oluşturmadan önce çıkarılan içeriği inceleyin. AI sağlayıcısı kullanılmaz.",
+  "Choose a PDF CV": "PDF özgeçmiş seç",
+  "Choose a PDF up to 4 MB.": "En fazla 4 MB boyutunda bir PDF seçin.",
+  "Upload PDF CV": "PDF özgeçmiş yükle",
+  "Text-based PDF · up to 4 MB and 10 pages. Scanned files need OCR before import.":
+    "Metin tabanlı PDF · en fazla 4 MB ve 10 sayfa. Taranan belgeler içe aktarma öncesinde OCR gerektirir.",
+  "Review PDF and preview import":
+    "PDF dosyasını incele ve içe aktarmayı önizle",
+  "Reading PDF…": "PDF okunuyor…",
+  "PDF review failed.": "PDF incelemesi başarısız oldu.",
+  "Import failed.": "İçe aktarma başarısız oldu.",
+  "Original PDF · ATS heuristic": "Orijinal PDF · ATS sezgisel değerlendirmesi",
+  "Inspect extracted text": "Çıkarılan metni incele",
+  "Editable draft preview": "Düzenlenebilir taslak önizlemesi",
+  "Create editable CV": "Düzenlenebilir CV oluştur",
+  "I reviewed the extraction and will check the fields in the editor.":
+    "Çıkarılan içeriği inceledim ve alanları editörde kontrol edeceğim.",
+  "This uses the app's CV layout. The PDF's original layout is not preserved. Ambiguous experience lines stay together so you can organize them in the editor.":
+    "Uygulamanın CV düzeni kullanılır. PDF dosyasının özgün düzeni korunmaz. Belirsiz deneyim satırları editörde düzenlemeniz için birlikte tutulur.",
+  "A transparent file-readability heuristic, not an external ATS score or a job-match prediction. It measures extracted text and recognized headings; columns and reading order still need your review.":
+    "Şeffaf bir dosya okunabilirliği değerlendirmesidir; harici ATS puanı veya ilan uyumu tahmini değildir. Çıkarılan metni ve tanınan başlıkları ölçer; sütunları ve okuma sırasını kontrol etmeniz gerekir.",
+  "extracted words": "çıkarılan kelime",
+  "Leave with unsaved changes? Drafts are recoverable on this device.":
+    "Kaydedilmemiş değişikliklerle çıkılsın mı? Taslaklar bu cihazda kurtarılabilir.",
+  "This backup was already restored in this browser. Add another copy?":
+    "Bu yedek bu tarayıcıda daha önce geri yüklendi. Bir kopya daha eklensin mi?",
+  "Review suggested wording": "Önerilen metni incele",
+  Tip: "İpucu",
+
+  "Recovered draft": "Kurtarılan taslak",
+  "Failed to load resume": "Özgeçmiş yüklenemedi",
+  "Resolve save conflict": "Kayıt çakışmasını çöz",
+  "A newer revision is available": "Daha yeni bir sürüm var",
+  "Your draft is preserved. Both choices save it as a separate CV before loading the server revision.":
+    "Taslağınız korunuyor. İki seçenek de sunucudaki sürümü yüklemeden önce taslağı ayrı bir özgeçmiş olarak kaydeder.",
+  "Compare changes": "Değişiklikleri karşılaştır",
+  "Keep draft copy and load server revision":
+    "Taslağın kopyasını sakla ve son sürümü yükle",
+  "Open draft copy in a new tab": "Taslak kopyasını yeni sekmede aç",
+  "The draft copy was saved. Open it from the CV list.":
+    "Taslağın kopyası kaydedildi. Özgeçmiş listesinden açabilirsiniz.",
+  "Local draft recovery is unavailable. Save regularly.":
+    "Yerel taslak kurtarma kullanılamıyor. Düzenli olarak kaydedin.",
+  "Could not read the recovered draft.": "Kurtarılan taslak okunamadı.",
+  "The recovered draft is invalid or uses an unsupported version.":
+    "Kurtarılan taslak geçersiz veya desteklenmeyen bir sürüm kullanıyor.",
+  "Another tab has a separate draft for this CV. Saving uses revision checks.":
+    "Başka bir sekmede bu özgeçmişin ayrı bir taslağı var. Kayıtta sürüm kontrolü yapılır.",
+
   "Apply suggestion": "Öneriyi uygula",
   "Skip suggestion": "Öneriyi atla",
   "Undo this suggestion": "Uygulamayı geri al",
@@ -553,8 +675,11 @@ Object.assign(copyTranslations, {
 });
 export function useCopy() {
   const { language } = useI18n();
-  return (text: string) =>
-    language === "tr" ? copyTranslations[text] || text : text;
+  return useCallback(
+    (text: string) =>
+      language === "tr" ? copyTranslations[text] || text : text,
+    [language],
+  );
 }
 Object.assign(copyTranslations, {
   "Your career archive": "Kariyer arşiviniz",

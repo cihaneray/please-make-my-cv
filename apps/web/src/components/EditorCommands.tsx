@@ -92,10 +92,11 @@ export function EditorCommands({
         ref={trigger}
         type="button"
         className="studio-undo"
+        aria-label={copy("Search and commands")}
         disabled={disabled}
         onClick={open}
       >
-        {copy("Search and commands")} <kbd>Ctrl K</kbd>
+        {copy("Search")} <kbd>Ctrl K</kbd>
       </button>
       <dialog
         ref={dialog}

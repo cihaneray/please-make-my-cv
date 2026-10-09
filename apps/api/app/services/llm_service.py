@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field, SecretStr, ValidationError, field_validat
 
 from app.core.config import settings
 from app.core.exceptions import AppException
+from app.core.llm_transport import ModelTransport, validate_host
 from app.core.secrets import decrypt_secret, local_cipher, private_write
 from app.rules.privacy import KVKKDataMinimizer
 from app.schemas.resume import ResumeDocument
@@ -53,6 +54,7 @@ class Connection(BaseModel):
             "ollama",
         }:
             raise ValueError("Remote connections require HTTPS; HTTP is allowed for local Ollama")
+        validate_host(parsed.hostname)
         return value.rstrip("/")
 
 
@@ -243,7 +245,12 @@ def completion(
             "stream": False,
         }
     try:
-        with httpx.Client(timeout=httpx.Timeout(90, connect=10), follow_redirects=False) as client:
+        with httpx.Client(
+            timeout=httpx.Timeout(90, connect=10),
+            follow_redirects=False,
+            trust_env=False,
+            transport=ModelTransport(),
+        ) as client:
             deadline = time.monotonic() + 90
             for attempt in range(3):
                 remaining = max(0.1, deadline - time.monotonic())

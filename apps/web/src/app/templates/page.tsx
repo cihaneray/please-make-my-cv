@@ -3,7 +3,7 @@ import { notify } from "@/components/Notifications";
 
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { api } from "@/lib/api";
+import { api, errorMessage } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import {
   RESUME_TEMPLATES,
@@ -24,8 +24,8 @@ export default function TemplatesPage() {
         templateId: templateId,
       });
       router.push(`/resumes/${newResume.metadata.id}`);
-    } catch (err: any) {
-      notify(`Failed to create resume: ${err.message}`);
+    } catch (err: unknown) {
+      notify(`Failed to create resume: ${errorMessage(err)}`);
     } finally {
       setCreating(false);
     }

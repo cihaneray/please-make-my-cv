@@ -2,14 +2,17 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.api.routes import ai, export, imports, jobs, library, resumes, source, workspace
 from app.core.body_limit import BodyLimitMiddleware
 from app.core.config import settings
 from app.core.exceptions import AppException
+from app.core.local_access import LocalOriginMiddleware
 from app.core.logging import RequestLoggingMiddleware
 from app.db.seed import seed_database
 from app.db.session import SessionLocal, init_db
@@ -43,6 +46,8 @@ app = FastAPI(
 app.add_middleware(RequestLoggingMiddleware)
 
 app.add_middleware(BodyLimitMiddleware, limit=settings.max_upload_size_bytes)
+app.add_middleware(LocalOriginMiddleware)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts, www_redirect=False)
 
 # CORS configuration
 app.add_middleware(
@@ -70,6 +75,7 @@ async def app_exception_handler(request: Request, exc: AppException):
 
 
 @app.exception_handler(ValidationError)
+@app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: ValidationError):
     details = [
         {"field": ".".join(str(loc) for loc in e["loc"]), "msg": e["msg"]} for e in exc.errors()
@@ -81,6 +87,21 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
                 "code": "VALIDATION_ERROR",
                 "message": "Schema validation failed.",
                 "details": details,
+            }
+        },
+    )
+
+
+@app.exception_handler(Exception)
+async def unexpected_exception_handler(request: Request, exc: Exception):
+    logger.error("Unhandled request error", exc_info=exc)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": {
+                "code": "INTERNAL_ERROR",
+                "message": "An unexpected server error occurred.",
+                "details": [],
             }
         },
     )

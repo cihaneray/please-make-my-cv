@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.analyzers.analyzer_service import AnalysisService
+from app.core.stored_document import read_stored_document
 from app.db.session import get_db
 from app.schemas.analysis import PdfCheckReport, ResumeAnalysisReport, ResumeComparisonReport
 from app.schemas.resume import (
@@ -142,7 +143,7 @@ def preview_draft(resume_id: str, document: ResumeDocument):
         HtmlPdfExporter.render_html(document),
         media_type="text/html",
         headers={
-            "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+            "Content-Security-Policy": "default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox"
         },
     )
 
@@ -164,14 +165,16 @@ def export_draft(resume_id: str, document: ResumeDocument, format: Literal["pdf"
 
 @router.get("/{resume_id}/history")
 def history(resume_id: str, db: Session = Depends(get_db)):
-    from app.db.models import ResumeRevisionModel
+    from app.core.exceptions import EntityNotFoundException
+    from app.db.models import ResumeModel, ResumeRevisionModel
 
-    ResumeService.get_resume(db, resume_id)
+    if not db.get(ResumeModel, resume_id):
+        raise EntityNotFoundException("Resume", resume_id)
     return [
         {
             "revision": row.revision,
             "createdAt": row.created_at.isoformat(),
-            "document": ResumeDocument.model_validate_json(row.document_json),
+            "document": read_stored_document(row.document_json, row.resume_id),
         }
         for row in db.query(ResumeRevisionModel)
         .filter_by(resume_id=resume_id)
@@ -193,7 +196,7 @@ def restore(resume_id: str, revision: int, expected_revision: int, db: Session =
         resume_id,
         UpdateResumeRequest(
             revision=expected_revision,
-            document=ResumeDocument.model_validate_json(row.document_json),
+            document=read_stored_document(row.document_json, row.resume_id),
         ),
     )
 

@@ -20,9 +20,13 @@ def export_resume(
     content, mime_type, filename = ConversionService.export(doc, format)
 
     headers = {
-        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        "Content-Security-Policy": "default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox",
         "X-Content-Type-Options": "nosniff",
     }
+    if format == DataFormat.PDF:
+        headers["Content-Security-Policy"] = (
+            "default-src 'none'; frame-ancestors 'self'; base-uri 'none'"
+        )
     if download:
         headers["Content-Disposition"] = f'attachment; filename="{filename}"'
     else:

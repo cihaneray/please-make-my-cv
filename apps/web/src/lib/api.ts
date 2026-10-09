@@ -14,37 +14,94 @@ import {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status = 0,
+    public code = "NETWORK_ERROR",
+    public details: unknown = [],
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+export const errorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : "An unexpected error occurred.";
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
-  });
-
+  const timeout = AbortSignal.timeout(
+    url.includes("/ai/") ||
+      url.includes("/pdf-check") ||
+      url.includes("/page-fit")
+      ? 120000
+      : 30000,
+  );
+  const signal = init?.signal
+    ? AbortSignal.any([init.signal, timeout])
+    : timeout;
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...init,
+      signal,
+      headers: {
+        ...(init?.body instanceof FormData
+          ? {}
+          : { "Content-Type": "application/json" }),
+        ...init?.headers,
+      },
+    });
+  } catch (error) {
+    if (init?.signal?.aborted) throw error;
+    throw new ApiError(
+      timeout.aborted
+        ? "The request timed out. Try again."
+        : "Cannot reach the API. Check the connection and try again.",
+      0,
+      timeout.aborted ? "TIMEOUT" : "NETWORK_ERROR",
+    );
+  }
   if (!res.ok) {
     const raw = await res.text();
-    let errorDetail = raw || `Request failed (${res.status})`;
+    let message = `Request failed (${res.status})`,
+      code = "REQUEST_FAILED",
+      details: unknown = [];
     try {
       const data = JSON.parse(raw);
-      const detail = data?.error?.message || data?.detail;
-      errorDetail =
-        typeof detail === "string" ? detail : JSON.stringify(detail || data);
+      code = data.error?.code || code;
+      details = data.error?.details || data.detail || [];
+      message =
+        data.error?.message ||
+        (typeof data.detail === "string" ? data.detail : message);
+      if (res.status === 422 && Array.isArray(details))
+        message =
+          details
+            .map(
+              (item: {
+                field?: string;
+                loc?: (string | number)[];
+                msg?: string;
+              }) =>
+                `${item.field || item.loc?.join(".") || "Field"}: ${item.msg || "Invalid value"}`,
+            )
+            .join("; ") || message;
     } catch {
-      /* Plain-text server error. */
+      /* Do not expose an HTML proxy error as user-facing text. */
     }
-
-    const err = new Error(errorDetail);
-    (err as any).status = res.status;
-    throw err;
+    throw new ApiError(message, res.status, code, details);
   }
-
   if (res.status === 204) return undefined as T;
   return res.json();
 }
 
 export const api = {
+  reviewPdfImport: (file: File) => {
+    const body = new FormData();
+    body.append("file", file);
+    return fetchJson<import("./types").PdfImportReport>(
+      `${API_BASE}/import/pdf`,
+      { method: "POST", body },
+    );
+  },
   planTailoring: (jobId: string, resumeId: string) =>
     fetchJson<import("./types").TailoringPlan>(
       `${API_BASE}/jobs/${jobId}/tailoring/${resumeId}`,
@@ -235,10 +292,13 @@ export const api = {
   async getAnalysis(
     id: string,
     document?: ResumeDocument,
+    signal?: AbortSignal,
   ): Promise<ResumeAnalysisReport> {
     return fetchJson<ResumeAnalysisReport>(
       `${API_BASE}/resumes/${id}/analysis`,
-      document ? { method: "POST", body: JSON.stringify(document) } : undefined,
+      document
+        ? { method: "POST", body: JSON.stringify(document), signal }
+        : { signal },
     );
   },
 

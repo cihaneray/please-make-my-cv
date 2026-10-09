@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import base64
+import re
 import uuid
 from datetime import UTC, datetime
+from io import BytesIO
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from docx.image.image import Image
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 def default_uuid() -> str:
@@ -22,6 +26,31 @@ class ProfileLink(BaseModel):
 
 
 class Profile(BaseModel):
+    photo: str = Field(default="", max_length=350000)
+
+    @field_validator("photo")
+    @classmethod
+    def valid_photo(cls, value: str) -> str:
+        if not value:
+            return value
+        match = re.fullmatch(r"data:image/(png|jpeg);base64,([A-Za-z0-9+/=]+)", value)
+        if not match:
+            raise ValueError("Photo must be an embedded PNG or JPEG image")
+        try:
+            data = base64.b64decode(match[2], validate=True)
+            if len(data) > 256 * 1024:
+                raise ValueError("Photo exceeds 256 KB")
+            image = Image.from_file(BytesIO(data))
+            if image.content_type != f"image/{match[1]}" or not (
+                1 <= image.px_width <= 1024 and 1 <= image.px_height <= 1024
+            ):
+                raise ValueError("Photo format or dimensions are invalid")
+        except Exception as exc:
+            raise ValueError(
+                "Use a valid PNG or JPEG photo, up to 256 KB and 1024 pixels per side"
+            ) from exc
+        return value
+
     firstName: str = ""
     lastName: str = ""
     headline: str = ""  # Professional Title
@@ -137,6 +166,7 @@ class DesignSettings(BaseModel):
 
 
 class VisibilitySettings(BaseModel):
+    showPhoto: bool = True
     showSummary: bool = True
     showExperience: bool = True
     showEducation: bool = True

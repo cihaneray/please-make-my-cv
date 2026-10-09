@@ -188,7 +188,6 @@ coverage/
 *.swp
 *.swo
 *.bak
-*~
 .#*
 
 # AI Assistant scratchpads & vendor files

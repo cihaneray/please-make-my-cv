@@ -73,24 +73,36 @@ export function ThemePicker() {
       ? { light: "Açık", dark: "Koyu", system: "Sistem" }
       : { light: "Light", dark: "Dark", system: "System" };
   return (
-    <fieldset className="space-y-3">
+    <fieldset className="settings-theme-picker">
       <legend className="font-semibold">
         {language === "tr" ? "Renk teması" : "Color theme"}
       </legend>
-      <div className="flex flex-wrap gap-3">
+      <div className="settings-theme-options">
         {(["light", "dark", "system"] as const).map((value) => (
           <label
             key={value}
-            className={`flex items-center gap-2 cursor-pointer rounded-lg border px-4 py-3 ${theme === value ? "border-primary bg-secondary-container text-on-surface" : "border-outline-variant bg-surface-container-lowest text-on-surface-variant"}`}
+            className="settings-theme-option"
+            data-selected={theme === value}
           >
-            <input
-              type="radio"
-              name="color-theme"
-              value={value}
-              checked={theme === value}
-              onChange={() => setTheme(value)}
-            />
-            {labels[value]}
+            <span
+              className={`settings-theme-swatch ${value}`}
+              aria-hidden="true"
+            >
+              <span />
+              <span />
+              <span />
+            </span>
+            <span className="settings-theme-choice">
+              <input
+                aria-label={labels[value]}
+                type="radio"
+                name="color-theme"
+                value={value}
+                checked={theme === value}
+                onChange={() => setTheme(value)}
+              />
+              <span>{labels[value]}</span>
+            </span>
           </label>
         ))}
       </div>

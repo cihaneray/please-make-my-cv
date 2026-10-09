@@ -1,6 +1,6 @@
 from collections.abc import Generator
 
-from sqlalchemy import URL, create_engine
+from sqlalchemy import URL, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import settings
@@ -8,6 +8,7 @@ from app.core.config import settings
 connect_args = {}
 if not settings.database_user and settings.database_url.startswith("sqlite"):
     connect_args["check_same_thread"] = False
+    connect_args["timeout"] = 30
 
 database_url = (
     URL.create(
@@ -27,6 +28,13 @@ engine = create_engine(
     echo=False,
 )
 
+if engine.dialect.name == "sqlite":
+
+    @event.listens_for(engine, "connect")
+    def enable_foreign_keys(connection, _record):
+        connection.execute("PRAGMA foreign_keys=ON")
+
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
@@ -38,9 +46,21 @@ def init_db() -> None:
 
     root = Path(__file__).resolve().parents[2]
     config = Config(str(root / "alembic.ini"))
-    with engine.begin() as connection:
+    # A separate SQLite migration connection permits Alembic table rebuilds.
+    migration_engine = (
+        create_engine(database_url, connect_args=connect_args)
+        if engine.dialect.name == "sqlite"
+        else engine
+    )
+    with migration_engine.begin() as connection:
+        if connection.dialect.name == "postgresql":
+            connection.exec_driver_sql("SELECT pg_advisory_xact_lock(1129944915)")
+        elif connection.dialect.name == "sqlite":
+            connection.exec_driver_sql("BEGIN IMMEDIATE")
         config.attributes["connection"] = connection
         command.upgrade(config, "head")
+    if migration_engine is not engine:
+        migration_engine.dispose()
 
 
 def get_db() -> Generator[Session, None, None]:

@@ -3,6 +3,6 @@ revision = 3
 requires-python = ">=3.12"
 
 [[package]]
-name = "it-is-good-cv"
+name = "please-make-my-cv"
 version = "0.1.0"
 source = { virtual = "." }
