@@ -42,7 +42,10 @@ class AnalysisService:
 
         # 3. Content score calculation based on content/formatting deductions
         content_issues = [
-            i for i in all_issues if i.section in ["experience", "projects", "summary"]
+            i
+            for i in all_issues
+            if i.section in ["experience", "projects", "summary"]
+            and i.severity != IssueSeverity.INFO
         ]
         content_deduction = sum(
             15
