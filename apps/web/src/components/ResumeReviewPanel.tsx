@@ -3,6 +3,8 @@ import { useI18n } from "@/lib/i18n";
 import { useCopy } from "@/lib/copy";
 import { Icons } from "@/components/Icons";
 import { AIResumeReview } from "@/components/AIResumeReview";
+import ResumeTranslation from "@/components/ResumeTranslation";
+import { api } from "@/lib/api";
 import { applyAIEdit } from "@/lib/ai-edits";
 import {
   AnalysisIssue,
@@ -23,7 +25,7 @@ export function ResumeReviewPanel({
   analyzing: boolean;
   analysisReport: ResumeAnalysisReport | null;
 }) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const copy = useCopy();
   return (
     <div className="inspector-mode flex flex-1 w-full overflow-hidden">
@@ -39,6 +41,20 @@ export function ResumeReviewPanel({
             setDoc((current) =>
               current ? applyAIEdit(current, edit) : current,
             )
+          }
+        />
+        <ResumeTranslation
+          key={`translation-${doc.metadata.id}`}
+          document={doc}
+          sourcePending={disabled}
+          language={language}
+          onTranslate={api.translateResume}
+          onCreate={(document, title) =>
+            api.createResume({
+              initialData: document,
+              title,
+              targetRole: document.metadata.targetRole,
+            })
           }
         />
         {analyzing ? (
@@ -61,7 +77,7 @@ export function ResumeReviewPanel({
                 </p>
                 <p>
                   {copy(
-                    "Content quality starts at 100 and deducts 15/10/5/2 for critical/important/warning/info findings in experience, projects or summary. A score of 100 only means these rules found no issues; it does not mean the text cannot be improved.",
+                    "Content quality starts at 100 and deducts 15/10/5 for critical/important/warning findings in experience, projects or summary. Informational findings do not reduce the score. A score of 100 only means these rules found no penalized issues; it does not mean the text cannot be improved.",
                   )}
                 </p>
               </details>

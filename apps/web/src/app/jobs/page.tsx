@@ -2,7 +2,9 @@
 import { notify } from "@/components/Notifications";
 
 import { JobAgenda } from "@/components/JobAgenda";
+import JobUrlImport from "@/components/JobUrlImport";
 import { JobTools } from "@/components/JobTools";
+import { JobDeleteDialog } from "@/components/JobDeleteDialog";
 import { useCopy } from "@/lib/copy";
 import React, { useEffect, useRef, useState } from "react";
 import { Icons } from "@/components/Icons";
@@ -30,10 +32,12 @@ export default function JobsPage() {
   const [matching, setMatching] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [jobToDelete, setJobToDelete] = useState<JobApplication | null>(null);
 
   // New job form state
   const [newCompany, setNewCompany] = useState("");
   const [newPosition, setNewPosition] = useState("");
+  const [newUrl, setNewUrl] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newLocation, setNewLocation] = useState("");
   const [newStatus, setNewStatus] = useState<JobStatus>("saved" as JobStatus);
@@ -101,6 +105,7 @@ export default function JobsPage() {
         company: newCompany,
         position: newPosition,
         description: newDesc,
+        url: newUrl,
         location: newLocation,
         status: newStatus,
         linkedResumeId: linkedResume || (resumes[0] ? resumes[0].id : null),
@@ -111,6 +116,7 @@ export default function JobsPage() {
       setNewCompany("");
       setNewPosition("");
       setNewDesc("");
+      setNewUrl("");
       setNewLocation("");
     } catch (err: unknown) {
       notify(`Create job failed: ${errorMessage(err)}`);
@@ -231,6 +237,16 @@ export default function JobsPage() {
         <div className="application-stage">
           {selectedJob ? (
             <>
+              <div className="application-file-actions">
+                <button
+                  type="button"
+                  className="editorial-button application-delete-button"
+                  onClick={() => setJobToDelete(selectedJob)}
+                >
+                  <Icons.Delete size={16} />
+                  {copy("Delete job")}
+                </button>
+              </div>
               <JobTools
                 key={selectedJob.id}
                 job={selectedJob}
@@ -273,12 +289,36 @@ export default function JobsPage() {
         </div>
       </div>
       {!loading && <JobAgenda jobs={jobs} onSelect={setSelectedJob} />}
+      {jobToDelete && (
+        <JobDeleteDialog
+          job={jobToDelete}
+          onClose={() => setJobToDelete(null)}
+          onDeleted={(id) => {
+            const remaining = jobs.filter((job) => job.id !== id);
+            setJobs(remaining);
+            if (selectedId.current === id) {
+              selectedId.current = remaining[0]?.id || null;
+              setSelectedJob(remaining[0] || null);
+              setMatchResult(null);
+              setMatchError(false);
+              setMatching(false);
+            }
+            try {
+              localStorage.removeItem(`job-draft-${id}`);
+              localStorage.removeItem(`job-email-${id}`);
+            } catch {
+              // A successful deletion also works when browser storage is unavailable.
+            }
+            notify(copy("Job deleted. Your CVs are unchanged."));
+          }}
+        />
+      )}
       {/* Add Job Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <form
             onSubmit={handleCreateJob}
-            className="w-full max-w-lg bg-surface-container-lowest p-space-xl rounded-xl shadow-xl flex flex-col gap-space-md border border-surface-container-highest"
+            className="job-create-form w-full max-w-lg bg-surface-container-lowest p-space-xl rounded-xl shadow-xl flex flex-col gap-space-md border border-surface-container-highest"
           >
             <div className="flex items-center justify-between border-b border-surface-container-high pb-2">
               <span className="font-headline-md font-semibold">
@@ -293,6 +333,25 @@ export default function JobsPage() {
                 <Icons.Close size={18} />
               </button>
             </div>
+
+            <JobUrlImport
+              language={language}
+              onImport={api.importJobUrl}
+              onApply={(values) => {
+                setNewCompany(values.company);
+                setNewPosition(values.position);
+                setNewDesc(values.description);
+                setNewUrl(values.sourceUrl);
+              }}
+            />
+            <label className="career-tool-field">
+              <span>{copy("Job listing URL (optional)")}</span>
+              <input
+                type="url"
+                value={newUrl}
+                onChange={(e) => setNewUrl(e.target.value)}
+              />
+            </label>
 
             <div className="flex flex-col gap-1">
               <label className="font-label-sm text-secondary">

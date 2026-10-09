@@ -6,6 +6,7 @@ import "@/styles/controls.css";
 
 import "@/components/workspace-actions.css";
 import "@/styles/workspace-polish.css";
+import "@/styles/workspace-features.css";
 import { headers } from "next/headers";
 export const dynamic = "force-dynamic";
 import { ThemeProvider } from "@/components/ThemeProvider";

@@ -1,5 +1,6 @@
 "use client";
 import { ProfilePhoto } from "@/components/ProfilePhoto";
+import { AnonymousExport } from "@/components/AnonymousExport";
 import { DownloadMenu } from "@/components/DownloadMenu";
 import { EditorCommands } from "@/components/EditorCommands";
 import { useDraftHistory } from "@/lib/draft-history";
@@ -56,6 +57,7 @@ export default function ResumeStudioPage() {
     removed,
   } = useDraftHistory();
   const [savedSnapshot, setSavedSnapshot] = useState("");
+  const [showAnonymous, setShowAnonymous] = useState(false);
   const [notice, setNotice] = useState("");
   const [conflict, setConflict] = useState(false);
   const [suggestion, setSuggestion] = useState<{
@@ -433,6 +435,12 @@ export default function ResumeStudioPage() {
   }
   return (
     <div className="editorial-studio">
+      {showAnonymous && (
+        <AnonymousExport
+          document={doc}
+          onClose={() => setShowAnonymous(false)}
+        />
+      )}
       {suggestion && (
         <SuggestionDialog
           before={suggestion.before}
@@ -524,6 +532,7 @@ export default function ResumeStudioPage() {
             {saving ? t("saving") : t("saveDraft")}
           </button>
           <DownloadMenu
+            onAnonymous={() => setShowAnonymous(true)}
             disabled={sourcePending}
             download={(format) => api.downloadDocument(doc, format)}
             onError={setNotice}
@@ -1503,7 +1512,11 @@ export default function ResumeStudioPage() {
             />
           )}
           {/* 4. REVIEW & ATS ANALYSIS MODE */}
-          {activeTab === "review" && (
+          <div
+            className="studio-review-session"
+            hidden={activeTab !== "review"}
+            key={doc.metadata.id}
+          >
             <ResumeReviewPanel
               doc={doc}
               setDoc={setDoc}
@@ -1511,7 +1524,7 @@ export default function ResumeStudioPage() {
               analyzing={analyzing}
               analysisReport={analysisReport}
             />
-          )}
+          </div>
         </section>
       </div>
     </div>

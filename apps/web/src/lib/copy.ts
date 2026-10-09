@@ -2,6 +2,109 @@
 import { useCallback } from "react";
 import { useI18n } from "./i18n";
 export const copyTranslations: Record<string, string> = {
+  "Anonymous PDF": "Anonim PDF",
+  "Review a copy with personal details removed":
+    "Kişisel bilgileri çıkarılmış kopyayı inceleyin",
+  "Anonymous preview": "Anonim önizleme",
+  "Download anonymous PDF": "Anonim PDF indir",
+  "Preparing anonymous preview…": "Anonim önizleme hazırlanıyor…",
+  "Could not prepare anonymous preview.": "Anonim önizleme hazırlanamadı.",
+  "Review the redacted preview before downloading. Names, photo, contact details, and known personal values have been removed. Review free text for indirect identifiers or details we cannot recognize.":
+    "İndirmeden önce önizlemeyi inceleyin. Ad, fotoğraf, iletişim bilgileri ve bilinen kişisel değerler çıkarıldı. Serbest metindeki dolaylı kimlik bilgilerini ve tanınamayan ayrıntıları kendiniz kontrol edin.",
+  "Application email drafts": "Başvuru e-posta taslakları",
+  "Prepare and edit a template from saved job details. No email is sent and no AI request is needed.":
+    "Kayıtlı ilan bilgilerinden bir şablon hazırlayıp düzenleyin. E-posta gönderilmez ve yapay zekâ çağrısı yapılmaz.",
+  "Email type": "E-posta türü",
+  "Application follow-up": "Başvuru takibi",
+  "Interview thank-you": "Mülakat sonrası teşekkür",
+  "Offer discussion": "Teklif görüşmesi",
+  "Recipient name (optional)": "Alıcı adı (isteğe bağlı)",
+  "Terms you want to discuss": "Görüşmek istediğiniz koşullar",
+  "Enter your own expectations; no salary figure is assumed.":
+    "Beklentilerinizi kendiniz girin; maaş tutarı varsayılmaz.",
+  "Save job changes before preparing an email.":
+    "E-posta hazırlamadan önce ilan değişikliklerini kaydedin.",
+  "Replace the existing email draft?":
+    "Mevcut e-posta taslağı değiştirilsin mi?",
+  "Prepare email draft": "E-posta taslağı hazırla",
+  "Email subject": "E-posta konusu",
+  "Email text": "E-posta metni",
+  "Verify placeholders and all facts before sending. This editable draft is stored only in this browser.":
+    "Göndermeden önce yer tutucuları ve tüm bilgileri doğrulayın. Düzenlenebilir taslak yalnızca bu tarayıcıda saklanır.",
+  "Email draft copied.": "E-posta taslağı kopyalandı.",
+  "Could not copy. Select the text or download the draft.":
+    "Kopyalanamadı. Metni seçin veya taslağı indirin.",
+  "Copy email draft": "E-posta taslağını kopyala",
+  "Download email draft": "E-posta taslağını indir",
+  "Job listing URL (optional)": "İlan bağlantısı (isteğe bağlı)",
+
+  "Create a CV from the library": "Kütüphaneden CV oluştur",
+  "A focused CV from your career archive":
+    "Kariyer arşivinizden hedefe uygun CV",
+  "Choose a saved job, review matching snippets and create a separate draft.":
+    "Kayıtlı bir ilan seçin, eşleşen parçacıkları inceleyin ve ayrı bir taslak oluşturun.",
+  "Close builder": "Oluşturucuyu kapat",
+  "Saved target job": "Kayıtlı hedef ilan",
+  "Loading jobs…": "İlanlar yükleniyor…",
+  "Choose a saved job": "Kayıtlı bir ilan seçin",
+  "Save a target job before creating a CV from the library.":
+    "Kütüphaneden CV oluşturmadan önce bir hedef ilan kaydedin.",
+  "Open target jobs": "Hedef ilanları aç",
+  "Suggestions use text matches, not a proficiency score. Only selected original text is copied; employers, dates and qualifications are never invented.":
+    "Öneriler metin eşleşmelerine dayanır; yetkinlik puanı değildir. Yalnızca seçilen özgün metin kopyalanır; işveren, tarih veya nitelik uydurulmaz.",
+  "Choose career evidence": "Kariyer kanıtlarını seçin",
+  "Select text matches": "Metin eşleşmelerini seç",
+  Selected: "Seçilen",
+  "Add a career snippet before creating a CV.":
+    "CV oluşturmadan önce bir kariyer parçacığı ekleyin.",
+  "Text matches": "Metin eşleşmeleri",
+  "No direct text match; available for manual selection":
+    "Doğrudan metin eşleşmesi yok; elle seçilebilir",
+  "Not mentioned in selected evidence":
+    "Seçilen kanıtlarda geçmeyen gereksinimler",
+  "Review gaps yourself; missing terms will not be added to the CV.":
+    "Eksikleri kendiniz değerlendirin; eksik terimler CV’ye eklenmez.",
+  "Personal details": "Kişisel bilgiler",
+  "First name": "Ad",
+  "Last name": "Soyad",
+  "Email (optional)": "E-posta (isteğe bağlı)",
+  "I will complete missing personal details in the editor.":
+    "Eksik kişisel bilgileri editörde tamamlayacağım.",
+  "Selected snippets become a career achievements section. Complete employment history, education and contact details before exporting.":
+    "Seçilen parçacıklar kariyer başarıları bölümüne eklenir. Dışa aktarmadan önce iş geçmişini, eğitim ve iletişim bilgilerini tamamlayın.",
+  "Creating draft…": "Taslak oluşturuluyor…",
+  "Create selected CV draft": "Seçilenlerden CV taslağı oluştur",
+  "Reload saved jobs": "Kayıtlı ilanları yeniden yükle",
+  "Your separate draft is ready. Review and complete it before sending.":
+    "Ayrı taslağınız hazır. Göndermeden önce inceleyip tamamlayın.",
+  "Open created CV": "Oluşturulan CV’yi aç",
+  "Selected career achievements": "Seçilen kariyer başarıları",
+
+  "Delete job": "İlanı sil",
+  "Delete this job?": "Bu ilan silinsin mi?",
+  "Delete job permanently": "İlanı kalıcı olarak sil",
+  "Job deleted. Your CVs are unchanged.":
+    "İlan silindi. Özgeçmişleriniz korunuyor.",
+  "This permanently removes the job, its application history, saved letter and submitted copies. Your original and tailored CVs stay in your document list. Unsaved edits to this job will also be discarded.":
+    "İlan, başvuru geçmişi, kayıtlı ön yazı ve gönderilen kopyalar kalıcı olarak silinir. Asıl ve ilana özel özgeçmişleriniz belge listesinde kalır. Bu ilandaki kaydedilmemiş düzenlemeler de silinir.",
+  "Review saved CV": "Kayıtlı CV’yi değerlendir",
+  "Close review": "Değerlendirmeyi kapat",
+  "Review the saved document without changing it. Open the editor to make changes after reviewing suggestions.":
+    "Kayıtlı belgeyi değiştirmeden değerlendirin. Önerileri inceledikten sonra değişiklik yapmak için editörü açın.",
+  "Enable AI reviews in Settings before starting.":
+    "Başlamadan önce Ayarlar’dan AI incelemelerini etkinleştirin.",
+  "Review target": "Değerlendirme hedefi",
+  "General CV review": "Genel CV değerlendirmesi",
+  "Saved jobs could not be loaded. General review is still available.":
+    "Kayıtlı ilanlar yüklenemedi. Genel değerlendirmeyi kullanabilirsiniz.",
+  "Add a description or requirements to this job before reviewing against it.":
+    "İlana göre değerlendirme yapmadan önce ilan açıklamasını veya gereksinimlerini ekleyin.",
+  "Start AI review": "AI değerlendirmesini başlat",
+  "AI review results": "AI değerlendirme sonuçları",
+  "No recommendations in this review.": "Bu değerlendirmede öneri yok.",
+  "Open editor to make changes": "Düzenlemek için editörü aç",
+  "Review CV": "CV’yi değerlendir",
+
   Search: "Ara",
   Redo: "Yinele",
   "CV language": "CV dili",
@@ -154,8 +257,8 @@ export const copyTranslations: Record<string, string> = {
     "Bu kontroller yapay zeka kullanmadan yerelde çalışır. Belge düzeni, iletişim bilgileri, tekrarlanan veya uzun maddeler ve tanımlı diğer kurallar kontrol edilir. Yukarıdaki AI metin önerileri ayrı bir değerlendirmedir.",
   "ATS score = earned points ÷ 80 × 100. Job relevance is excluded here. Missing email subtracts 10 contact points; missing phone subtracts 5. Other rule findings reduce their related dimension.":
     "ATS puanı = kazanılan puan ÷ 80 × 100. İlanla uyum burada puanlanmaz. Eksik e-posta iletişimden 10, eksik telefon 5 puan düşürür. Diğer kural bulguları ilgili boyutun puanını azaltır.",
-  "Content quality starts at 100 and deducts 15/10/5/2 for critical/important/warning/info findings in experience, projects or summary. A score of 100 only means these rules found no issues; it does not mean the text cannot be improved.":
-    "İçerik kalitesi 100'den başlar; deneyim, proje veya özetteki kritik/önemli/uyarı/bilgi bulguları için sırasıyla 15/10/5/2 puan düşülür. 100 puan yalnızca bu kuralların sorun bulmadığını belirtir; metnin geliştirilemeyeceği anlamına gelmez.",
+  "Content quality starts at 100 and deducts 15/10/5 for critical/important/warning findings in experience, projects or summary. Informational findings do not reduce the score. A score of 100 only means these rules found no penalized issues; it does not mean the text cannot be improved.":
+    "İçerik kalitesi 100'den başlar; deneyim, proje veya özetteki kritik/önemli/uyarı bulguları için sırasıyla 15/10/5 puan düşülür. Bilgi amaçlı bulgular puanı düşürmez. 100 puan yalnızca puan kesilen sorun bulunmadığını belirtir; metnin geliştirilemeyeceği anlamına gelmez.",
   "No local rule findings. AI may still suggest wording improvements or ask for missing context.":
     "Yerel kurallarda bulgu yok. AI yine de metin iyileştirmeleri önerebilir veya eksik bağlam hakkında soru sorabilir.",
   "Internal document heuristic. Job relevance is not assessed here; use Jobs to compare a specific description. Not an external ATS endorsement.":

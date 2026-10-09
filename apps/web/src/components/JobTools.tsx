@@ -8,6 +8,7 @@ import { SlidingIndicator } from "./SlidingIndicator";
 import { ApplicationPreparation } from "./ApplicationPreparation";
 import { ApplicationEvidence } from "./ApplicationEvidence";
 import { JobTailoring } from "./JobTailoring";
+import { JobEmailDrafts } from "./JobEmailDrafts";
 import { Icons } from "./Icons";
 import {
   JobApplication,
@@ -300,6 +301,7 @@ export function JobTools({
           onDocuments={() => switchTab("documents")}
         />
         <JobTailoring key={`tailoring-${job.id}`} job={job} dirty={dirty} />
+        <JobEmailDrafts key={`email-${job.id}`} job={job} dirty={dirty} />
         <section
           className="dossier-match"
           aria-label={copy("CV match")}
