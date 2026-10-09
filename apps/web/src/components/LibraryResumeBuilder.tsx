@@ -153,7 +153,7 @@ export default function LibraryResumeBuilder({
         ),
     ) || [];
 
-  async function create(event: React.FormEvent<HTMLFormElement>) {
+  async function create(event: import("react").FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (
       !job ||
