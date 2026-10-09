@@ -3,11 +3,14 @@
 import json
 import uuid
 from datetime import datetime
+from functools import lru_cache
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field, SecretStr
+from sqlalchemy import String, Text, func
 from sqlalchemy.orm import Session
 
+from app.core.stored_document import read_stored_document
 from app.db.models import (
     ApplicationSnapshotModel,
     JobModel,
@@ -21,7 +24,6 @@ from app.schemas.library import LibrarySnippet
 from app.schemas.resume import ResumeDocument
 from app.services.job_service import JobService
 from app.services.library_service import LibraryService
-from app.services.resume_service import ResumeService
 
 router = APIRouter(prefix="/workspace", tags=["Workspace"])
 
@@ -35,18 +37,34 @@ def backup_timestamp(value: str) -> datetime:
         raise ValidationException("Backup contains an invalid timestamp.") from exc
 
 
-@router.get("/metrics")
-def workspace_metrics(db: Session = Depends(get_db)):
+@lru_cache(maxsize=128)
+def metric_score(document_json: str):
     from app.analyzers.analyzer_service import AnalysisService
 
-    scores = [
-        AnalysisService.analyze(ResumeService.get_resume(db, row.id)).atsCompatibilityScore
-        for row in ResumeService.list_resumes(db)
-    ]
+    return AnalysisService.analyze(
+        ResumeDocument.model_validate_json(document_json)
+    ).atsCompatibilityScore
+
+
+@router.get("/metrics")
+def workspace_metrics(db: Session = Depends(get_db)):
+    scores, corrupt = [], []
+    count = 0
+    rows = db.query(ResumeModel).filter(ResumeModel.is_archived.is_(False)).yield_per(32)
+    for row in rows:
+        count += 1
+        try:
+            document = ResumeDocument.model_validate_json(row.document_json)
+            scores.append(metric_score(document.model_dump_json(exclude={"profile": {"photo"}})))
+        except ValueError:
+            corrupt.append(row.id)
     return {
         "atsAverage": round(sum(scores) / len(scores), 1) if scores else None,
-        "resumeCount": len(scores),
-        "notice": "Internal ATS heuristic; not an external ATS endorsement.",
+        "resumeCount": count,
+        "corruptResumeIds": corrupt,
+        "notice": "Some CVs contain invalid data and were excluded from the average."
+        if corrupt
+        else "Internal ATS heuristic; not an external ATS endorsement.",
     }
 
 
@@ -117,6 +135,29 @@ def encrypted_restore(request: EncryptedRestore, db: Session = Depends(get_db)):
 
 @router.get("/backup", response_model=Backup)
 def backup(db: Session = Depends(get_db)):
+    from app.core.config import settings
+    from app.core.exceptions import AppException
+
+    # Bound raw payload sizes in the DB before loading CVs/photos into memory.
+    raw_size = 0
+    for model in (
+        ResumeModel,
+        ResumeRevisionModel,
+        ApplicationSnapshotModel,
+        JobModel,
+        LibraryItemModel,
+    ):
+        columns = [
+            column for column in model.__table__.columns if isinstance(column.type, (String, Text))
+        ]
+        size = sum(func.coalesce(func.length(column), 0) for column in columns)
+        raw_size += db.query(func.coalesce(func.sum(size), 0)).scalar()
+    if raw_size > settings.max_upload_size_bytes - 1024:
+        raise AppException(
+            "BACKUP_TOO_LARGE",
+            "Backup exceeds the restore size limit. Increase MAX_UPLOAD_SIZE_BYTES before exporting.",
+            413,
+        )
     jobs = JobService.list_jobs(db)
     snapshots = db.query(ApplicationSnapshotModel).all()
     known_jobs = {job.id for job in jobs}
@@ -133,10 +174,25 @@ def backup(db: Session = Depends(get_db)):
                 )
             )
             known_jobs.add(snapshot.job_id)
-    return Backup(
-        resumes=[
-            ResumeService.get_resume(db, row.id) for row in ResumeService.list_resumes(db, True)
-        ],
+    resumes = []
+    for row in db.query(ResumeModel).all():
+        try:
+            document = ResumeDocument.model_validate_json(row.document_json)
+            document.metadata.revision = row.revision
+            document.metadata.isArchived = row.is_archived
+            document.metadata.parentResumeId = row.parent_resume_id
+            resumes.append(document)
+        except ValueError as exc:
+            from app.core.exceptions import AppException
+
+            raise AppException(
+                "BACKUP_CORRUPT_RECORD",
+                "Backup could not include an invalid CV. Repair or restore this record first.",
+                409,
+                {"resumeId": row.id},
+            ) from exc
+    result = Backup(
+        resumes=resumes,
         jobs=jobs,
         library=LibraryService.list_snippets(db),
         history=[
@@ -144,7 +200,7 @@ def backup(db: Session = Depends(get_db)):
                 resumeId=r.resume_id,
                 revision=r.revision,
                 createdAt=r.created_at,
-                document=ResumeDocument.model_validate_json(r.document_json),
+                document=read_stored_document(r.document_json, f"{r.resume_id}:{r.revision}"),
             )
             for r in db.query(ResumeRevisionModel).all()
         ],
@@ -152,11 +208,21 @@ def backup(db: Session = Depends(get_db)):
             SnapshotEntry(
                 jobId=r.job_id,
                 createdAt=r.created_at,
-                document=ResumeDocument.model_validate_json(r.document_json),
+                document=read_stored_document(r.document_json, r.id),
             )
             for r in snapshots
         ],
     )
+    from app.core.config import settings
+    from app.core.exceptions import AppException
+
+    if len(result.model_dump_json().encode()) > settings.max_upload_size_bytes - 1024:
+        raise AppException(
+            "BACKUP_TOO_LARGE",
+            "Backup exceeds the restore size limit. Increase MAX_UPLOAD_SIZE_BYTES before exporting.",
+            413,
+        )
+    return result
 
 
 @router.post("/restore")

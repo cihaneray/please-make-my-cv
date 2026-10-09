@@ -1,5 +1,6 @@
 import html
 import re
+from urllib.parse import urlsplit
 
 from app.schemas.resume import ResumeDocument
 
@@ -36,12 +37,17 @@ def _format_date_range(start: str | None, end: str | None, current: bool, is_tr:
 
 
 def _normalize_url(url: str | None) -> str:
-    if not url:
+    if not url or not url.strip():
         return ""
-    u = url.strip()
-    if u.startswith("http://") or u.startswith("https://"):
-        return u
-    return f"https://{u}"
+    value = url.strip()
+    if re.match(r"^[a-z][a-z0-9+.-]*:", value, re.I) and not re.match(r"^https?://", value, re.I):
+        return ""
+    candidate = value if re.match(r"^https?://", value, re.I) else f"https://{value}"
+    try:
+        parsed = urlsplit(candidate)
+        return candidate if parsed.hostname and not parsed.username and not parsed.password else ""
+    except ValueError:
+        return ""
 
 
 def _display_url(url: str | None) -> str:
@@ -55,7 +61,7 @@ class HtmlPdfExporter:
     def render_html(doc: ResumeDocument) -> str:
         """Renders an A4 print-optimized HTML document with CSS styling matching the chosen template."""
         template_id = (doc.design.template or doc.metadata.templateId or "minimal").lower().strip()
-        if template_id not in ["minimal", "technical", "professional"]:
+        if template_id not in ["minimal", "technical", "professional", "classic"]:
             template_id = "minimal"
 
         is_tr = (doc.metadata.language or "en").lower() == "tr"
@@ -92,9 +98,28 @@ class HtmlPdfExporter:
         section_gap = {"compact": "10px", "normal": "14px", "relaxed": "18px"}.get(
             doc.design.spacing, "14px"
         )
+        if template_id == "classic" and doc.design.margins == "normal":
+            page_margin = "12mm 15mm"
+
+        def format_dates(start, end, current, language_is_tr):
+            if template_id != "classic":
+                return _format_date_range(start, end, current, language_is_tr)
+
+            def numeric(value):
+                return re.sub(r"^(\d{4})-(\d{2})(.*)$", r"\2/\1\3", value or "")
+
+            left = numeric(start)
+            right = ("Devam Ediyor" if language_is_tr else "Present") if current else numeric(end)
+            return f"{left} - {right}" if left and right else left or right
+
         full_name = html.escape(
             f"{doc.profile.firstName} {doc.profile.lastName}".strip()
             or ("Ad Soyad" if is_tr else "Curriculum Vitae")
+        )
+        photo_html = (
+            f'<img class="profile-photo" src="{html.escape(doc.profile.photo, quote=True)}" alt="" width="96" height="96">'
+            if doc.profile.photo and doc.visibility.showPhoto
+            else ""
         )
         headline = html.escape(doc.profile.headline)
 
@@ -178,6 +203,9 @@ class HtmlPdfExporter:
             </section>
             """
 
+        if template_id == "classic" and is_tr:
+            titles["skills"] = "YETENEKLER"
+
         # Experience
         exp_html = ""
         if doc.experience and doc.visibility.showExperience:
@@ -185,9 +213,7 @@ class HtmlPdfExporter:
             for exp in doc.experience:
                 pos = html.escape(exp.position)
                 comp = html.escape(exp.company)
-                dates = html.escape(
-                    _format_date_range(exp.startDate, exp.endDate, exp.current, is_tr)
-                )
+                dates = html.escape(format_dates(exp.startDate, exp.endDate, exp.current, is_tr))
                 loc = html.escape(exp.location)
                 bullets = "".join(f"<li>{html.escape(b)}</li>" for b in exp.bullets)
                 techs = (
@@ -204,6 +230,8 @@ class HtmlPdfExporter:
                     </div>
                     <div class="entry-subtitle italic">{pos}</div>
                     """
+                elif template_id == "classic":
+                    header_line = f"""<div class="entry-header"><span class="entry-title">{pos}</span><span class="entry-dates">{dates}</span></div><div class="entry-subtitle italic">{comp}{f" - {loc}" if loc else ""}</div>"""
                 else:
                     header_line = f"""
                     <div class="entry-header">
@@ -236,9 +264,7 @@ class HtmlPdfExporter:
                     f"{edu.degree}{(' — ' if is_tr else ' in ') + edu.fieldOfStudy if edu.fieldOfStudy else ''}"
                 )
                 inst = html.escape(edu.institution)
-                dates = html.escape(
-                    _format_date_range(edu.startDate, edu.endDate, edu.current, is_tr)
-                )
+                dates = html.escape(format_dates(edu.startDate, edu.endDate, edu.current, is_tr))
                 loc = html.escape(edu.location)
                 if edu.grade:
                     deg += f" ({html.escape(edu.grade)})"
@@ -255,6 +281,10 @@ class HtmlPdfExporter:
                         {f'<ul class="bullets">{highlights}</ul>' if highlights else ""}
                     </div>
                     """)
+                elif template_id == "classic":
+                    edu_items.append(
+                        f"""<div class="entry"><div class="entry-header"><span class="entry-title">{deg}</span><span class="entry-dates">{dates}</span></div><div class="entry-subtitle italic">{inst}{f" - {loc}" if loc else ""}</div>{f'<ul class="bullets">{highlights}</ul>' if highlights else ""}</div>"""
+                    )
                 else:
                     edu_items.append(f"""
                     <div class="entry">
@@ -294,10 +324,11 @@ class HtmlPdfExporter:
                 proj_items.append(f"""
                 <div class="entry">
                     <div class="entry-header">
-                        <span class="entry-title">{name}{f" ({role})" if role else ""}</span>
+                        <span class="entry-title">{name}{f" ({role})" if role and template_id != "classic" else ""}</span>
                         {url_str}
-                        <span class="entry-dates">{html.escape(_format_date_range(p.startDate, p.endDate, False, is_tr))}</span>
+                        <span class="entry-dates">{html.escape(format_dates(p.startDate, p.endDate, False, is_tr))}</span>
                     </div>
+                    {f'<div class="entry-subtitle italic">{role}</div>' if role and template_id == "classic" else ""}
                     {f'<ul class="bullets">{bullets}</ul>' if bullets else ""}
                     {techs}
                 </div>
@@ -371,7 +402,7 @@ class HtmlPdfExporter:
                 "certifications",
                 "languages",
             ]
-            if template_id == "technical"
+            if template_id in {"technical", "classic"}
             else [
                 "summary",
                 "experience",
@@ -396,8 +427,15 @@ class HtmlPdfExporter:
             items = []
             for item in section.items:
                 bullets = "".join(f"<li>{html.escape(b)}</li>" for b in item.bullets)
+                title = f"<strong>{html.escape(item.title)}</strong>" if item.title else ""
+                subtitle = (
+                    f"<div>{html.escape(item.subtitle)} {html.escape(item.date)}</div>"
+                    if item.subtitle or item.date
+                    else ""
+                )
+                description = f"<p>{html.escape(item.description)}</p>" if item.description else ""
                 items.append(
-                    f'<div class="entry"><strong>{html.escape(item.title)}</strong><div>{html.escape(item.subtitle)} {html.escape(item.date)}</div><p>{html.escape(item.description)}</p><ul class="bullets">{bullets}</ul></div>'
+                    f'<div class="entry">{title}{subtitle}{description}{f'<ul class="bullets">{bullets}</ul>' if bullets else ""}</div>'
                 )
             custom_html += f'<section class="section"><h2 class="section-title">{html.escape(section.title)}</h2>{"".join(items)}</section>'
 
@@ -425,6 +463,55 @@ class HtmlPdfExporter:
             )
         )
         name_transform = "uppercase" if template_id in ["technical", "professional"] else "none"
+
+        classic_styles = ""
+        if template_id == "classic":
+            unit = float(font_size.removesuffix("pt")) / 8
+            line_height = {"compact": 1.15, "normal": 1.35, "relaxed": 1.5}.get(
+                doc.design.spacing, 1.35
+            )
+            entry_gap = {"compact": 3, "normal": 6, "relaxed": 9}.get(doc.design.spacing, 6)
+            bullet_gap = {"compact": 0, "normal": 1.5, "relaxed": 3}.get(doc.design.spacing, 1.5)
+            classic_styles = f"""
+body {{ line-height: 1.12; }}
+header {{ text-align: left; border-bottom: 2px solid {accent_color}; padding-bottom: 4pt; margin-bottom: 6pt; min-height: 70pt; }}
+h1.name {{ font-size: {16 * unit}pt; line-height: 1.1; padding-top: 10pt; margin-bottom: 4pt; letter-spacing: .02em; }}
+.profile-photo {{ width: 18mm; height: auto; max-height: 23mm; border-radius: 2px; border: 1px solid {accent_color}; margin-bottom: 2pt; }}
+.contacts {{ font-size: {8 * unit}pt; color: #444; line-height: 1.3; }}
+.contacts a {{ color: #1670ab; }}
+.section {{ margin-bottom: {entry_gap}pt; }}
+.cv-page > .section:last-child, .section:last-child > .entry:last-child {{ margin-bottom: 0; }}
+.section-title {{ font-size: {9 * unit}pt; border-bottom: 1px solid #666; letter-spacing: 0; padding-bottom: 2pt; margin-bottom: 4pt; }}
+.summary-text {{ font-size: {7.5 * unit}pt; line-height: {max(1.18, line_height)}; color: #18181b; }}
+.skill-row {{ font-size: {7.5 * unit}pt; line-height: {line_height}; margin-bottom: {max(0.25, bullet_gap)}pt; }}
+.skill-category {{ font-weight: 700; }}
+.entry {{ margin-bottom: {entry_gap}pt; }}
+.entry-title {{ font-size: {8 * unit}pt; font-weight: 700; }}
+.entry-dates, .entry-subtitle {{ font-size: {7.5 * unit}pt; line-height: {max(1.12, line_height - 0.1)}; margin-bottom: 0; }}
+ul.bullets {{ margin-top: 0; padding-left: 12pt; }}
+ul.bullets li {{ font-size: {7 * unit}pt; line-height: {line_height}; margin-bottom: {bullet_gap}pt; color: #18181b; }}
+.entry-desc {{ font-size: {7.5 * unit}pt; line-height: {line_height}; }}
+"""
+            first_row = [
+                html.escape(doc.profile.location),
+                html.escape(doc.profile.phone),
+                f'<a href="mailto:{html.escape(doc.profile.email, quote=True)}">{html.escape(doc.profile.email)}</a>'
+                if doc.profile.email
+                else "",
+            ]
+            second_row = [
+                f'<a href="{html.escape(_normalize_url(value), quote=True)}">{html.escape(_display_url(value))}</a>'
+                for value in [doc.profile.linkedin, doc.profile.github, doc.profile.website]
+                if value
+            ]
+            second_row.extend(
+                f'<a href="{html.escape(_normalize_url(link.url), quote=True)}">{html.escape(link.label or _display_url(link.url))}</a>'
+                for link in doc.profile.links
+                if link.url
+            )
+            contacts_html = " | ".join(value for value in first_row if value) + (
+                "<br>" + " | ".join(second_row) if second_row else ""
+            )
 
         return f"""<!DOCTYPE html>
 <html lang="{"tr" if is_tr else "en"}">
@@ -468,7 +555,9 @@ class HtmlPdfExporter:
   @media print {{
     .cv-page {{ max-width: none; padding: 0; }}
   }}
+  .profile-photo {{ float: right; width: 24mm; height: 24mm; object-fit: cover; border-radius: 3mm; margin: 0 0 3mm 5mm; }}
   header {{
+    display: flow-root;
     text-align: {header_align};
     {header_border}
     padding-bottom: 10px;
@@ -595,11 +684,13 @@ class HtmlPdfExporter:
     font-size: calc(8.5pt * {font_scale});
     color: #374151;
   }}
+  {classic_styles}
 </style>
 </head>
 <body>
   <div class="cv-page">
     <header>
+      {photo_html}
       <h1 class="name">{full_name}</h1>
       {f'<div class="headline">{headline}</div>' if headline else ""}
       <div class="contacts">{contacts_html}</div>
@@ -608,4 +699,4 @@ class HtmlPdfExporter:
   </div>
 </body>
 </html>
-"""
+""".replace(' href=""', "")

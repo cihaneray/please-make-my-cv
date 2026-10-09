@@ -37,7 +37,8 @@ def feedback():
     }
 
 
-def test_settings_never_return_key_and_drop_on_endpoint_change(client):
+def test_settings_never_return_key_and_drop_on_endpoint_change(client, monkeypatch):
+    monkeypatch.setattr(settings, "llm_allowed_hosts", ["other.example"])
     value = {"enabled": True, "model": "test", "apiKey": "secret-test-key"}
     response = client.put("/api/ai/settings", json=value)
     assert response.status_code == 200
@@ -75,6 +76,7 @@ def test_settings_clear_disable_and_invalid_url(client):
     [("openai-compatible", "https://api.example/v1"), ("ollama", "http://localhost:11434")],
 )
 def test_wire_protocol_redaction_and_score(monkeypatch, provider, base):
+    monkeypatch.setattr(settings, "llm_allowed_hosts", ["api.example"])
     configure(provider=provider, baseUrl=base, apiKey="private")
     captured = {}
     original = httpx.Client
@@ -95,7 +97,7 @@ def test_wire_protocol_redaction_and_score(monkeypatch, provider, base):
     monkeypatch.setattr(
         llm.httpx,
         "Client",
-        lambda **kwargs: original(transport=httpx.MockTransport(handle), **kwargs),
+        lambda **kwargs: original(**{**kwargs, "transport": httpx.MockTransport(handle)}),
     )
     doc = ResumeDocument()
     doc.profile.firstName = "PrivateName"
@@ -187,7 +189,7 @@ def test_timeout_and_malformed_responses(monkeypatch, kind):
     monkeypatch.setattr(
         llm.httpx,
         "Client",
-        lambda **kwargs: original(transport=httpx.MockTransport(handle), **kwargs),
+        lambda **kwargs: original(**{**kwargs, "transport": httpx.MockTransport(handle)}),
     )
     with pytest.raises(AppException) as error:
         llm.completion("JSON", {})

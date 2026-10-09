@@ -1,3 +1,4 @@
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -7,6 +8,10 @@ class Settings(BaseSettings):
     debug: bool = False
     seed_demo: bool = False
     api_prefix: str = "/api"
+    allowed_hosts: list[str] = ["localhost", "127.0.0.1", "::1", "api"]
+    pdf_import_workers: int = Field(default=2, ge=1, le=8)
+    llm_allowed_hosts: list[str] = []
+    api_token: SecretStr = SecretStr("")
 
     # Database
     database_url: str = "sqlite:///./cv_workspace.db"

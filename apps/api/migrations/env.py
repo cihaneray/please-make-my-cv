@@ -2,8 +2,8 @@ from alembic import context
 from sqlalchemy import create_engine
 
 import app.db.models  # noqa: F401
-from app.core.config import settings
 from app.db.base import Base
+from app.db.session import database_url
 
 
 def run():
@@ -13,7 +13,7 @@ def run():
         with context.begin_transaction():
             context.run_migrations()
     else:
-        engine = create_engine(settings.database_url)
+        engine = create_engine(database_url)
         with engine.begin() as conn:
             context.configure(connection=conn, target_metadata=Base.metadata)
             context.run_migrations()

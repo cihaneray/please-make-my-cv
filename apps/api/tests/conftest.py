@@ -40,7 +40,7 @@ def client(db_session):
 
     app.dependency_overrides[get_db] = override_get_db
     app.state.skip_database_startup = True
-    with TestClient(app) as c:
+    with TestClient(app, base_url="http://localhost") as c:
         yield c
     app.dependency_overrides.clear()
 

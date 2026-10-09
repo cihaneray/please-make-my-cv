@@ -1,5 +1,6 @@
 """Editable Word rendering of the semantic HTML used by the live preview."""
 
+import base64
 import re
 from io import BytesIO
 from urllib.parse import urlsplit
@@ -75,7 +76,7 @@ def render_docx(resume: ResumeDocument) -> bytes:
     for border in word.styles.element.xpath(".//w:pBdr"):
         border.getparent().remove(border)
     template = (resume.design.template or resume.metadata.templateId or "minimal").lower().strip()
-    if template not in {"technical", "professional", "minimal"}:
+    if template not in {"technical", "professional", "minimal", "classic"}:
         template = "minimal"
     color = resume.design.accentColor.lstrip("#")
     if not re.fullmatch(r"[a-fA-F0-9]{6}", color):
@@ -258,16 +259,41 @@ def render_docx(resume: ResumeDocument) -> bytes:
         else:
             paragraph(node)
 
+    header_container = word
+    if resume.profile.photo and resume.visibility.showPhoto:
+        table = word.add_table(rows=1, cols=2)
+        table.autofit = False
+        table.columns[0].width = table.cell(0, 0).width = content_width - Mm(29)
+        table.columns[1].width = table.cell(0, 1).width = Mm(29)
+        table.rows[0]._tr.get_or_add_trPr().append(OxmlElement("w:cantSplit"))
+        header_container = table.cell(0, 0)
+        empty = header_container.paragraphs[0]._p
+        empty.getparent().remove(empty)
+        image_paragraph = table.cell(0, 1).paragraphs[0]
+        image_paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        image_paragraph.add_run().add_picture(
+            BytesIO(base64.b64decode(resume.profile.photo.split(",", 1)[1])),
+            width=Mm(18 if template == "classic" else 24),
+            height=None if template == "classic" else Mm(24),
+        )
+
+    def header_paragraph(node, size, shade):
+        p = header_container.add_paragraph()
+        inline(p, node, size, shade)
+        return p
+
     for node in page.find("header"):
+        if node.tag == "img":
+            continue
         if node.tag == "h1":
-            p = word.add_paragraph(style="Title")
+            p = header_container.add_paragraph(style="Title")
             inline(p, node, 20 * scale, color, bold=True, uppercase=template != "minimal")
             p.paragraph_format.line_spacing, p.paragraph_format.space_after = 1.2, Pt(2.25)
         elif node.get("class") == "headline":
-            p = paragraph(node, size=10.5 * scale, shade="4B5563")
+            p = header_paragraph(node, 10.5 * scale, "4B5563")
             p.paragraph_format.space_after = Pt(4.5)
         else:
-            p = paragraph(node, size=8.5 * scale, shade="6B7280")
+            p = header_paragraph(node, 8.5 * scale, "6B7280")
             p.paragraph_format.space_after = Pt(10.5)
             _border(
                 p,

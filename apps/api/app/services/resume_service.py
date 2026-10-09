@@ -2,6 +2,7 @@ import json
 import uuid
 from datetime import UTC, datetime
 
+from pydantic import ValidationError
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
@@ -73,8 +74,18 @@ class ResumeService:
         if not model:
             raise EntityNotFoundException("Resume", resume_id)
 
-        doc_dict = json.loads(model.document_json)
-        doc = ResumeDocument.model_validate(doc_dict)
+        try:
+            doc_dict = json.loads(model.document_json)
+            doc = ResumeDocument.model_validate(doc_dict)
+        except (ValueError, TypeError, ValidationError) as exc:
+            from app.core.exceptions import AppException
+
+            raise AppException(
+                "DOCUMENT_CORRUPT",
+                "This CV contains invalid stored data. Restore a valid revision or backup.",
+                409,
+                {"resumeId": resume_id},
+            ) from exc
         # Ensure model revision and id match database
         doc.metadata.id = model.id
         doc.metadata.title = model.title
@@ -88,6 +99,8 @@ class ResumeService:
     @staticmethod
     def create_resume(db: Session, request: CreateResumeRequest) -> ResumeDocument:
         doc = request.initialData.model_copy(deep=True) if request.initialData else ResumeDocument()
+        if doc.metadata.parentResumeId and not db.get(ResumeModel, doc.metadata.parentResumeId):
+            raise ValidationException("The parent CV does not exist in this workspace.")
         new_id = str(uuid.uuid4())
         doc.metadata.id = new_id
         doc.metadata.title = request.title
@@ -133,9 +146,13 @@ class ResumeService:
 
         updated_doc = request.document.model_copy(deep=True)
         updated_doc.metadata.id = resume_id
-        updated_doc.metadata.createdAt = ResumeDocument.model_validate_json(
-            model.document_json
-        ).metadata.createdAt
+        try:
+            updated_doc.metadata.createdAt = ResumeDocument.model_validate_json(
+                model.document_json
+            ).metadata.createdAt
+        except ValueError:
+            # Allow a valid revision to repair a corrupt current record.
+            updated_doc.metadata.createdAt = model.created_at.replace(tzinfo=UTC).isoformat()
         updated_doc.metadata.parentResumeId = model.parent_resume_id
         updated_doc.metadata.revision = request.revision + 1
         updated_doc.metadata.updatedAt = now_iso()

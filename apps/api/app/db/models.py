@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, DateTime, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -19,7 +19,19 @@ class ResumeModel(Base):
     template_id: Mapped[str] = mapped_column(String(64), default="minimal")
     revision: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    parent_resume_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    __table_args__ = (Index("ix_resumes_archived_updated", "is_archived", "updated_at"),)
+    parent_resume_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey(
+            "resumes.id",
+            name="fk_resume_parent",
+            ondelete="SET NULL",
+            deferrable=True,
+            initially="DEFERRED",
+        ),
+        nullable=True,
+        index=True,
+    )
     document_json: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_utc, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
@@ -41,7 +53,19 @@ class JobModel(Base):
     description: Mapped[str] = mapped_column(Text, default="")
     notes: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[str] = mapped_column(String(32), default="saved", nullable=False)
-    linked_resume_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    __table_args__ = (Index("ix_jobs_status_updated", "status", "updated_at"),)
+    linked_resume_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey(
+            "resumes.id",
+            name="fk_job_resume",
+            ondelete="SET NULL",
+            deferrable=True,
+            initially="DEFERRED",
+        ),
+        nullable=True,
+        index=True,
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_utc, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=now_utc, onupdate=now_utc, nullable=False
