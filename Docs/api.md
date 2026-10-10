@@ -22,6 +22,7 @@ The generated OpenAPI specification at `/openapi.json` and interactive `/docs` a
 - `POST /resumes/{id}/export?format=pdf|docx` accepts a draft and returns PDF or editable Word bytes; PDF is the default. DOCX pagination can differ from PDF.
 - `POST /resumes/{id}/pdf-check` accepts a draft and reports checks from its actual PDF output.
 - `POST /resumes/{id}/page-fit` suggests layout changes for a draft; the UI requires explicit application.
+- `POST /resumes/{id}/export/anonymous/preview` accepts a draft and returns the anonymized document; `POST /resumes/{id}/export/anonymous/pdf` exports it as PDF. Inspect remaining narrative text for identifying details.
 - `POST /resumes/compare-drafts` accepts `{source, target}` and compares two complete drafts.
 - `POST /resumes/{id}/compare/{other_id}` compares content, visibility and design. Entries are matched by stable ID.
 
@@ -32,6 +33,7 @@ The generated OpenAPI specification at `/openapi.json` and interactive `/docs` a
 - `PUT /resumes/{id}/source` accepts `{format, content, revision}` and persists validated JSON/YAML. The browser uses validation followed by draft application, leaving Save explicit.
 - `POST /import/validate` and `/import/preview` accept `{content, format?}`. Markdown is a lossy import with warnings. Unknown JSON/YAML fields and unsupported schema versions are rejected.
 - `POST /import/apply` creates a new document. `overwriteExistingId` is explicitly rejected.
+- `POST /import/pdf` accepts a PDF upload, extracts text and returns analysis plus an editable import candidate. It does not save a CV automatically or preserve arbitrary source layouts.
 - `GET /resumes/{id}/export?format=pdf|docx|html|json|yaml|markdown&download=true` exports a saved document. PDF returns `application/pdf`; HTML is a distinct format. DOCX is export-only.
 
 ## Jobs, library and backups
@@ -54,6 +56,7 @@ These routes are for a trusted local single-user installation. There is no multi
 
 ## Optional LLM review
 
+- `POST /api/ai/translate`: `{document, targetLanguage: "en" | "tr"}`. Returns a translation preview with individual changes; the original stays unchanged. Review before applying to the draft or creating a copy.
 - `GET /api/ai/settings`: public connection details and `hasApiKey`; never returns the secret.
 - `PUT /api/ai/settings`: `enabled`, `provider` (`openai-compatible`, `ollama`, or `gemini`), `baseUrl`, `model`, optional `apiKey`, optional `clearApiKey`. A missing key preserves the current one only when endpoint and provider are unchanged.
 - `POST /api/ai/test`: test saved connection using a small JSON generation, no resume payload.

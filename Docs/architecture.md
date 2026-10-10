@@ -4,6 +4,10 @@ The FastAPI Pydantic `ResumeDocument` is the storage and API contract. `apps/api
 
 The Studio owns the working draft. Forms update it; JSON/YAML source is serialized from it and applied back after server validation. Draft analysis and export accept that draft directly. The save response updates the revision without overwriting edits typed while saving. Local storage offers explicitly recoverable drafts; it is neither encryption nor a backup guarantee.
 
+Repeatable experience, education, project and skill entries share a foldable editor component. Version comparison groups saved revisions and other CVs in a dialog and compares against the current draft. The optional reading map uses measured preview section positions and text density; it is excluded from exports.
+
+Deterministic document analysis uses `app.rules.registry` through `AnalysisService`. The same registered rules power API analysis and regression tests; there is no separate legacy analyzer rule set.
+
 Persistence uses atomic `UPDATE ... WHERE id = ... AND revision = ...`. The same transaction captures the previous revision. Metadata patches require an expected revision. Soft deletion advances revisions. Saved history can be loaded into the draft or restored through the API as a new revision.
 
 Alembic adopts existing databases and creates versioned history/snapshot tables. Demo seeding is opt-in. Tests bypass production startup and override request sessions. Job submission snapshots retain the submitted document independently of later edits.
