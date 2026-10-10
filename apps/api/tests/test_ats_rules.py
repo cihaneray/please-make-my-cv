@@ -1,15 +1,15 @@
 from app.analyzers.analyzer_service import AnalysisService
-from app.analyzers.rules import ExperienceQualityRule, MissingContactRule
+from app.rules.ats import ATSParseabilityRule
+from app.rules.content_quality import ExperienceContentQualityRule
 from app.schemas.resume import ExperienceItem, Profile, ResumeDocument
 
 
 def test_missing_contact_rule():
     doc = ResumeDocument(profile=Profile(firstName="Test"))
-    issues = MissingContactRule().analyze(doc)
-    rule_ids = [i.ruleId for i in issues]
-    assert "missing-email" in rule_ids
-    assert "missing-phone" in rule_ids
-    assert "missing-headline" in rule_ids
+    issues = ATSParseabilityRule().evaluate(doc).issues
+    rule_ids = [i.id for i in issues]
+    assert "ats-email-missing" in rule_ids
+    assert "ats-headline-missing" in rule_ids
 
 
 def test_experience_quality_rule_weak_openings():
@@ -25,9 +25,12 @@ def test_experience_quality_rule_weak_openings():
             )
         ]
     )
-    issues = ExperienceQualityRule().analyze(doc)
-    rule_ids = [i.ruleId for i in issues]
-    assert "weak-action-verb" in rule_ids
+    issues = ExperienceContentQualityRule().evaluate(doc).issues
+    assert len(issues) == 2
+    assert {issue.field_id for issue in issues} == {
+        "experience-0-bullet-0",
+        "experience-0-bullet-1",
+    }
 
 
 def test_full_analysis_report():

@@ -13,6 +13,9 @@
 **/playwright-report
 .git
 *.log
+output/
+tmp/
+.codex-artifacts/
 
 **/*.key
 **/secrets/
