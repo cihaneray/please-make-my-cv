@@ -62,6 +62,73 @@ def test_translation_rejects_malformed_or_changed_facts(monkeypatch, output):
     assert document.summary == "Improved by 30%"
 
 
+def test_translation_allows_grammar_to_reorder_protected_tokens(monkeypatch):
+    document = ResumeDocument.model_validate(
+        {
+            "summary": "Built Python services with 30% improvement.",
+            "skills": [{"skills": ["Python"]}],
+        }
+    )
+    source = document.model_dump()
+    monkeypatch.setattr(
+        translation,
+        "completion",
+        lambda *args: {
+            "translations": ["[[KEEP_1]] iyileştirme sağlayan [[KEEP_0]] servisleri geliştirdi."]
+        },
+    )
+    result = translation.translate_document(document, "tr")
+    assert result["document"].summary == "30% iyileştirme sağlayan Python servisleri geliştirdi."
+    assert document.model_dump() == source
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "[[KEEP_0]] [[KEEP_0]] [[KEEP_1]]",
+        "[[KEEP_0]] [[KEEP_2]]",
+        "[[KEEP_0]] 31%",
+        "[[KEEP_0]] [[KEEP_1]] 999",
+        "[[KEEP_0]] [[KEEP_1]] [[KEEP_unknown]]",
+        "[[KEEP_1]]",
+    ],
+)
+def test_translation_reordering_still_rejects_fact_changes(monkeypatch, value):
+    document = ResumeDocument.model_validate(
+        {
+            "summary": "Built Python services with 30% improvement.",
+            "skills": [{"skills": ["Python"]}],
+        }
+    )
+    monkeypatch.setattr(translation, "completion", lambda *args: {"translations": [value]})
+    with pytest.raises(AppException) as error:
+        translation.translate_document(document, "tr")
+    assert error.value.code == "TRANSLATION_FACT_CHANGED"
+
+
+def test_translation_tokens_cannot_move_between_fields(monkeypatch):
+    document = ResumeDocument.model_validate(
+        {
+            "summary": "Built Python services with 30% improvement.",
+            "experience": [{"summary": "Cut costs by 40%."}],
+            "skills": [{"skills": ["Python"]}],
+        }
+    )
+    monkeypatch.setattr(
+        translation,
+        "completion",
+        lambda *args: {
+            "translations": [
+                "[[KEEP_0]] servisleri geliştirdi.",
+                "[[KEEP_0]] [[KEEP_1]] tasarruf sağladı.",
+            ]
+        },
+    )
+    with pytest.raises(AppException) as error:
+        translation.translate_document(document, "tr")
+    assert error.value.code == "TRANSLATION_FACT_CHANGED"
+
+
 @pytest.mark.parametrize(
     "url",
     [

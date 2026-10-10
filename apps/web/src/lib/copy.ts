@@ -2,6 +2,34 @@
 import { useCallback } from "react";
 import { useI18n } from "./i18n";
 export const copyTranslations: Record<string, string> = {
+  "Untitled skill group": "Adsız yetenek grubu",
+  "Saved versions": "Kaydedilen sürümler",
+  "Other CVs": "Diğer özgeçmişler",
+  "Loading comparison choices…": "Karşılaştırma seçenekleri yükleniyor…",
+  "No saved versions or other CVs are available yet.":
+    "Henüz kaydedilen sürüm veya başka özgeçmiş yok.",
+  "Try again": "Tekrar dene",
+  "Comparing…": "Karşılaştırılıyor…",
+  "No differences found.": "Fark bulunamadı.",
+  Added: "Eklendi",
+  Removed: "Kaldırıldı",
+  Changed: "Değiştirildi",
+  "Entry order changed.": "Öğe sırası değişti.",
+  "No content": "İçerik yok",
+  "Close comparison": "Karşılaştırmayı kapat",
+  "Select a version or CV to see how it differs from your current draft.":
+    "Mevcut taslağınızdan nasıl farklı olduğunu görmek için bir sürüm veya özgeçmiş seçin.",
+  "Collapse entry": "Kaydı daralt",
+  "Expand entry": "Kaydı genişlet",
+  "Untitled experience": "Adsız deneyim",
+  "Untitled education": "Adsız eğitim",
+  "Untitled project": "Adsız proje",
+  "Recovered draft available.": "Kurtarılan taslak mevcut.",
+  Recover: "Kurtar",
+  "Discard recovered draft": "Kurtarılan taslağı sil",
+  "Recovered draft loaded. If another revision exists, saving will report a conflict.":
+    "Kurtarılan taslak yüklendi. Başka bir sürüm varsa kaydetme sırasında çakışma bildirilecek.",
+  "Resume title": "Özgeçmiş başlığı",
   "Anonymous PDF": "Anonim PDF",
   "Review a copy with personal details removed":
     "Kişisel bilgileri çıkarılmış kopyayı inceleyin",

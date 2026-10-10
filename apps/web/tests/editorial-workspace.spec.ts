@@ -498,9 +498,9 @@ test("touch controls and selected sections stay separated in Turkish at narrow w
   for (const width of [320, 390, 1280]) {
     await page.setViewportSize({ width, height: 844 });
     const header = page.locator(".editor-entry-heading").first();
-    const card = await page.locator(".editor-entry").first().boundingBox();
+    const expandedFields = await header.locator("..").boundingBox();
     const heading = await header.boundingBox();
-    expect(heading!.y - card!.y).toBeLessThanOrEqual(20);
+    expect(heading!.y - expandedFields!.y).toBeLessThanOrEqual(20);
     const field = await header.locator(".editor-field > input").boundingBox();
     const remove = await header.getByRole("button").boundingBox();
     expect(field!.x + field!.width).toBeLessThan(remove!.x);
