@@ -63,13 +63,14 @@ export function rankLibraryEvidence(
   snippets: LibrarySnippet[],
   job: JobApplication,
 ) {
-  const terms = job.requirements.filter((term) => term.trim()).length
-    ? job.requirements.map((term) => normalize(term.trim()))
-    : (
-        normalize(`${job.position} ${job.description}`).match(
-          /[\p{L}\p{N}+#.]+/gu,
-        ) || []
-      ).filter((term) => term.length >= 3 && !stopWords.has(term));
+  const terms =
+    job.requirements.length > 0
+      ? job.requirements.map((term) => normalize(term.trim())).filter(Boolean)
+      : (
+          normalize(`${job.position} ${job.description}`).match(
+            /[\p{L}\p{N}+#.]+/gu,
+          ) || []
+        ).filter((term) => term.length >= 3 && !stopWords.has(term));
   const uniqueTerms = [...new Set(terms)];
   return snippets
     .filter((snippet) => snippet.content.trim())
@@ -153,7 +154,7 @@ export default function LibraryResumeBuilder({
         ),
     ) || [];
 
-  async function create(event: React.FormEvent<HTMLFormElement>) {
+  async function create(event: import("react").FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (
       !job ||
