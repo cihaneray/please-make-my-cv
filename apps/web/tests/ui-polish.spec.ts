@@ -15,8 +15,18 @@ test("list controls are unique and URL navigation filters documents", async ({
     .locator(".resume-list-card")
     .filter({ hasText: "Polish search example" });
   await expect(card).toBeVisible();
-  await expect(card).toContainText("CV language: EN");
-  await expect(card).toContainText("Market: TR");
+  await expect(
+    card
+      .locator("dl > div")
+      .filter({ has: page.locator("dt", { hasText: "CV language" }) })
+      .locator("dd"),
+  ).toHaveText("EN");
+  await expect(
+    card
+      .locator("dl > div")
+      .filter({ has: page.locator("dt", { hasText: "Market" }) })
+      .locator("dd"),
+  ).toHaveText("TR");
   await page.evaluate(() =>
     window.history.pushState(null, "", "/resumes?q=NO_MATCH_POLISH"),
   );

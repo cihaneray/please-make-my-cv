@@ -5,6 +5,13 @@ import { useCopy } from "@/lib/copy";
 import React, { useEffect, useState, useRef } from "react";
 import { api } from "@/lib/api";
 import { PdfCheckReport, ResumeDocument } from "@/lib/types";
+import { useI18n } from "@/lib/i18n";
+import {
+  measureReadingRegions,
+  ReadingHeatmapLegend,
+  ReadingHeatmapOverlay,
+  ReadingRegion,
+} from "./ReadingHeatmap";
 export function A4ResumePreview({
   document,
   onSelectSection,
@@ -17,6 +24,14 @@ export function A4ResumePreview({
   disabled?: boolean;
 }) {
   const copy = useCopy();
+  const { language } = useI18n();
+  const [readingMap, setReadingMap] = useState(false);
+  const [readingRegions, setReadingRegions] = useState<ReadingRegion[]>([]);
+  const [frameVersion, setFrameVersion] = useState(0);
+  const [previewDocument, setPreviewDocument] = useState<ResumeDocument | null>(
+    null,
+  );
+  const [frameReady, setFrameReady] = useState(false);
 
   const frame = useRef<HTMLIFrameElement>(null);
   const contentObserver = useRef<ResizeObserver | null>(null);
@@ -144,6 +159,45 @@ export function A4ResumePreview({
   const [busy, setBusy] = useState(false);
   const [check, setCheck] = useState<PdfCheckReport | null>(null);
   const [checking, setChecking] = useState(false);
+  const mapAvailable =
+    !pdf && !disabled && frameReady && previewDocument === document && !error;
+  const mapVisible = readingMap && mapAvailable;
+  useEffect(() => {
+    if (disabled || pdf) setReadingMap(false);
+  }, [disabled, pdf]);
+  useEffect(() => {
+    const content = frame.current?.contentDocument;
+    const body = content?.querySelector<HTMLElement>(".cv-page");
+    const canvas = viewport.current?.closest<HTMLElement>(".document-canvas");
+    if (!mapVisible || !content || !body || !canvas) return;
+    const measure = () => {
+      if (frame.current?.contentDocument !== content) return;
+      // Measure the actual area available to the sheet in the first preview screen.
+      const canvasRect = canvas.getBoundingClientRect();
+      const viewportRect = viewport.current!.getBoundingClientRect();
+      const screenHeight = Math.min(
+        canvas.clientHeight,
+        Math.max(0, window.innerHeight - canvasRect.top),
+      );
+      const sheetOffset = viewportRect.top - canvasRect.top + canvas.scrollTop;
+      setReadingRegions(
+        measureReadingRegions(
+          content,
+          Math.max(0, screenHeight - sheetOffset) / scale,
+        ),
+      );
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(body);
+    observer.observe(canvas);
+    const legend = canvas.querySelector<HTMLElement>(
+      '[data-testid="reading-map-legend"]',
+    );
+    if (legend) observer.observe(legend);
+    void content.fonts.ready.then(measure);
+    return () => observer.disconnect();
+  }, [mapVisible, frameVersion, scale]);
   useEffect(() => {
     setCheck(null);
   }, [document]);
@@ -153,6 +207,9 @@ export function A4ResumePreview({
       api
         .preview(document, controller.signal)
         .then((value) => {
+          if (controller.signal.aborted) return;
+          setFrameReady(frame.current?.srcdoc === value);
+          setPreviewDocument(document);
           setHtml(value);
           setError("");
         })
@@ -193,6 +250,16 @@ export function A4ResumePreview({
           </button>
           <button aria-pressed={!pdf} onClick={() => setPdf("")}>
             {copy("Live content")}
+          </button>
+          <button
+            aria-pressed={mapVisible}
+            disabled={!mapAvailable}
+            data-testid="reading-map-toggle"
+            onClick={() => setReadingMap((value) => !value)}
+          >
+            {language === "tr"
+              ? "Okuma haritası · TAHMİN"
+              : "Reading map · ESTIMATE"}
           </button>
         </div>
         {!pdf && html && (
@@ -274,6 +341,7 @@ export function A4ResumePreview({
           </button>
         </div>
       )}
+      {mapVisible && <ReadingHeatmapLegend regions={readingRegions} />}
       <div
         ref={viewport}
         className="w-full min-w-0"
@@ -297,6 +365,8 @@ export function A4ResumePreview({
               srcDoc={html}
               onLoad={(event) => {
                 prepareFrame(event.currentTarget);
+                setFrameReady(true);
+                setFrameVersion((value) => value + 1);
                 contentObserver.current?.disconnect();
                 const content = event.currentTarget.contentDocument;
                 const body = content?.querySelector<HTMLElement>(".cv-page");
@@ -323,6 +393,9 @@ export function A4ResumePreview({
               }}
               className="absolute top-0 left-0 bg-white"
             />
+            {mapVisible && (
+              <ReadingHeatmapOverlay regions={readingRegions} scale={scale} />
+            )}
             {Array.from({ length: estimatedPages - 1 }, (_, index) => (
               <div
                 key={index}

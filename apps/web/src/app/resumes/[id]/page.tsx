@@ -1,4 +1,6 @@
 "use client";
+import styles from "./studio.module.css";
+import { FoldableEditorEntry } from "@/components/FoldableEditorEntry";
 import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { AnonymousExport } from "@/components/AnonymousExport";
 import { DownloadMenu } from "@/components/DownloadMenu";
@@ -45,6 +47,26 @@ export default function ResumeStudioPage() {
   const resumeId = (routeParams?.id as string) || "";
   const { t } = useI18n();
   const copy = useCopy();
+  const [collapsedEntries, setCollapsedEntries] = useState<Set<string>>(
+    new Set(),
+  );
+  function toggleEntry(id: string) {
+    setCollapsedEntries((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function expandEntry(id?: string) {
+    if (!id) return;
+    setCollapsedEntries((current) => {
+      if (!current.has(id)) return current;
+      const next = new Set(current);
+      next.delete(id);
+      return next;
+    });
+  }
   const [mobileView, setMobileView] = useState("edit");
   const [inspectorOpen, setInspectorOpen] = useState(true);
   const {
@@ -150,21 +172,27 @@ export default function ResumeStudioPage() {
     return () => window.removeEventListener("keydown", shortcuts);
   }, [sourcePending, saving, activeTab, canUndo, canRedo, undo, redo]);
   const [activeSection, setActiveSection] = useState<string>("profile");
+  const openedDeepLink = useRef("");
   useEffect(() => {
     const section = new URLSearchParams(window.location.search).get("section");
     if (
       section &&
-      ["summary", "experience", "projects", "skills"].includes(section)
+      ["summary", "experience", "education", "projects", "skills"].includes(
+        section,
+      )
     )
       setActiveSection(section);
   }, [resumeId]);
   useEffect(() => {
     const entry = new URLSearchParams(window.location.search).get("entry");
-    if (entry)
-      window.document
-        .getElementById(`entry-${entry}`)
-        ?.scrollIntoView({ block: "center" });
-  }, [activeSection, doc]);
+    const key = `${resumeId}:${activeSection}:${entry}`;
+    const target = entry && window.document.getElementById(`entry-${entry}`);
+    if (entry && target && openedDeepLink.current !== key) {
+      openedDeepLink.current = key;
+      expandEntry(entry);
+      target.scrollIntoView({ block: "center" });
+    }
+  }, [activeSection, doc, resumeId]);
   useEffect(() => {
     if (!searchTarget || activeSection !== searchTarget.section) return;
     const target =
@@ -485,15 +513,15 @@ export default function ResumeStudioPage() {
           }}
         />
       )}
-      <div className="studio-ribbon no-print">
-        <div className="studio-document-title">
+      <div className={`studio-ribbon no-print ${styles.ribbon}`}>
+        <div className={`studio-document-title ${styles.title}`}>
           <span className="editorial-eyebrow">
             {copy("DOCUMENT STUDIO")} / {copy("Revision")}{" "}
             {doc.metadata.revision}
           </span>
           <input
             type="text"
-            aria-label="Resume title"
+            aria-label={copy("Resume title")}
             value={doc.metadata.title}
             onChange={(e) =>
               setDoc({
@@ -503,7 +531,7 @@ export default function ResumeStudioPage() {
             }
           />
         </div>
-        <div className="studio-actions">
+        <div className={`studio-actions ${styles.actions}`}>
           <button
             className="editorial-button"
             aria-label={copy(
@@ -539,7 +567,7 @@ export default function ResumeStudioPage() {
           />
         </div>
       </div>
-      <div role="status" className="studio-status no-print">
+      <div role="status" className={`studio-status no-print ${styles.status}`}>
         <span
           key={saving ? "saving" : dirty ? "dirty" : "saved"}
           className="save-state"
@@ -549,39 +577,42 @@ export default function ResumeStudioPage() {
           {saving ? t("saving") : copy(dirty ? "Unsaved draft" : "Saved")}
         </span>
         {(sourcePending || notice) && (
-          <>
-            {" "}
-            ·{" "}
+          <span className={styles.notice}>
             {sourcePending
               ? copy("Apply source changes before switching tabs or saving.")
               : notice}
-          </>
+          </span>
         )}
         {recovery && (
-          <span>
-            {" "}
-            Recovered draft available.{" "}
-            <button
-              onClick={() => {
-                setDoc(recovery);
-                setRecovery(null);
-                recoveryState.dismiss();
-                setNotice(
-                  "Recovered draft loaded. If another revision exists, saving will report a conflict.",
-                );
-              }}
-            >
-              Recover
-            </button>{" "}
-            <button
-              onClick={() => {
-                setRecovery(null);
-                recoveryState.dismiss();
-              }}
-            >
-              Discard recovered draft
-            </button>
-          </span>
+          <div className={styles.recovery}>
+            <span>{copy("Recovered draft available.")}</span>
+            <div className={styles.recoveryActions}>
+              <button
+                type="button"
+                onClick={() => {
+                  setDoc(recovery);
+                  setRecovery(null);
+                  recoveryState.dismiss();
+                  setNotice(
+                    copy(
+                      "Recovered draft loaded. If another revision exists, saving will report a conflict.",
+                    ),
+                  );
+                }}
+              >
+                {copy("Recover")}
+              </button>{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setRecovery(null);
+                  recoveryState.dismiss();
+                }}
+              >
+                {copy("Discard recovered draft")}
+              </button>
+            </div>
+          </div>
         )}
       </div>
       {removed && canUndo && (
@@ -601,6 +632,7 @@ export default function ResumeStudioPage() {
           document={doc}
           disabled={sourcePending || saving}
           onSelect={(section, entry, text) => {
+            expandEntry(entry);
             setActiveSection(section);
             setActiveTab("content");
             setInspectorOpen(true);
@@ -1073,11 +1105,17 @@ export default function ResumeStudioPage() {
                       </button>
                     </div>
                     {doc.experience.map((exp, expIdx) => (
-                      <div
-                        id={`entry-${exp.id}`}
+                      <FoldableEditorEntry
+                        id={exp.id}
                         key={exp.id}
-                        data-motion-id={exp.id}
-                        className="editor-entry"
+                        title={
+                          exp.position ||
+                          exp.company ||
+                          copy("Untitled experience")
+                        }
+                        subtitle={exp.position ? exp.company : exp.location}
+                        collapsed={collapsedEntries.has(exp.id)}
+                        onToggle={() => toggleEntry(exp.id)}
                       >
                         <div className="editor-entry-heading">
                           <EditorField
@@ -1163,7 +1201,7 @@ export default function ResumeStudioPage() {
                             )
                           }
                         />
-                      </div>
+                      </FoldableEditorEntry>
                     ))}
                     {!doc.experience.length && (
                       <p className="editor-empty-hint">
@@ -1190,11 +1228,15 @@ export default function ResumeStudioPage() {
                       </button>
                     </div>
                     {doc.education.map((edu, eduIdx) => (
-                      <div
-                        id={`entry-${edu.id}`}
+                      <FoldableEditorEntry
+                        id={edu.id}
                         key={edu.id}
-                        data-motion-id={edu.id}
-                        className="editor-entry"
+                        title={edu.institution || copy("Untitled education")}
+                        subtitle={[edu.degree, edu.fieldOfStudy]
+                          .filter(Boolean)
+                          .join(" · ")}
+                        collapsed={collapsedEntries.has(edu.id)}
+                        onToggle={() => toggleEntry(edu.id)}
                       >
                         <div className="editor-entry-heading">
                           <EditorField
@@ -1277,7 +1319,7 @@ export default function ResumeStudioPage() {
                             )
                           }
                         />
-                      </div>
+                      </FoldableEditorEntry>
                     ))}
                     {!doc.education.length && (
                       <p className="editor-empty-hint">
@@ -1304,11 +1346,13 @@ export default function ResumeStudioPage() {
                       </button>
                     </div>
                     {doc.projects.map((proj, projIdx) => (
-                      <div
-                        id={`entry-${proj.id}`}
+                      <FoldableEditorEntry
+                        id={proj.id}
                         key={proj.id}
-                        data-motion-id={proj.id}
-                        className="editor-entry"
+                        title={proj.name || copy("Untitled project")}
+                        subtitle={proj.role}
+                        collapsed={collapsedEntries.has(proj.id)}
+                        onToggle={() => toggleEntry(proj.id)}
                       >
                         <div className="editor-entry-heading">
                           <EditorField
@@ -1389,7 +1433,7 @@ export default function ResumeStudioPage() {
                             )
                           }
                         />
-                      </div>
+                      </FoldableEditorEntry>
                     ))}
                     {!doc.projects.length && (
                       <p className="editor-empty-hint">
@@ -1417,6 +1461,7 @@ export default function ResumeStudioPage() {
                             skills: [],
                           };
                           updateField("skills", [...doc.skills, newGroup]);
+                          expandEntry(newGroup.id);
                         }}
                         className="editor-action"
                       >
@@ -1426,23 +1471,27 @@ export default function ResumeStudioPage() {
                     </div>
                     <div className="flex flex-col gap-3">
                       {doc.skills.map((grp, idx) => (
-                        <div
-                          id={`entry-${grp.id}`}
+                        <FoldableEditorEntry
+                          id={grp.id}
                           key={grp.id}
-                          data-motion-id={grp.id}
-                          className="editor-entry skill-entry"
+                          title={grp.category || copy("Untitled skill group")}
+                          subtitle={`${copy("Skills")}: ${grp.skills.length}${
+                            grp.skills.length
+                              ? ` · ${grp.skills.slice(0, 3).join(" · ")}${grp.skills.length > 3 ? " …" : ""}`
+                              : ""
+                          }`}
+                          collapsed={collapsedEntries.has(grp.id)}
+                          onToggle={() => toggleEntry(grp.id)}
                         >
                           <div className="editor-entry-heading">
-                            <input
-                              type="text"
-                              aria-label={copy("Skill category")}
+                            <EditorField
+                              label={copy("Skill category")}
                               value={grp.category}
-                              onChange={(e) => {
+                              onChange={(category) => {
                                 const newSkills = structuredClone(doc.skills);
-                                newSkills[idx].category = e.target.value;
+                                newSkills[idx].category = category;
                                 updateField("skills", newSkills);
                               }}
-                              className="font-headline-md bg-transparent font-semibold outline-none"
                             />
                             <button
                               type="button"
@@ -1484,7 +1533,7 @@ export default function ResumeStudioPage() {
                               )
                             }
                           />
-                        </div>
+                        </FoldableEditorEntry>
                       ))}
                     </div>
                   </MotionList>

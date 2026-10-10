@@ -86,9 +86,14 @@ test("revision comparison and PDF checks use the current draft", async ({
   await page
     .getByRole("textbox", { name: "First Name", exact: true })
     .fill("Draft difference");
-  await page.getByText("Compare versions", { exact: true }).click();
-  await page.getByRole("button", { name: "Load comparison choices" }).click();
+  await page.getByLabel("Compare revisions and variants").click();
+  await expect(
+    page.getByRole("dialog", { name: "Compare versions" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Compare current draft with")).toBeVisible();
+  await page.getByRole("button", { name: "Close comparison" }).click();
   await page.getByRole("button", { name: "Türkçeye geç", exact: true }).click();
+  await page.getByLabel("Sürümleri ve varyantları karşılaştır").click();
   for (const width of [320, 390, 1280]) {
     await page.setViewportSize({ width, height: 844 });
     const label = await page
@@ -110,10 +115,11 @@ test("revision comparison and PDF checks use the current draft", async ({
     ).toBeLessThanOrEqual(width);
   }
   await page.setViewportSize({ width: 1280, height: 844 });
+  await page.getByRole("button", { name: "Karşılaştırmayı kapat" }).click();
   await page
     .getByRole("button", { name: "Switch to English", exact: true })
     .click();
-  await page.getByText("Compare versions", { exact: true }).click();
+  await page.getByLabel("Compare revisions and variants").click();
 
   await page
     .getByLabel("Compare current draft with")

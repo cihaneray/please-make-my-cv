@@ -1,12 +1,46 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useEffect, useId, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { useCopy } from "@/lib/copy";
 import {
+  ComparisonChange,
   ResumeDocument,
   ResumeComparisonReport,
   ResumeSummary,
 } from "@/lib/types";
+import styles from "./ResumeChanges.module.css";
+
+type Revision = { revision: number; document: ResumeDocument };
+
+function readableField(value: string) {
+  return value
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]/g, " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+function readableValue(value: unknown) {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "string") return value;
+  return JSON.stringify(value, null, 2);
+}
+
+function changeTitle(change: ComparisonChange) {
+  const field = change.details.field;
+  const entry = change.details.to ?? change.details.from;
+  if (!field && entry && typeof entry === "object" && !Array.isArray(entry)) {
+    const value = entry as Record<string, unknown>;
+    const label =
+      value.title ?? value.name ?? value.company ?? value.institution;
+    if (typeof label === "string" && label.trim()) return label;
+  }
+  return typeof field === "string"
+    ? readableField(field)
+    : change.description === "Entry order changed."
+      ? change.description
+      : readableField(change.category);
+}
 
 export function ResumeChanges({
   document,
@@ -16,136 +50,283 @@ export function ResumeChanges({
   disabled: boolean;
 }) {
   const copy = useCopy();
-  const [revisions, setRevisions] = useState<
-    Array<{ revision: number; document: ResumeDocument }>
-  >([]);
+  const details = useRef<HTMLDetailsElement>(null);
+  const dialog = useRef<HTMLDialogElement>(null);
+  const loadId = useRef(0);
+  const comparisonId = useRef(0);
+  const titleId = useId();
+  const [revisions, setRevisions] = useState<Revision[]>([]);
   const [resumes, setResumes] = useState<ResumeSummary[]>([]);
   const [target, setTarget] = useState("");
   const [report, setReport] = useState<ResumeComparisonReport | null>(null);
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [comparing, setComparing] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  // A draft edit invalidates the visible result and any request based on the old draft.
   useEffect(() => {
+    comparisonId.current += 1;
     setReport(null);
+    setComparing(false);
   }, [document]);
+
+  useEffect(() => {
+    loadId.current += 1;
+    comparisonId.current += 1;
+    setTarget("");
+    setRevisions([]);
+    setResumes([]);
+    setLoaded(false);
+    setLoading(false);
+    setError("");
+  }, [document.metadata.id]);
+
   async function load() {
-    setBusy(true);
+    const current = ++loadId.current;
+    setLoading(true);
+    setLoaded(false);
+    setTarget("");
+    setReport(null);
     setError("");
     try {
       const [history, list] = await Promise.all([
         api.history(document.metadata.id),
         api.listResumes(),
       ]);
+      if (current !== loadId.current) return;
       setRevisions(history);
-      setResumes(list.filter((r) => r.id !== document.metadata.id));
-    } catch (e) {
-      setError((e as Error).message);
+      setResumes(list.filter((item) => item.id !== document.metadata.id));
+      setLoaded(true);
+    } catch (cause) {
+      if (current === loadId.current) setError((cause as Error).message);
     } finally {
-      setBusy(false);
+      if (current === loadId.current) setLoading(false);
     }
   }
+
+  function close() {
+    loadId.current += 1;
+    comparisonId.current += 1;
+    dialog.current?.close();
+    details.current?.removeAttribute("open");
+    setLoading(false);
+    setComparing(false);
+  }
+
+  async function compare() {
+    if (!target || comparing) return;
+    const current = ++comparisonId.current;
+    const selected = target;
+    const draft = document;
+    setComparing(true);
+    setError("");
+    setReport(null);
+    try {
+      const baseline = selected.startsWith("revision:")
+        ? revisions.find((item) => item.revision === Number(selected.slice(9)))
+            ?.document
+        : await api.getResume(selected.slice(7));
+      if (!baseline) throw new Error(copy("Select a revision or resume"));
+      const result = await api.compareDrafts(baseline, draft);
+      if (current === comparisonId.current) setReport(result);
+    } catch (cause) {
+      if (current === comparisonId.current) setError((cause as Error).message);
+    } finally {
+      if (current === comparisonId.current) setComparing(false);
+    }
+  }
+
+  const hasChoices = revisions.length > 0 || resumes.length > 0;
+  const selectedLabel = target.startsWith("revision:")
+    ? `${copy("Revision")} ${target.slice(9)}`
+    : resumes.find((item) => `resume:${item.id}` === target)?.title;
+
   return (
-    <details className="workspace-tools border-b p-3 no-print shrink-0 max-h-[50vh] overflow-auto">
-      <summary aria-label={copy("Compare revisions and variants")}>
+    <details
+      ref={details}
+      className="workspace-tools no-print"
+      onToggle={(event) => {
+        if (!event.currentTarget.open || dialog.current?.open) return;
+        if (disabled) {
+          event.currentTarget.removeAttribute("open");
+          return;
+        }
+        dialog.current?.showModal();
+        void load();
+      }}
+    >
+      <summary
+        aria-label={copy("Compare revisions and variants")}
+        aria-disabled={disabled}
+        tabIndex={disabled ? -1 : 0}
+        onClick={(event) => {
+          if (disabled) event.preventDefault();
+        }}
+      >
         {copy("Compare versions")}
       </summary>
-      <div className="document-popover">
-        <button
-          className="document-popover-close"
-          aria-label={copy("Close panel")}
-          onClick={(event) =>
-            event.currentTarget.closest("details")?.removeAttribute("open")
-          }
-        >
-          {copy("Close panel")}
-        </button>
-        <fieldset
-          disabled={disabled || busy}
-          className="revision-comparison-fields"
-        >
-          <button onClick={load}>{copy("Load comparison choices")}</button>
-          <label className="revision-comparison-target">
-            <span>{copy("Compare current draft with")}</span>
-            <select
-              value={target}
-              onChange={(e) => {
-                setTarget(e.target.value);
-                setReport(null);
-              }}
+      <dialog
+        ref={dialog}
+        className={styles.dialog}
+        aria-labelledby={titleId}
+        onCancel={(event) => {
+          event.preventDefault();
+          close();
+        }}
+        onClose={() => details.current?.removeAttribute("open")}
+        onClick={(event) => {
+          if (event.target === dialog.current) close();
+        }}
+      >
+        <div className={`document-popover ${styles.content}`}>
+          <header className={styles.header}>
+            <div>
+              <h2 id={titleId}>{copy("Compare versions")}</h2>
+              <p>
+                {copy(
+                  "Select a version or CV to see how it differs from your current draft.",
+                )}
+              </p>
+            </div>
+            <button
+              type="button"
+              aria-label={copy("Close comparison")}
+              onClick={close}
             >
-              <option value="">{copy("Select a revision or resume")}</option>
-              {revisions.map((r) => (
-                <option key={r.revision} value={`revision:${r.revision}`}>
-                  {copy("Revision")} {r.revision}
-                </option>
-              ))}
-              {resumes.map((r) => (
-                <option key={r.id} value={`resume:${r.id}`}>
-                  {r.title}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            disabled={!target}
-            onClick={async () => {
-              setBusy(true);
-              setError("");
-              try {
-                const baseline = target.startsWith("revision:")
-                  ? revisions.find(
-                      (r) => r.revision === Number(target.slice(9)),
-                    )?.document
-                  : await api.getResume(target.slice(7));
-                if (!baseline)
-                  throw new Error(copy("Select a revision or resume"));
-                setReport(await api.compareDrafts(baseline, document));
-              } catch (e) {
-                setError((e as Error).message);
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            {copy("Show differences")}
-          </button>
-        </fieldset>
-        {error && <p role="alert">{error}</p>}
-        {report && (
-          <section aria-live="polite">
-            <p>
-              {copy("Differences")}: {report.changes.length} ·{" "}
-              {copy("Before → current draft")}
+              ×
+            </button>
+          </header>
+          <div className={styles.body}>
+            <p className={styles.note}>
+              {copy("Comparison does not change your document.")}
             </p>
-            <p>{copy("Comparison does not change your document.")}</p>
-            {report.changes.map((change, i) => (
-              <article key={i} className="border rounded p-3 my-2">
+            {loading && (
+              <p role="status">{copy("Loading comparison choices…")}</p>
+            )}
+            {!loading && error && !loaded && (
+              <div role="alert" className={styles.message}>
+                <p>{error}</p>
+                <button type="button" onClick={() => void load()}>
+                  {copy("Try again")}
+                </button>
+              </div>
+            )}
+            {!loading && loaded && !hasChoices && (
+              <p className={styles.message}>
+                {copy("No saved versions or other CVs are available yet.")}
+              </p>
+            )}
+            {!loading && loaded && hasChoices && (
+              <div className="revision-comparison-fields">
+                <label className="revision-comparison-target">
+                  <span>{copy("Compare current draft with")}</span>
+                  <select
+                    value={target}
+                    disabled={disabled || comparing}
+                    onChange={(event) => {
+                      comparisonId.current += 1;
+                      setTarget(event.target.value);
+                      setReport(null);
+                      setError("");
+                    }}
+                  >
+                    <option value="">
+                      {copy("Select a revision or resume")}
+                    </option>
+                    {revisions.length > 0 && (
+                      <optgroup label={copy("Saved versions")}>
+                        {revisions.map((item) => (
+                          <option
+                            key={item.revision}
+                            value={`revision:${item.revision}`}
+                          >
+                            {copy("Revision")} {item.revision}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {resumes.length > 0 && (
+                      <optgroup label={copy("Other CVs")}>
+                        {resumes.map((item) => (
+                          <option key={item.id} value={`resume:${item.id}`}>
+                            {item.title}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  className={styles.compareButton}
+                  disabled={disabled || comparing || !target}
+                  onClick={() => void compare()}
+                >
+                  {comparing ? copy("Comparing…") : copy("Show differences")}
+                </button>
+              </div>
+            )}
+            {error && loaded && (
+              <p role="alert" className={styles.message}>
+                {error}
+              </p>
+            )}
+            {report && (
+              <section className={styles.results} aria-live="polite">
                 <h3>
-                  {copy(change.category)} ·{" "}
-                  {String(change.details.field || change.changeType)}
+                  {copy("Differences")} · {report.changes.length}
                 </h3>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <div>
-                    <strong>{copy("Before")}</strong>
-                    <pre className="whitespace-pre-wrap break-words text-xs">
-                      {typeof change.details.from === "string"
-                        ? change.details.from
-                        : JSON.stringify(change.details.from ?? null, null, 2)}
-                    </pre>
-                  </div>
-                  <div>
-                    <strong>{copy("Current draft")}</strong>
-                    <pre className="whitespace-pre-wrap break-words text-xs">
-                      {typeof change.details.to === "string"
-                        ? change.details.to
-                        : JSON.stringify(change.details.to ?? null, null, 2)}
-                    </pre>
-                  </div>
+                <p>
+                  {selectedLabel} → {copy("Current draft")}
+                </p>
+                {report.changes.length === 0 && (
+                  <p className={styles.message}>
+                    {copy("No differences found.")}
+                  </p>
+                )}
+                <div className={styles.changes}>
+                  {report.changes.map((change, index) => {
+                    const before = readableValue(change.details.from);
+                    const after = readableValue(change.details.to);
+                    const kind =
+                      change.changeType === "added"
+                        ? copy("Added")
+                        : change.changeType === "removed"
+                          ? copy("Removed")
+                          : copy("Changed");
+                    return (
+                      <article key={index} className={styles.change}>
+                        <div className={styles.changeHeading}>
+                          <div>
+                            <span className={styles.category}>
+                              {copy(change.category)}
+                            </span>
+                            <h4>{copy(changeTitle(change))}</h4>
+                          </div>
+                          <span className={styles.kind}>{kind}</span>
+                        </div>
+                        {(before !== null || after !== null) && (
+                          <div className={styles.values}>
+                            <div>
+                              <strong>{copy("Before")}</strong>
+                              <pre>{before ?? copy("No content")}</pre>
+                            </div>
+                            <div>
+                              <strong>{copy("Current draft")}</strong>
+                              <pre>{after ?? copy("No content")}</pre>
+                            </div>
+                          </div>
+                        )}
+                      </article>
+                    );
+                  })}
                 </div>
-              </article>
-            ))}
-          </section>
-        )}
-      </div>
+              </section>
+            )}
+          </div>
+        </div>
+      </dialog>
     </details>
   );
 }

@@ -1,0 +1,98 @@
+.ribbon:global(.studio-ribbon) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px 24px;
+  align-items: center;
+}
+.title:global(.studio-document-title) {
+  min-width: 0;
+  width: 100%;
+  padding: 2px;
+}
+.title:global(.studio-document-title) > input {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 6px 8px;
+  margin-top: 3px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  text-overflow: ellipsis;
+}
+.title:global(.studio-document-title) > input:focus {
+  outline: 2px solid rgb(var(--color-primary));
+  outline-offset: 0;
+  border-color: transparent;
+}
+.actions:global(.studio-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
+  gap: 8px;
+}
+.actions:global(.studio-actions) > button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.status:global(.studio-status) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.notice {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+.recovery {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  flex: 1 1 100%;
+  padding-top: 8px;
+  border-top: 1px solid rgb(var(--color-outline-variant));
+}
+.recoveryActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.recoveryActions > button {
+  padding: 6px 10px;
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 4px;
+  font-weight: 600;
+}
+.recoveryActions > button:first-child {
+  background: rgb(var(--color-primary));
+  color: rgb(var(--color-on-primary));
+  border-color: rgb(var(--color-primary));
+}
+@media (max-width: 1100px) {
+  .ribbon:global(.studio-ribbon) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .actions:global(.studio-actions) {
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 480px) {
+  .ribbon:global(.studio-ribbon) {
+    padding: 12px 16px 8px;
+  }
+  .actions:global(.studio-actions) {
+    gap: 6px;
+  }
+  .actions:global(.studio-actions) :global(.editorial-button) {
+    padding: 8px 10px;
+  }
+  .status:global(.studio-status) {
+    padding-inline: 18px;
+  }
+}
