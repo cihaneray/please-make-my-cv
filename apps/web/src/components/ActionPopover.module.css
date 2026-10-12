@@ -1,0 +1,81 @@
+.downloadTrigger.downloadTrigger {
+  width: auto;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+.popup {
+  position: fixed;
+  inset: auto;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.3rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgb(var(--color-surface-container-highest));
+  border-radius: 0.75rem;
+  background: rgb(var(--color-surface-container-lowest));
+  color: rgb(var(--color-on-surface));
+  box-shadow:
+    0 12px 32px rgb(0 0 0 / 18%),
+    0 2px 8px rgb(0 0 0 / 10%);
+}
+.popup:popover-open {
+  display: flex;
+  flex-direction: column;
+}
+.popup > button {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.65rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  cursor: pointer;
+}
+.popup > button:hover,
+.popup > button:focus-visible {
+  background: rgb(var(--color-surface-container-low));
+}
+.popup > button:focus-visible {
+  outline: 2px solid rgb(var(--color-primary));
+  outline-offset: -2px;
+}
+.popup > button > span {
+  color: rgb(var(--color-on-surface-variant));
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+.tagPopup.tagPopup {
+  padding: 0.6rem;
+  gap: 0.5rem;
+}
+.tagPopup:not(:popover-open) {
+  display: none;
+}
+.tagPopup.tagPopup :global(.library-tag-filter-options) {
+  flex-shrink: 0;
+  max-height: none;
+  overflow: visible;
+}
+.tagTrigger.tagTrigger {
+  border-color: rgb(var(--color-surface-container-highest));
+  border-radius: 0.625rem;
+  background: rgb(var(--color-surface-container-lowest));
+}
+.tagPopup.tagPopup :global(.library-tag-filter-option) {
+  border: 0;
+  border-radius: 0.5rem;
+}
+.tagPopup.tagPopup :global(.library-tag-filter-option[aria-pressed="true"]) {
+  background: rgb(var(--color-surface-container-low));
+  color: rgb(var(--color-primary));
+  font-weight: 600;
+}

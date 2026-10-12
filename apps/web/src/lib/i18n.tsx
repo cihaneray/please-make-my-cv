@@ -39,7 +39,7 @@ export const translations = {
     statusRejected: "Rejected",
     statusArchived: "Archived",
     viewAll: "View All",
-    openStudio: "Open Studio",
+    openStudio: "Open editor",
     duplicate: "Duplicate",
     delete: "Delete",
     exportPdf: "Export PDF",
@@ -89,7 +89,7 @@ export const translations = {
     saving: "Saving...",
     exporting: "Exporting...",
     sections: "Sections",
-    loadingStudio: "Loading CV Workspace Studio...",
+    loadingStudio: "Loading CV workspace...",
 
     // Profile & Sections
     personalProfile: "Personal Profile",
@@ -113,10 +113,10 @@ export const translations = {
     addRole: "Add Role",
     jobTitle: "Job Title",
     company: "Company",
-    dates: "Dates (e.g. 2022 — Present)",
+    dates: "Dates (e.g. 2022 to Present)",
     achievements: "Achievements:",
     addBullet: "Add Bullet",
-    aiPolish: "AI Polish Bullet",
+    aiPolish: "Edit wording with AI",
 
     education: "Education",
     addEducation: "Add Education",
@@ -146,11 +146,11 @@ export const translations = {
     targetMarketLabel: "Target Market",
     marketNotice:
       "CV language and target market are fully independent. An English CV for Türkiye (Language: EN, Market: TR) follows Turkish market norms without US resume restrictions.",
-    marketTR: "Türkiye (TR) — Local norms, optional photo",
-    marketUS: "United States (US) — Strict anti-bias, no photo",
-    marketUK: "United Kingdom (UK) — UK conventions",
-    marketEU: "European Union (EU) — Europass / EU norms",
-    marketGlobal: "Global / Remote — International conventions",
+    marketTR: "Türkiye (TR): Local norms, optional photo",
+    marketUS: "United States (US): Bias reduction guidance, no photo",
+    marketUK: "United Kingdom (UK): UK conventions",
+    marketEU: "European Union (EU): Europass / EU norms",
+    marketGlobal: "Global / Remote: International conventions",
     marketOther: "Other Market",
 
     // Review tab
@@ -224,9 +224,9 @@ export const translations = {
 
     // Library Page
     careerLibraryTitle: "Career Library",
-    librarySubheading: "Global Career Content Repository",
+    librarySubheading: "Reusable career details",
     libraryDescription:
-      "Store, tag, and reuse battle-tested achievements, projects, and skills across all resumes.",
+      "Save achievements, projects, and skills to reuse across resumes.",
     searchSnippets: "Search reusable bullets, metrics, or technologies...",
     addSnippet: "Add Snippet",
     allTags: "All Tags",
@@ -288,15 +288,15 @@ export const translations = {
     localDataPromiseTitle: "Local workspace storage",
     privacyDetails:
       "Documents are stored by your configured API. AI is off by default. When enabled, requested reviews send career content to the server selected in LLM connection settings. Protect database files and backups; local storage is not encryption or a compliance certification.",
-    themeSectionTitle: "Interface Aesthetic",
+    themeSectionTitle: "Theme settings",
     themeSectionDesc:
-      "Calm Editorial Workspace — designed for clarity, high typographical legibility, and distraction-free editing.",
-    currentTheme: "Calm Editorial Light",
-    paletteLabel: "Minimalist Swiss editorial palette",
+      "Choose a light, dark, or system theme.",
+    currentTheme: "Light theme",
+    paletteLabel: "Neutral colors",
     saveSettings: "Preferences are saved automatically",
     navGeneral: "Language & Region",
     navPrivacy: "Privacy & Security",
-    navAesthetic: "Theme & Aesthetic",
+    navAesthetic: "Theme",
     systemStatus: "Local System Healthy",
   },
   tr: {
@@ -333,7 +333,7 @@ export const translations = {
     statusRejected: "Reddedildi",
     statusArchived: "Arşivlendi",
     viewAll: "Tümünü Gör",
-    openStudio: "Stüdyoyu Aç",
+    openStudio: "Editörü Aç",
     duplicate: "Kopyala",
     delete: "Sil",
     exportPdf: "PDF İndir",
@@ -383,7 +383,7 @@ export const translations = {
     saving: "Kaydediliyor...",
     exporting: "Dışa aktarılıyor...",
     sections: "Bölümler",
-    loadingStudio: "CV Workspace Stüdyosu Yükleniyor...",
+    loadingStudio: "CV çalışma alanı yükleniyor...",
 
     // Profile & Sections
     personalProfile: "Kişisel Profil",
@@ -407,10 +407,10 @@ export const translations = {
     addRole: "Rol Ekle",
     jobTitle: "Pozisyon Ünvanı",
     company: "Şirket",
-    dates: "Tarihler (örn. 2022 — Günümüz)",
+    dates: "Tarihler (örn. 2022'den günümüze)",
     achievements: "Başarılar & Katkılar:",
     addBullet: "Madde Ekle",
-    aiPolish: "Yapay Zeka ile Parlat",
+    aiPolish: "Yapay zekâ ile metni düzenle",
 
     education: "Eğitim",
     addEducation: "Eğitim Ekle",
@@ -440,12 +440,12 @@ export const translations = {
     targetMarketLabel: "Hedef Pazar",
     marketNotice:
       "CV dili ve hedef pazar birbirinden tamamen bağımsızdır. Türkiye için yazılan İngilizce bir CV (Dil: EN, Pazar: TR), ABD kurallarını dayatmadan Türkiye pazar standartlarını gözetir.",
-    marketTR: "Türkiye (TR) — Yerel standartlar, opsiyonel fotoğraf",
+    marketTR: "Türkiye (TR): Yerel standartlar, opsiyonel fotoğraf",
     marketUS:
-      "Amerika Birleşik Devletleri (US) — Katı önyargısızlık, fotoğrafsız",
-    marketUK: "Birleşik Krallık (UK) — UK standartları",
-    marketEU: "Avrupa Birliği (EU) — Europass / AB normları",
-    marketGlobal: "Global / Uzaktan — Uluslararası standartlar",
+      "Amerika Birleşik Devletleri (US): Önyargıyı azaltma kuralları, fotoğraf yok",
+    marketUK: "Birleşik Krallık (UK): UK standartları",
+    marketEU: "Avrupa Birliği (EU): Europass / AB normları",
+    marketGlobal: "Global / Uzaktan: Uluslararası standartlar",
     marketOther: "Diğer Pazar",
 
     // Review tab
@@ -586,11 +586,11 @@ export const translations = {
     localDataPromiseTitle: "Yerel çalışma alanı depolaması",
     privacyDetails:
       "Belgeler yapılandırılmış API tarafından saklanır. Yapay zeka varsayılan olarak kapalıdır. Etkinleştirildiğinde istenen incelemeler kariyer içeriğini LLM ayarlarında seçilen sunucuya gönderir. Veritabanı ve yedekleri koruyun; yerel depolama şifreleme veya uyumluluk sertifikası değildir.",
-    themeSectionTitle: "Arayüz Estetiği",
+    themeSectionTitle: "Tema ayarları",
     themeSectionDesc:
-      "Calm Editorial Workspace — berraklık, yüksek tipografik okunabilirlik ve dikkat dağıtmayan düzen için tasarlandı.",
-    currentTheme: "Calm Editorial Açık Tema",
-    paletteLabel: "Minimalist İsviçre editoryal renk paleti",
+      "Açık, koyu veya sistem temasını seçin.",
+    currentTheme: "Açık tema",
+    paletteLabel: "Nötr renkler",
     saveSettings: "Tercihler otomatik olarak kaydedilmektedir",
     navGeneral: "Dil ve Bölge",
     navPrivacy: "Gizlilik ve Güvenlik",

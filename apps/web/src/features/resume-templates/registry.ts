@@ -7,10 +7,10 @@ import { ProfessionalTemplate } from "./templates/professional/ProfessionalTempl
 export const RESUME_TEMPLATES: ResumeTemplateDefinition[] = [
   {
     id: "minimal",
-    name: "Minimal Swiss",
+    name: "Minimal",
     category: "Design Systems & Product",
     description:
-      "Understated editorial layout inspired by Swiss modernist typography, active whitespace, and razor-sharp delineation lines.",
+      "A clean layout with clear headings, generous spacing, and simple dividers.",
     recommendedFor:
       "Product Designers, UI/UX Specialists, Design Technologists, Generalists",
     defaultAccentColor: "#0F172A",
@@ -19,10 +19,10 @@ export const RESUME_TEMPLATES: ResumeTemplateDefinition[] = [
   },
   {
     id: "technical",
-    name: "Technical Architecture",
+    name: "Technical",
     category: "Engineering & Cloud",
     description:
-      "Dense, structured information architecture optimized for deep technical stacks, cloud certifications, and bulleted system outcomes.",
+      "A compact layout for technical skills, certifications, and project details.",
     recommendedFor:
       "Backend Architects, Staff Engineers, DevOps, Cloud Developers",
     defaultAccentColor: "#131B2E",
@@ -31,10 +31,10 @@ export const RESUME_TEMPLATES: ResumeTemplateDefinition[] = [
   },
   {
     id: "professional",
-    name: "Executive Editorial",
+    name: "Professional",
     category: "Leadership & Strategy",
     description:
-      "High-contrast typography with balanced executive summary presentation designed for director and VP level visibility.",
+      "A formal layout with a prominent summary and clear sections for leadership experience.",
     recommendedFor:
       "Engineering Managers, Product Leads, Technical Directors, Consultants",
     defaultAccentColor: "#1E293B",
@@ -171,7 +171,7 @@ export const SAMPLE_PREVIEW_RESUME: ResumeDocument = {
   certifications: [
     {
       id: "cert-1",
-      name: "AWS Certified Solutions Architect – Professional",
+      name: "AWS Certified Solutions Architect - Professional",
       issuer: "Amazon Web Services",
       issueDate: "2023-05",
       expiryDate: "2026-05",

@@ -1,0 +1,130 @@
+.root {
+  min-width: 0;
+}
+
+.trigger,
+.root button.trigger {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgb(var(--color-surface-container-highest));
+  border-radius: 0.625rem;
+  background: rgb(var(--color-surface-container-lowest));
+  color: rgb(var(--color-on-surface));
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.trigger:hover:not(:disabled),
+.root button.trigger:hover:not(:disabled) {
+  border-color: rgb(var(--color-outline));
+}
+
+.trigger:focus-visible {
+  outline: 2px solid rgb(var(--color-primary));
+  outline-offset: 2px;
+}
+
+.selectedValue {
+  overflow: hidden;
+  color: inherit;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron,
+.check {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.chevron {
+  color: rgb(var(--color-on-surface-variant));
+}
+
+.popup {
+  position: fixed;
+  inset: auto;
+  z-index: 1000;
+  max-height: min(15rem, calc(100dvh - 1rem));
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.3rem;
+  border: 1px solid rgb(var(--color-surface-container-highest));
+  border-radius: 0.75rem;
+  background: rgb(var(--color-surface-container-lowest));
+  color: rgb(var(--color-on-surface));
+  box-shadow:
+    0 12px 32px rgb(0 0 0 / 18%),
+    0 2px 8px rgb(0 0 0 / 10%);
+  overscroll-behavior: contain;
+}
+
+.popup:popover-open {
+  display: flex;
+  flex-direction: column;
+}
+
+.option {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.5rem;
+  color: rgb(var(--color-on-surface));
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  cursor: pointer;
+}
+
+.activeOption {
+  background: rgb(var(--color-surface-container-low));
+}
+
+.option[aria-selected="true"] {
+  color: rgb(var(--color-primary));
+  font-weight: 600;
+}
+
+.check {
+  color: rgb(var(--color-primary));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trigger {
+    transition: none;
+  }
+}
+
+.group {
+  padding: 8px 10px 4px;
+  font-size: 12px;
+  color: rgb(var(--color-secondary));
+  font-weight: 600;
+}
+.option[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: default;
+}
+.trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -40,7 +40,7 @@ export function measureReadingRegions(
     label:
       element.querySelector("h2, h1")?.textContent?.trim() ||
       element.dataset.studioSection ||
-      "—",
+      "-",
     top: rect.top + (content.defaultView?.scrollY || 0),
     left: rect.left,
     width: rect.width,

@@ -181,7 +181,7 @@ export function formatDateRange(
   }
 
   if (start && end) {
-    return `${start} — ${end}`;
+    return `${start} - ${end}`;
   }
   if (start) {
     return start;

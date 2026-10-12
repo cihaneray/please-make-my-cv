@@ -1,3 +1,4 @@
+import { selectMenu } from "./helpers/select-menu";
 import { test, expect } from "@playwright/test";
 import { applyAIEdit } from "../src/lib/ai-edits";
 
@@ -18,9 +19,8 @@ test("job draft survives status changes and reload without reverting status on s
   await page
     .getByRole("textbox", { name: "Notes", exact: true })
     .fill("Unsaved meeting note");
-  await page
-    .getByRole("combobox", { name: "Application status" })
-    .selectOption("interview");
+  await selectMenu(page
+    .getByRole("combobox", { name: "Application status" }), "interview");
   await expect(
     page.getByRole("textbox", { name: "Notes", exact: true }),
   ).toHaveValue("Unsaved meeting note");
@@ -100,7 +100,7 @@ test("revision comparison and PDF checks use the current draft", async ({
       .locator(".revision-comparison-target > span")
       .boundingBox();
     const select = await page
-      .locator(".revision-comparison-target > select")
+      .locator('.revision-comparison-target [role="combobox"]')
       .boundingBox();
     expect(select!.y).toBeGreaterThanOrEqual(label!.y + label!.height + 6);
     const panel = await page
@@ -121,9 +121,8 @@ test("revision comparison and PDF checks use the current draft", async ({
     .click();
   await page.getByLabel("Compare revisions and variants").click();
 
-  await page
-    .getByLabel("Compare current draft with")
-    .selectOption("revision:1");
+  await selectMenu(page
+    .getByLabel("Compare current draft with"), "revision:1");
   await page.getByRole("button", { name: "Show differences" }).click();
   await expect(
     page.getByText("Draft difference", { exact: true }).last(),
@@ -164,7 +163,7 @@ test("library metric is calculated and new snippets do not invent variants", asy
   ).json();
   await page.goto("/library");
   await expect(
-    page.getByText("ATS heuristic average", { exact: true }),
+    page.getByText("Saved CV ATS average", { exact: true }),
   ).toBeVisible();
   if (metrics.atsAverage !== null)
     await expect(
@@ -181,9 +180,8 @@ test("library metric is calculated and new snippets do not invent variants", asy
     .getByRole("textbox", { name: "Tags", exact: true })
     .fill("CustomTag");
   await page.getByRole("button", { name: "Save Snippet", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "CustomTag", exact: true }),
-  ).toBeVisible();
+  await page.getByRole("button", { name: /^Tag:/ }).click();
+  await expect(page.getByRole("button", { name: /^CustomTag/ })).toBeVisible();
   const snippets = await (
     await request.get("http://127.0.0.1:8101/api/library")
   ).json();
@@ -410,9 +408,8 @@ test("mobile navigation remains available", async ({ page }) => {
   await expect(
     page.getByRole("combobox", { name: "Navigate workspace" }),
   ).toBeVisible();
-  await page
-    .getByRole("combobox", { name: "Navigate workspace" })
-    .selectOption("/resumes");
+  await selectMenu(page
+    .getByRole("combobox", { name: "Navigate workspace" }), "/resumes");
   await expect(page).toHaveURL(/resumes/);
 });
 
@@ -504,7 +501,7 @@ test("LLM settings save securely and test the selected provider", async ({
     route.fulfill({ json: { message: "Connection succeeded." } }),
   );
   await page.goto("/settings");
-  await page.getByLabel("Provider", { exact: true }).selectOption("ollama");
+  await selectMenu(page.getByLabel("Provider", { exact: true }), "ollama");
   await expect(page.getByLabel("API base URL")).toHaveValue(
     "http://localhost:11434",
   );
@@ -572,7 +569,7 @@ test("AI review shows explained score and flags outdated feedback", async ({
   await page
     .getByRole("button", { name: "Review current draft with AI" })
     .click();
-  await expect(page.getByText("AI editorial score: 60/100")).toBeVisible();
+  await expect(page.getByText("AI review score: 60/100")).toBeVisible();
   await expect(page.getByText("Add a verified outcome")).toBeVisible();
   await page.getByLabel("Target job description (optional)").fill("Engineer");
   await expect(
@@ -613,12 +610,12 @@ test("live preview keeps A4 geometry and print margins while fitting the panel",
     path: "test-results/preview-a4.png",
     fullPage: true,
   });
-  await page.getByLabel("Preview zoom").selectOption("1");
+  await selectMenu(page.getByLabel("Preview zoom"), "1");
   expect((await page.locator("iframe").boundingBox())!.width).toBeCloseTo(
     793.7,
     0,
   );
-  await page.getByLabel("Preview zoom").selectOption("fit");
+  await selectMenu(page.getByLabel("Preview zoom"), "fit");
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("button", { name: "Preview", exact: true }).click();
   await expect
@@ -682,7 +679,7 @@ test("dark mode persists and keeps resume paper white", async ({
     };
     const body = getComputedStyle(document.body);
     const action = getComputedStyle(
-      document.querySelector(".studio-actions .primary")!,
+      document.querySelector('.studio-actions button[aria-haspopup="menu"]')!,
     );
     const field = getComputedStyle(document.activeElement!);
     return {
@@ -1108,7 +1105,7 @@ test("Gemini can be configured and tested without exposing the stored key", asyn
     }),
   );
   await page.goto("/settings");
-  await page.getByLabel("Provider", { exact: true }).selectOption("gemini");
+  await selectMenu(page.getByLabel("Provider", { exact: true }), "gemini");
   await expect(page.getByLabel("API base URL")).toHaveValue(
     "https://generativelanguage.googleapis.com/v1beta",
   );
@@ -1127,8 +1124,8 @@ test("Gemini can be configured and tested without exposing the stored key", asyn
     }),
   ).toBeVisible();
   await page.reload();
-  await expect(page.getByLabel("Provider", { exact: true })).toHaveValue(
-    "gemini",
+  await expect(page.getByLabel("Provider", { exact: true })).toContainText(
+    "Google Gemini",
   );
   await expect(page.getByLabel("Gemini API key")).toHaveValue("");
 });

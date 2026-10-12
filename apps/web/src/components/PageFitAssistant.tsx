@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { useCopy } from "@/lib/copy";
 import { PageFitReport, ResumeDocument } from "@/lib/types";
+import { SelectMenu } from "@/components/SelectMenu";
 export function PageFitAssistant({
   document,
   onChange,
@@ -31,17 +32,17 @@ export function PageFitAssistant({
       <h3>{copy("Page length assistant")}</h3>
       <label>
         {copy("Target page count")}
-        <select
+        <SelectMenu
           aria-label={copy("Target page count")}
-          value={target}
-          onChange={(e) => setTarget(Number(e.target.value))}
+          value={String(target)}
+          onValueChange={(value) => setTarget(Number(value))}
         >
           {[1, 2, 3].map((n) => (
             <option key={n} value={n}>
               {n}
             </option>
           ))}
-        </select>
+        </SelectMenu>
       </label>
       <p>
         {copy(

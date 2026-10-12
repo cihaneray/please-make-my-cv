@@ -10,6 +10,7 @@ import {
   ResumeSummary,
 } from "@/lib/types";
 import styles from "./ResumeChanges.module.css";
+import { SelectMenu } from "@/components/SelectMenu";
 
 type Revision = { revision: number; document: ResumeDocument };
 
@@ -26,7 +27,7 @@ function readableValue(value: unknown) {
   return JSON.stringify(value, null, 2);
 }
 
-function changeTitle(change: ComparisonChange) {
+function changeTitle(change: ComparisonChange, copy: (text: string) => string) {
   const field = change.details.field;
   const entry = change.details.to ?? change.details.from;
   if (!field && entry && typeof entry === "object" && !Array.isArray(entry)) {
@@ -36,10 +37,10 @@ function changeTitle(change: ComparisonChange) {
     if (typeof label === "string" && label.trim()) return label;
   }
   return typeof field === "string"
-    ? readableField(field)
+    ? copy(readableField(field))
     : change.description === "Entry order changed."
-      ? change.description
-      : readableField(change.category);
+      ? copy(change.description)
+      : copy(readableField(change.category));
 }
 
 export function ResumeChanges({
@@ -221,12 +222,12 @@ export function ResumeChanges({
               <div className="revision-comparison-fields">
                 <label className="revision-comparison-target">
                   <span>{copy("Compare current draft with")}</span>
-                  <select
+                  <SelectMenu
                     value={target}
                     disabled={disabled || comparing}
-                    onChange={(event) => {
+                    onValueChange={(value) => {
                       comparisonId.current += 1;
-                      setTarget(event.target.value);
+                      setTarget(value);
                       setReport(null);
                       setError("");
                     }}
@@ -255,7 +256,7 @@ export function ResumeChanges({
                         ))}
                       </optgroup>
                     )}
-                  </select>
+                  </SelectMenu>
                 </label>
                 <button
                   type="button"
@@ -302,7 +303,7 @@ export function ResumeChanges({
                             <span className={styles.category}>
                               {copy(change.category)}
                             </span>
-                            <h4>{copy(changeTitle(change))}</h4>
+                            <h4>{changeTitle(change, copy)}</h4>
                           </div>
                           <span className={styles.kind}>{kind}</span>
                         </div>

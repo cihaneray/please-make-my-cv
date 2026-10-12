@@ -10,6 +10,7 @@ import { ApplicationEvidence } from "./ApplicationEvidence";
 import { JobTailoring } from "./JobTailoring";
 import { JobEmailDrafts } from "./JobEmailDrafts";
 import { Icons } from "./Icons";
+import { SelectMenu } from "@/components/SelectMenu";
 import {
   JobApplication,
   ResumeDocument,
@@ -220,12 +221,12 @@ export function JobTools({
         </div>
         <label className="dossier-status-label">
           {copy("Application status")}
-          <select
+          <SelectMenu
             aria-label={copy("Application status")}
             value={job.status}
             disabled={busy}
-            onChange={(e) =>
-              run(() => onStatusChange(e.target.value as JobStatus))
+            onValueChange={(value) =>
+              run(() => onStatusChange(value as JobStatus))
             }
           >
             {Object.values(JobStatus).map((status) => (
@@ -233,7 +234,7 @@ export function JobTools({
                 {getJobStatusLabel(status)}
               </option>
             ))}
-          </select>
+          </SelectMenu>
         </label>
       </header>
       <div className="dossier-dates">
@@ -318,7 +319,7 @@ export function JobTools({
             </span>
           </div>
           <p>
-            {matchResult?.summary ||
+            {(matchResult?.summary ? copy(matchResult.summary) : "") ||
               copy(
                 "Link a CV to compare the requirements in this application.",
               )}
@@ -357,8 +358,8 @@ export function JobTools({
             {matchResult.sectionFeedback.map((feedback, index) => (
               <div key={index}>
                 <strong>{copy(feedback.section)}</strong>
-                <p>{feedback.message}</p>
-                <p>{feedback.recommendation}</p>
+                <p>{copy(feedback.message)}</p>
+                <p>{copy(feedback.recommendation)}</p>
               </div>
             ))}
           </section>
@@ -494,12 +495,12 @@ export function JobTools({
             <h3>{copy("Application CV")}</h3>
             <label>
               {copy("Linked resume")}
-              <select
+              <SelectMenu
                 aria-label={copy("Linked resume")}
                 disabled={busy}
                 value={draft.linkedResumeId || ""}
-                onChange={(e) =>
-                  setDraft({ ...draft, linkedResumeId: e.target.value || null })
+                onValueChange={(value) =>
+                  setDraft({ ...draft, linkedResumeId: value || null })
                 }
               >
                 <option value="">{copy("None")}</option>
@@ -508,7 +509,7 @@ export function JobTools({
                     {row.title}
                   </option>
                 ))}
-              </select>
+              </SelectMenu>
             </label>
             {linkedResume ? (
               <>
@@ -517,7 +518,7 @@ export function JobTools({
                   className="editorial-link"
                   href={`/resumes/${linkedResume.id}`}
                 >
-                  {copy("Open in studio")} <Icons.ArrowRight size={14} />
+                  {copy("Open editor")} <Icons.ArrowRight size={14} />
                 </a>
               </>
             ) : (
@@ -529,7 +530,7 @@ export function JobTools({
           {tab === "documents" && linkedResume && (
             <a
               className="dossier-cv-cover"
-              aria-label={`${copy("Open in studio")}: ${linkedResume.title}`}
+              aria-label={`${copy("Open editor")}: ${linkedResume.title}`}
               href={`/resumes/${linkedResume.id}`}
             >
               <DocumentCover key={linkedResume.id} id={linkedResume.id} />
@@ -541,16 +542,16 @@ export function JobTools({
             <h3>{copy("Cover letter")}</h3>
             <label>
               {copy("Letter language")}
-              <select
+              <SelectMenu
                 aria-label={copy("Letter language")}
                 value={letterLanguage}
-                onChange={(e) =>
-                  setLetterLanguage(e.target.value as "en" | "tr")
+                onValueChange={(value) =>
+                  setLetterLanguage(value as "en" | "tr")
                 }
               >
                 <option value="en">English</option>
                 <option value="tr">Türkçe</option>
-              </select>
+              </SelectMenu>
             </label>
             <label>
               <input

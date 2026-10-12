@@ -19,7 +19,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { I18nProvider } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "CV Workspace — Your personal studio",
+  title: "CV Workspace | Resume editor",
   description:
     "Structured personal CV workspace for creating, editing, and optimizing resumes.",
 };

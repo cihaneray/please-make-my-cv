@@ -1870,3 +1870,55 @@ html.dark {
   text-decoration: underline;
   min-height: 36px;
 }
+
+.design-save-button.editorial-button {
+  margin-top: 16px;
+  min-height: 44px;
+  width: 100%;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 10px;
+}
+.shelf-document,
+.shelf-new {
+  display: grid;
+  grid-template-rows: 200px 3em 1.5em 1.5em;
+  align-content: start;
+  row-gap: 8px;
+  min-width: 0;
+  text-align: left;
+}
+.shelf-document .shelf-paper,
+.shelf-new .shelf-new-paper {
+  height: 100%;
+  margin-bottom: 0;
+}
+.shelf-document h3,
+.shelf-new strong {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  min-width: 0;
+}
+.shelf-document p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+  line-height: 1.5;
+}
+.shelf-document > span,
+.shelf-new > span:last-child {
+  margin: 0;
+  line-height: 1.5;
+}
+@media (max-width: 600px) {
+  .shelf-document,
+  .shelf-new {
+    grid-template-rows: 180px 3em 1.5em 1.5em;
+  }
+}

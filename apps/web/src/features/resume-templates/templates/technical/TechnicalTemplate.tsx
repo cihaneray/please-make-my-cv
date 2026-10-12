@@ -273,7 +273,7 @@ export function TechnicalTemplate({
                       {edu.institution && (
                         <span className="font-normal text-neutral-600">
                           {" "}
-                          — {edu.institution}
+                          - {edu.institution}
                         </span>
                       )}
                     </div>
@@ -327,7 +327,7 @@ export function TechnicalTemplate({
                       {c.name}
                     </span>
                     {c.issuer && (
-                      <span className="text-neutral-600"> — {c.issuer}</span>
+                      <span className="text-neutral-600"> - {c.issuer}</span>
                     )}
                     {c.credentialId && (
                       <span className="text-[10px] font-mono text-neutral-500 ml-2">

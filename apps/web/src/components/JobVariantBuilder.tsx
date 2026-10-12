@@ -4,6 +4,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { JobApplication, ResumeDocument, TargetJob } from "@/lib/types";
 import { useCopy } from "@/lib/copy";
+import { SelectMenu } from "@/components/SelectMenu";
 export function JobVariantBuilder({
   document,
   target,
@@ -63,19 +64,19 @@ export function JobVariantBuilder({
       )}
       <p className="text-sm">
         {copy(
-          "Create a separate copy of this draft for a target job, then review and accept tailored suggestions in the copy. Your original and job tracker links stay unchanged.",
+          "Create a copy of this draft for a target job. Review the suggestions and accept the ones you want. Your original and job links will stay unchanged.",
         )}
       </p>
       <label className="ai-review-field">
         <span>{copy("Use a saved job")}</span>
-        <select
-          aria-label="Use a saved job"
+        <SelectMenu
+          aria-label={copy("Use a saved job")}
           className="block w-full"
           disabled={busy || disabled}
           value={selected}
-          onChange={(e) => {
-            setSelected(e.target.value);
-            const job = jobs.find((item) => item.id === e.target.value);
+          onValueChange={(value) => {
+            setSelected(value);
+            const job = jobs.find((item) => item.id === value);
             if (job)
               onTarget({
                 company: job.company,
@@ -87,10 +88,10 @@ export function JobVariantBuilder({
           <option value="">{copy("Enter manually")}</option>
           {jobs.map((job) => (
             <option key={job.id} value={job.id}>
-              {job.position} — {job.company}
+              {job.position} - {job.company}
             </option>
           ))}
-        </select>
+        </SelectMenu>
       </label>
       <label className="ai-review-field">
         <span>{copy("Target company")}</span>
