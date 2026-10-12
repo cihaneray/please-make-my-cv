@@ -80,6 +80,19 @@ export function rankLibraryEvidence(
         [
           snippet.title,
           snippet.content,
+          snippet.project
+            ? [
+                snippet.project.name,
+                snippet.project.role,
+                ...snippet.project.bullets,
+                ...snippet.project.technologies,
+              ].join(" ")
+            : "",
+          snippet.certification
+            ? [snippet.certification.name, snippet.certification.issuer].join(
+                " ",
+              )
+            : "",
           ...snippet.tags,
           ...snippet.targetRoles,
         ].join(" "),
@@ -140,6 +153,10 @@ export default function LibraryResumeBuilder({
   }, [open, loadAttempt]);
 
   const job = jobs.find((item) => item.id === jobId);
+  const hasJobContext =
+    !!job &&
+    !!job.position.trim() &&
+    (!!job.description.trim() || job.requirements.length > 0);
   const ranked = useMemo(
     () => (job ? rankLibraryEvidence(snippets, job) : []),
     [snippets, job],
@@ -162,6 +179,7 @@ export default function LibraryResumeBuilder({
     event.preventDefault();
     if (
       !job ||
+      !hasJobContext ||
       !selected.length ||
       busy ||
       createdId ||
@@ -211,24 +229,54 @@ export default function LibraryResumeBuilder({
       summary: "",
       experience: [],
       education: [],
-      projects: [],
+      projects: selected
+        .filter(({ snippet }) => snippet.type === "project")
+        .map(({ snippet }) => ({
+          ...(snippet.project || {
+            name: snippet.title,
+            role: "",
+            url: "",
+            startDate: "",
+            endDate: "",
+            bullets: snippet.content.split("\n").filter(Boolean),
+            technologies: [],
+          }),
+          id: crypto.randomUUID(),
+        })),
       skills: [],
-      certifications: [],
+      certifications: selected
+        .filter(({ snippet }) => snippet.type === "certification")
+        .map(({ snippet }) => ({
+          ...(snippet.certification || {
+            name: snippet.title,
+            issuer: "",
+            issueDate: "",
+            expiryDate: "",
+            credentialUrl: "",
+            credentialId: "",
+          }),
+          id: crypto.randomUUID(),
+        })),
       languages: [],
       customSections: [
         {
           id: crypto.randomUUID(),
           title: copy("Selected career achievements"),
-          items: selected.map(({ snippet }) => ({
-            id: crypto.randomUUID(),
-            title: snippet.title,
-            subtitle: "",
-            date: "",
-            description: snippet.content,
-            bullets: [],
-          })),
+          items: selected
+            .filter(
+              ({ snippet }) =>
+                !["project", "certification"].includes(snippet.type),
+            )
+            .map(({ snippet }) => ({
+              id: crypto.randomUUID(),
+              title: snippet.title,
+              subtitle: "",
+              date: "",
+              description: snippet.content,
+              bullets: [],
+            })),
         },
-      ],
+      ].filter((section) => section.items.length > 0),
       design: {
         sectionOrder: [
           "summary",
@@ -382,7 +430,20 @@ export default function LibraryResumeBuilder({
                         }
                       />
                       <span>
-                        <strong>{snippet.title}</strong>
+                        <strong>
+                          {snippet.title} ·{" "}
+                          {snippet.type === "project"
+                            ? language === "tr"
+                              ? "Proje"
+                              : "Project"
+                            : snippet.type === "certification"
+                              ? language === "tr"
+                                ? "Sertifika"
+                                : "Certification"
+                              : language === "tr"
+                                ? "Başarı"
+                                : "Achievement"}
+                        </strong>
                         <span className="library-builder-match">
                           {matches.length
                             ? `${copy("Text matches")}: ${matches.join(", ")}`
@@ -403,6 +464,13 @@ export default function LibraryResumeBuilder({
                     {missingTerms.join(", ")}.{" "}
                     {copy(
                       "Review gaps yourself; missing terms will not be added to the CV.",
+                    )}
+                  </p>
+                )}
+                {!hasJobContext && (
+                  <p role="alert">
+                    {copy(
+                      "Add a job description or requirements before creating a tailored CV.",
                     )}
                   </p>
                 )}
@@ -451,13 +519,14 @@ export default function LibraryResumeBuilder({
                 </label>
                 <p className="library-builder-notice">
                   {copy(
-                    "Selected snippets become a career achievements section. Complete employment history, education and contact details before exporting.",
+                    "Projects and certifications keep their own sections; other snippets become achievements. Review the selected evidence against this job and complete personal details before exporting.",
                   )}
                 </p>
                 <button
                   type="submit"
                   className="library-primary"
                   disabled={
+                    !hasJobContext ||
                     !selected.length ||
                     (!deferProfile && (!firstName.trim() || !lastName.trim()))
                   }

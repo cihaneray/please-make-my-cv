@@ -52,7 +52,7 @@ export function ResumeContentEditor({
   onImproveSummary: handleAiImproveSummary,
   onRewriteBullet: handleAiRewriteBullet,
 }: Props) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const copy = useCopy();
   const {
     updateField,
@@ -656,6 +656,22 @@ export function ResumeContentEditor({
                     }
                   />
                 </div>
+                <EditorField
+                  label={
+                    language === "tr"
+                      ? "Bağlantı metni (isteğe bağlı)"
+                      : "Link text (optional)"
+                  }
+                  value={proj.urlLabel || ""}
+                  onChange={(urlLabel) =>
+                    updateProjectItem(projIdx, { ...proj, urlLabel })
+                  }
+                />
+                <p className="text-xs text-secondary">
+                  {language === "tr"
+                    ? "Örneğin: Steam’de görüntüle. Bağlantının adresi aynı kalır."
+                    : "For example: View on Steam. The destination URL stays the same."}
+                </p>
                 <DateFields
                   allowPresent={false}
                   value={{

@@ -222,7 +222,7 @@ export function MinimalTemplate({
             <div className="pt-2 space-y-3">
               {projects.map((proj) => (
                 <div data-cv-entry="true" key={proj.id} className="space-y-0.5">
-                  <div className="flex items-baseline justify-between gap-4">
+                  <div className="flex items-baseline flex-wrap gap-x-2 gap-y-0.5">
                     <div className="font-medium text-[12px] text-neutral-900 flex items-center gap-2">
                       <span>{proj.name}</span>
                       {proj.role && (
@@ -236,9 +236,9 @@ export function MinimalTemplate({
                         href={normalizeUrl(proj.url)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[10.5px] text-neutral-500 hover:text-neutral-900 transition-colors"
+                        className="text-[10.5px] text-neutral-500 hover:text-neutral-900 transition-colors break-all"
                       >
-                        {proj.url.replace(/^https?:\/\//i, "")}
+                        {proj.urlLabel || proj.url.replace(/^https?:\/\//i, "")}
                       </a>
                     )}
                   </div>

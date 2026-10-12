@@ -7,6 +7,8 @@ import { Icons } from "@/components/Icons";
 import { api, errorMessage } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { LibraryItemType, LibrarySnippet } from "@/lib/types";
+import { SelectMenu } from "@/components/SelectMenu";
+import type { ProjectItem, CertificationItem } from "@/lib/types";
 import LibraryResumeBuilder from "@/components/LibraryResumeBuilder";
 import { useAnchoredPopover } from "@/components/useAnchoredPopover";
 import popoverStyles from "@/components/ActionPopover.module.css";
@@ -93,6 +95,15 @@ export default function LibraryPage() {
   }, [showAddBox]);
 
   // New snippet state
+  const [newType, setNewType] = useState<LibraryItemType>(
+    LibraryItemType.BULLET,
+  );
+  const [technologyText, setTechnologyText] = useState("");
+  const [project, setProject] = useState<Partial<ProjectItem>>({});
+  const [certificate, setCertificate] = useState<Partial<CertificationItem>>(
+    {},
+  );
+  const label = (en: string, tr: string) => (language === "tr" ? tr : en);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
   const [newCategory, setNewCategory] = useState("General");
@@ -132,7 +143,10 @@ export default function LibraryPage() {
   async function handleCreateSnippet(e: React.FormEvent) {
     e.preventDefault();
     if (saving) return;
-    if (!newContent.trim()) {
+    if (
+      (!newContent.trim() && newType !== "certification") ||
+      (newType !== "bullet" && !newTitle.trim())
+    ) {
       setFormError(copy("Enter an achievement before saving."));
       return;
     }
@@ -145,12 +159,44 @@ export default function LibraryPage() {
         .filter(Boolean);
       const payload = {
         title: newTitle.trim() || copy("Career Achievement"),
-        content: newContent.trim(),
+        content: newContent.trim() || newTitle.trim(),
+        project:
+          newType === "project"
+            ? {
+                id: project.id || crypto.randomUUID(),
+                role: "",
+                url: "",
+                urlLabel: "",
+                startDate: "",
+                endDate: "",
+                ...project,
+                name: newTitle.trim(),
+                technologies: technologyText
+                  .split(",")
+                  .map((x) => x.trim())
+                  .filter(Boolean),
+                bullets: newContent
+                  .split("\n")
+                  .map((line) => line.trim())
+                  .filter(Boolean),
+              }
+            : null,
+        certification:
+          newType === "certification"
+            ? {
+                id: certificate.id || crypto.randomUUID(),
+                issuer: "",
+                issueDate: "",
+                expiryDate: "",
+                credentialId: "",
+                credentialUrl: "",
+                ...certificate,
+                name: newTitle.trim(),
+              }
+            : null,
         category: newCategory,
         tags: tagsList,
-        type:
-          snippets.find((item) => item.id === editingId)?.type ||
-          LibraryItemType.BULLET,
+        type: newType,
         variants: [
           ...(editingId
             ? (
@@ -186,6 +232,10 @@ export default function LibraryPage() {
           : [created, ...snippets],
       );
       setEditingId(null);
+      setNewType(LibraryItemType.BULLET);
+      setProject({});
+      setCertificate({});
+      setTechnologyText("");
       setTechnical("");
       setConcise("");
       setNewCategory("General");
@@ -343,6 +393,10 @@ export default function LibraryPage() {
                 aria-controls="library-snippet-dialog"
                 onClick={() => {
                   setEditingId(null);
+                  setNewType(LibraryItemType.BULLET);
+                  setProject({});
+                  setCertificate({});
+                  setTechnologyText("");
                   setNewTitle("");
                   setNewContent("");
                   setNewCategory("General");
@@ -545,10 +599,98 @@ export default function LibraryPage() {
                   </button>
                 </div>
                 <fieldset disabled={saving} className="library-form-grid">
+                  <label className="library-field library-field-wide">
+                    {label("Content type", "İçerik türü")}
+                    <SelectMenu
+                      value={newType}
+                      onValueChange={(value) =>
+                        setNewType(value as LibraryItemType)
+                      }
+                    >
+                      <option value="bullet">
+                        {label("Achievement", "Başarı")}
+                      </option>
+                      <option value="project">
+                        {label("Project", "Proje")}
+                      </option>
+                      <option value="certification">
+                        {label("Certification", "Sertifika")}
+                      </option>
+                      <option value="experience">
+                        {label("Experience", "Deneyim")}
+                      </option>
+                      <option value="skill">{label("Skill", "Yetenek")}</option>
+                    </SelectMenu>
+                  </label>
+                  {newType === "project" && (
+                    <>
+                      {(
+                        [
+                          ["role", "Role", "Rol"],
+                          ["url", "Project URL", "Proje bağlantısı"],
+                          ["urlLabel", "Link text", "Bağlantı metni"],
+                          ["startDate", "Start date", "Başlangıç tarihi"],
+                          ["endDate", "End date", "Bitiş tarihi"],
+                        ] as const
+                      ).map(([key, en, tr]) => (
+                        <label className="library-field" key={key}>
+                          {label(en, tr)}
+                          <input
+                            value={project[key] || ""}
+                            onChange={(event) =>
+                              setProject({
+                                ...project,
+                                [key]: event.target.value,
+                              })
+                            }
+                          />
+                        </label>
+                      ))}
+                      <label className="library-field">
+                        {label("Technologies", "Teknolojiler")}
+                        <input
+                          value={technologyText}
+                          onChange={(event) =>
+                            setTechnologyText(event.target.value)
+                          }
+                        />
+                      </label>
+                    </>
+                  )}
+                  {newType === "certification" &&
+                    (
+                      [
+                        ["issuer", "Issuer", "Veren kurum"],
+                        ["issueDate", "Issue date", "Veriliş tarihi"],
+                        ["expiryDate", "Expiry date", "Son geçerlilik tarihi"],
+                        ["credentialId", "Credential ID", "Sertifika numarası"],
+                        [
+                          "credentialUrl",
+                          "Credential URL",
+                          "Doğrulama bağlantısı",
+                        ],
+                      ] as const
+                    ).map(([key, en, tr]) => (
+                      <label className="library-field" key={key}>
+                        {label(en, tr)}
+                        <input
+                          value={certificate[key] || ""}
+                          onChange={(event) =>
+                            setCertificate({
+                              ...certificate,
+                              [key]: event.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                    ))}
                   <label className="library-field">
                     {copy("Snippet title")}
                     <input
                       placeholder={copy("e.g. Reduced API response time")}
+                      required={
+                        newType === "project" || newType === "certification"
+                      }
                       value={newTitle}
                       onChange={(e) => setNewTitle(e.target.value)}
                     />
@@ -562,9 +704,16 @@ export default function LibraryPage() {
                     />
                   </label>
                   <label className="library-field library-field-wide">
-                    {copy("Achievement")}
+                    {newType === "project"
+                      ? label(
+                          "Project accomplishments (one per line)",
+                          "Proje başarıları (her satıra bir madde)",
+                        )
+                      : newType === "certification"
+                        ? label("Notes (optional)", "Notlar (isteğe bağlı)")
+                        : copy("Achievement")}
                     <textarea
-                      required
+                      required={newType !== "certification"}
                       rows={4}
                       placeholder={copy(
                         "Describe what you did, how you did it, and the measurable result.",
@@ -686,7 +835,11 @@ export default function LibraryPage() {
                         {snip.title || copy("Career Achievement")}
                       </span>
                       <span className="font-label-sm px-2 py-0.5 rounded bg-surface-container text-secondary text-[10px] uppercase font-bold">
-                        {snip.category}
+                        {snip.type === "project"
+                          ? label("Project", "Proje")
+                          : snip.type === "certification"
+                            ? label("Certification", "Sertifika")
+                            : snip.category}
                       </span>
                     </div>
 
@@ -698,6 +851,12 @@ export default function LibraryPage() {
                         onClick={() => {
                           setFormError("");
                           setEditingId(snip.id);
+                          setNewType(snip.type);
+                          setProject(snip.project || {});
+                          setCertificate(snip.certification || {});
+                          setTechnologyText(
+                            (snip.project?.technologies || []).join(", "),
+                          );
                           setNewTitle(snip.title);
                           setNewContent(snip.content);
                           setNewTags(snip.tags.join(", "));

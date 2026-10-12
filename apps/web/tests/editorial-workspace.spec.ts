@@ -31,7 +31,7 @@ test("job tailoring creates a copy from selected evidence and preserves the sour
   await page.goto(`/jobs?selected=${job.id}`);
   const region = page.getByRole("region", { name: "Tailor CV to this job" });
   await region
-    .getByRole("button", { name: "Suggest relevant bullets" })
+    .getByRole("button", { name: "Suggest relevant evidence" })
     .click();
   await expect(region).toContainText("kubernetes");
   await expect(region.getByRole("checkbox")).toBeChecked();

@@ -3,6 +3,16 @@ import { useCallback } from "react";
 import { useI18n } from "./i18n";
 import { localizeReportText } from "./report-copy";
 export const copyTranslations: Record<string, string> = {
+  "Projects and certifications keep their own sections; other snippets become achievements. Review the selected evidence against this job and complete personal details before exporting.":
+    "Projeler ve sertifikalar kendi bölümlerine eklenir; diğer parçacıklar başarılar bölümünde yer alır. Seçtiğiniz kanıtları ilana göre kontrol edin ve dışa aktarmadan önce kişisel bilgileri tamamlayın.",
+  "Add a job description or requirements before creating a tailored CV.":
+    "İlana özel CV oluşturmak için önce ilan açıklaması veya gereksinimlerini ekleyin.",
+  "Suggest relevant evidence": "İlgili kanıtları öner",
+  Certification: "Sertifika",
+  Project: "Proje",
+  "Saved CV": "Kayıtlı CV",
+  "Selected evidence is prioritized chronologically. Only selected projects and certifications are included in this job-specific copy.":
+    "Seçilen kanıtlar kronolojik sırayla öne çıkarılır. Bu ilana özel kopyaya yalnızca seçilen projeler ve sertifikalar eklenir.",
   "Review completed, but could not be saved to history.":
     "İnceleme tamamlandı ancak geçmişe kaydedilemedi.",
   "AI review history": "AI inceleme geçmişi",
