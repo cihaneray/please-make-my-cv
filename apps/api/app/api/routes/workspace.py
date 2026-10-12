@@ -362,6 +362,14 @@ def restore(data: Backup, db: Session = Depends(get_db)):
             LibraryItemModel(
                 id=str(uuid.uuid4()),
                 type=item.type.value,
+                details_json=json.dumps(
+                    {
+                        "project": item.project.model_dump() if item.project else None,
+                        "certification": item.certification.model_dump()
+                        if item.certification
+                        else None,
+                    }
+                ),
                 title=item.title,
                 content=item.content,
                 category=item.category,

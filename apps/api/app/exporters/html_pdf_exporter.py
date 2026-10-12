@@ -310,7 +310,7 @@ class HtmlPdfExporter:
                 name = html.escape(p.name)
                 role = html.escape(p.role)
                 url_str = (
-                    f'<a href="{html.escape(_normalize_url(p.url))}" target="_blank" class="entry-url">{html.escape(_display_url(p.url))}</a>'
+                    f'<a href="{html.escape(_normalize_url(p.url))}" target="_blank" class="entry-url">{html.escape(p.urlLabel or _display_url(p.url))}</a>'
                     if p.url
                     else ""
                 )
@@ -323,9 +323,8 @@ class HtmlPdfExporter:
 
                 proj_items.append(f"""
                 <div class="entry">
-                    <div class="entry-header">
-                        <span class="entry-title">{name}{f" ({role})" if role and template_id != "classic" else ""}</span>
-                        {url_str}
+                    <div class="entry-header project-header">
+                        <span class="entry-title project-identity"><span>{name}{f" ({role})" if role and template_id != "classic" else ""}</span> {url_str}</span>
                         <span class="entry-dates">{html.escape(format_dates(p.startDate, p.endDate, False, is_tr))}</span>
                     </div>
                     {f'<div class="entry-subtitle italic">{role}</div>' if role and template_id == "classic" else ""}
@@ -651,6 +650,27 @@ ul.bullets li {{ font-size: {7 * unit}pt; line-height: {line_height}; margin-bot
   }}
   .entry-url:hover {{
     text-decoration: underline;
+  }}
+  .project-header {{
+    flex-wrap: wrap;
+  }}
+  .project-identity {{
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 2px 10px;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow-wrap: anywhere;
+  }}
+  .project-identity .entry-url {{
+    font-weight: 400;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }}
+  .project-header .entry-dates {{
+    margin-left: auto;
+    flex: 0 0 auto;
   }}
   ul.bullets {{
     margin-top: 3px;

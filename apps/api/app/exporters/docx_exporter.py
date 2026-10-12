@@ -142,7 +142,14 @@ def render_docx(resume: ResumeDocument) -> bytes:
         add(node.text)
         for child in node:
             if child.tag == "a":
-                _link(p, "".join(child.itertext()).strip(), child.get("href", ""), size, shade)
+                project_link = "entry-url" in child.get("class", "").split()
+                _link(
+                    p,
+                    "".join(child.itertext()).strip(),
+                    child.get("href", ""),
+                    8 * scale if project_link else size,
+                    "6B7280" if project_link else shade,
+                )
             else:
                 inline(
                     p,
@@ -196,7 +203,7 @@ def render_docx(resume: ResumeDocument) -> bytes:
             if cls == "entry-dates":
                 p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
                 inline(p, child, 8 * scale, "6B7280")
-            elif cls == "entry-title":
+            elif "entry-title" in cls.split():
                 inline(p, child, font_size, "111827", bold=True)
             elif "cert-row" in node.get("class", ""):
                 inline(p, child, 8.5 * scale, "18181B")

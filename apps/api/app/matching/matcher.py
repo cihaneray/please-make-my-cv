@@ -45,6 +45,15 @@ class MatchingService:
                     ]
                 )
                 candidates.extend((section, entry.id, text) for text in texts if text)
+        if resume.visibility.showCertifications:
+            for certificate in resume.certifications:
+                candidates.append(
+                    (
+                        "certifications",
+                        certificate.id,
+                        " ".join([certificate.name, certificate.issuer]),
+                    )
+                )
         evidence = []
         for term in sorted(job_keywords):
             for section, entry_id, text in candidates:

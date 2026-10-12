@@ -94,6 +94,9 @@ class ProjectItem(BaseModel):
     name: str = ""
     role: str = ""
     url: str = ""
+    urlLabel: str = Field(
+        default="", max_length=120, json_schema_extra={"typescriptOptional": True}
+    )
     startDate: str = ""
     endDate: str = ""
     bullets: list[str] = Field(default_factory=list)

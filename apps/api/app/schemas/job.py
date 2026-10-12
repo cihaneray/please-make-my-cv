@@ -113,8 +113,11 @@ class CoverLetterRequest(BaseModel):
 
 
 class TailoringCandidate(BaseModel):
+    librarySnippetId: str | None = Field(
+        default=None, json_schema_extra={"typescriptOptional": True}
+    )
     id: str
-    section: Literal["experience", "projects"]
+    section: Literal["experience", "projects", "certifications"]
     entryId: str
     entryTitle: str
     bulletIndex: int

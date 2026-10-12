@@ -1,4 +1,6 @@
 ---
+
+For job-specific applications, require an explicit job title and description or requirements. Select supported project and certification evidence for that posting, preserve chronological work history, and never invent missing credentials or claims. Generic source CVs remain reusable; application copies must retain their target job context.
 ruleset: cv-ats-quality
 version: 1.0.0
 updated_at: 2026-09-27
