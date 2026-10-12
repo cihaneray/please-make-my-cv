@@ -7,6 +7,7 @@ import { useCopy } from "@/lib/copy";
 import { useI18n } from "@/lib/i18n";
 import { JobApplication, LibrarySnippet, ResumeDocument } from "@/lib/types";
 import { Icons } from "./Icons";
+import { SelectMenu } from "@/components/SelectMenu";
 
 const stopWords = new Set([
   "and",
@@ -143,9 +144,12 @@ export default function LibraryResumeBuilder({
     () => (job ? rankLibraryEvidence(snippets, job) : []),
     [snippets, job],
   );
-  const selected = ranked.filter(({ snippet }) =>
-    selectedIds.includes(snippet.id),
-  );
+  // Ranking helps review suggestions; copying retains the source library sequence.
+  // Snippets have no employment dates/provenance, so they stay achievements.
+  const selected = snippets
+    .filter((snippet) => selectedIds.includes(snippet.id))
+    .map((snippet) => ranked.find((item) => item.snippet.id === snippet.id))
+    .filter((item): item is NonNullable<typeof item> => !!item);
   const missingTerms =
     job?.requirements.filter(
       (term) =>
@@ -275,7 +279,7 @@ export default function LibraryResumeBuilder({
     >
       <div className="library-builder-heading">
         <div>
-          <h2>{copy("A focused CV from your career archive")}</h2>
+          <h2>{copy("Build a CV from saved career details")}</h2>
           <p>
             {copy(
               "Choose a saved job, review matching snippets and create a separate draft.",
@@ -304,11 +308,11 @@ export default function LibraryResumeBuilder({
           <fieldset disabled={busy || !!createdId}>
             <label className="library-builder-field">
               <span>{copy("Saved target job")}</span>
-              <select
+              <SelectMenu
                 value={jobId}
                 disabled={loading}
-                onChange={(event) => {
-                  setJobId(event.target.value);
+                onValueChange={(value) => {
+                  setJobId(value);
                   setSelectedIds([]);
                   setError("");
                 }}
@@ -321,7 +325,7 @@ export default function LibraryResumeBuilder({
                     {item.position} · {item.company}
                   </option>
                 ))}
-              </select>
+              </SelectMenu>
             </label>
             {!loading && !jobs.length && (
               <p>

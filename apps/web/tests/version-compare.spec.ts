@@ -1,3 +1,4 @@
+import { selectMenu } from "./helpers/select-menu";
 import { expect, test } from "@playwright/test";
 
 const API = "http://127.0.0.1:8101/api";
@@ -43,16 +44,20 @@ test("saved version and tailored CV compare against the unsaved draft", async ({
   await expect(dialog).toBeVisible();
   const selector = dialog.getByLabel("Compare current draft with");
   await expect(selector).toBeVisible();
+  await selector.click();
+  const menu = page.getByRole("listbox", {
+    name: "Options",
+  });
   await expect(
-    selector.locator('optgroup[label="Saved versions"] option'),
+    menu.locator('[data-option-group="Saved versions"] [role="option"]'),
   ).toHaveCount(1);
   await expect(
-    selector.locator('optgroup[label="Other CVs"] option').filter({
+    menu.locator('[data-option-group="Other CVs"] [role="option"]').filter({
       hasText: variant.metadata.title,
     }),
   ).toHaveCount(1);
 
-  await selector.selectOption("revision:1");
+  await selectMenu(selector, "revision:1");
   await dialog.getByRole("button", { name: "Show differences" }).click();
   await expect(
     dialog.getByText("Unsaved draft", { exact: true }),
@@ -64,7 +69,7 @@ test("saved version and tailored CV compare against the unsaved draft", async ({
     dialog.getByText("Revision 1 → Current draft", { exact: true }),
   ).toBeVisible();
 
-  await selector.selectOption(`resume:${variant.metadata.id}`);
+  await selectMenu(selector, `resume:${variant.metadata.id}`);
   await expect(
     dialog.getByText("Revision 1 → Current draft", { exact: true }),
   ).toHaveCount(0);
@@ -115,9 +120,10 @@ test("comparison shows an empty result for an unchanged saved version", async ({
   await page.goto(`/resumes/${doc.metadata.id}`);
   await page.getByLabel("Compare revisions and variants").click();
   const dialog = page.getByRole("dialog", { name: "Compare versions" });
-  await dialog
-    .getByLabel("Compare current draft with")
-    .selectOption("revision:1");
+  await selectMenu(
+    dialog.getByLabel("Compare current draft with"),
+    "revision:1",
+  );
   await dialog.getByRole("button", { name: "Show differences" }).click();
   await expect(
     dialog.getByText("No differences found.", { exact: true }),

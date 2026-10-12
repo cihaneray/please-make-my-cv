@@ -8,6 +8,7 @@ import { useI18n } from "@/lib/i18n";
 import { useCopy } from "@/lib/copy";
 import { notify } from "./Notifications";
 import { Icons } from "./Icons";
+import { SelectMenu } from "./SelectMenu";
 
 export function Header() {
   const router = useRouter();
@@ -43,9 +44,9 @@ export function Header() {
   return (
     <header className="workspace-header no-print">
       <div className="workspace-location">
-        <select
-          aria-label="Navigate workspace"
-          className="mobile-navigation"
+        <SelectMenu
+          aria-label={copy("Navigate workspace")}
+          rootClassName="mobile-navigation"
           value={
             studio
               ? "/resumes"
@@ -53,8 +54,8 @@ export function Header() {
                 ? pathname
                 : "/"
           }
-          onChange={(e) => {
-            if (canNavigate()) router.push(e.target.value);
+          onValueChange={(value) => {
+            if (canNavigate()) router.push(value);
           }}
         >
           {pages.map(([url, label]) => (
@@ -62,14 +63,14 @@ export function Header() {
               {label}
             </option>
           ))}
-        </select>
+        </SelectMenu>
         <Link href="/" className="header-wordmark">
           CV Workspace
         </Link>
         <span className="header-divider">/</span>
         <span className="header-location">
           {studio
-            ? copy("Document studio")
+            ? copy("Resume editor")
             : pages.find(([url]) => url === pathname)?.[1] || t("importCv")}
         </span>
       </div>

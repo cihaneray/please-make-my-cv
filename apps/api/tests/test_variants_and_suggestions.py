@@ -42,6 +42,22 @@ def test_variant_rejects_stale_or_wrong_source_and_empty_job(client):
     assert client.post(path, json=payload).status_code == 422
 
 
+def test_variant_restores_chronology_without_reordering_bullets(client):
+    source = client.post("/api/resumes", json={"title": "Chronology"}).json()
+    source["experience"] = [
+        {"id": "old", "startDate": "2017", "endDate": "2020", "bullets": ["First", "Second"]},
+        {"id": "new", "startDate": "2023-04", "current": True, "bullets": ["Later", "Last"]},
+    ]
+    response = client.post(
+        f"/api/resumes/{source['metadata']['id']}/variants",
+        json={"document": source, "targetJob": {"position": "Engineer", "description": "Build"}},
+    )
+    assert response.status_code == 201, response.text
+    result = response.json()
+    assert [item["id"] for item in result["experience"]] == ["new", "old"]
+    assert result["experience"][1]["bullets"] == ["First", "Second"]
+
+
 def test_review_returns_server_resolved_field_edits(monkeypatch):
     configure()
     doc = ResumeDocument(

@@ -1,0 +1,15 @@
+.dialog {
+  border: 0;
+  padding: 0;
+  margin: auto;
+  width: min(32rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  background: transparent;
+  border-radius: 0.75rem;
+}
+
+.dialog::backdrop {
+  background: rgb(0 0 0 / 40%);
+  backdrop-filter: blur(4px);
+}

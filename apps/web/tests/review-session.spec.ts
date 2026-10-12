@@ -1,3 +1,4 @@
+import { selectMenu } from "./helpers/select-menu";
 import { test, expect } from "@playwright/test";
 
 test("AI review, options and applied suggestions survive editor tab changes", async ({
@@ -73,7 +74,7 @@ test("AI review, options and applied suggestions survive editor tab changes", as
   await page
     .getByLabel("Target job description (optional)")
     .fill("Python services");
-  await page.getByLabel("Feedback language").selectOption("tr");
+  await selectMenu(page.getByLabel("Feedback language"), "tr");
   await page
     .getByRole("button", { name: "Review current draft with AI" })
     .click();
@@ -95,7 +96,7 @@ test("AI review, options and applied suggestions survive editor tab changes", as
     await expect(
       page.getByLabel("Target job description (optional)"),
     ).toHaveValue("Python services");
-    await expect(page.getByLabel("Feedback language")).toHaveValue("tr");
+    await expect(page.getByLabel("Feedback language")).toContainText("Türkçe");
   }
   expect(calls).toBe(1);
   await page

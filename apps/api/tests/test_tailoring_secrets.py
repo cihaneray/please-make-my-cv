@@ -7,14 +7,14 @@ from app.core.config import settings
 from app.core.exceptions import AppException
 from app.core.secrets import decrypt_backup, encrypt_backup
 from app.schemas.job import JobApplication
-from app.schemas.resume import ExperienceItem, ResumeDocument
+from app.schemas.resume import EducationItem, ExperienceItem, ProjectItem, ResumeDocument
 from app.services.llm_service import (
     ConnectionUpdate,
     load_connection,
     save_connection,
     secret_key_path,
 )
-from app.services.tailoring_service import tailored_document, tailoring_plan
+from app.services.tailoring_service import reverse_chronological, tailored_document, tailoring_plan
 
 
 def example():
@@ -42,13 +42,90 @@ def test_tailoring_preserves_evidence_and_original():
     plan = tailoring_plan(doc, job)
     assert plan.missingRequirements == ["kubernetes"]
     result = tailored_document(doc, job, [item.id for item in plan.candidates])
-    assert result.experience[0].bullets[0] == "Used Docker for Python services."
-    assert sorted(result.experience[0].bullets) == sorted(doc.experience[0].bullets)
+    assert result.experience[0].bullets == [
+        "Built Python APIs.",
+        "Used Docker for Python services.",
+        "Documented workflows.",
+    ]
     assert doc.model_dump_json() == before
     doc.visibility.showExperience = False
     assert tailoring_plan(doc, job).candidates == []
     with pytest.raises(AppException):
         tailored_document(doc, job, ["forged-id"])
+
+
+def test_tailoring_uses_dates_not_selection_or_match_score():
+    doc, job = example()
+    older = doc.experience[0]
+    older.id, older.startDate, older.endDate = "older", "2018", "2020"
+    current = ExperienceItem(
+        id="current",
+        startDate="2022-03",
+        current=True,
+        bullets=[
+            "Original introduction.",
+            "Built Python APIs.",
+            "Used Docker for Python services.",
+        ],
+    )
+    recent = ExperienceItem(
+        id="recent", startDate="2024-01", endDate="2025-06", bullets=["Python."]
+    )
+    doc.experience = [older, recent, current]
+    doc.projects = [
+        ProjectItem(id="old-project", startDate="2019", endDate="2020", bullets=["Python Docker."]),
+        ProjectItem(id="new-project", startDate="2025-03", endDate="Present", bullets=["Python."]),
+    ]
+    doc.education = [
+        EducationItem(id="old-school", startDate="2012", endDate="2016"),
+        EducationItem(id="new-school", startDate="2025", current=True),
+    ]
+    before = doc.model_dump_json()
+    plan = tailoring_plan(doc, job)
+    # Deliberately pass selections in reverse score/source order, and only part of the evidence.
+    selected = [
+        candidate.id for candidate in reversed(plan.candidates) if candidate.entryId != "recent"
+    ]
+    result = tailored_document(doc, job, selected)
+    assert [item.id for item in result.experience] == ["current", "recent", "older"]
+    assert [item.id for item in result.projects] == ["new-project", "old-project"]
+    assert [item.id for item in result.education] == ["new-school", "old-school"]
+    assert result.experience[0].bullets == [
+        "Built Python APIs.",
+        "Used Docker for Python services.",
+        "Original introduction.",
+    ]
+    assert result.experience[1].bullets == recent.bullets
+    for section in ("experience", "projects", "education"):
+        source = {item.id: item.model_dump() for item in getattr(doc, section)}
+        for item in getattr(result, section):
+            values = item.model_dump()
+            original = source[item.id]
+            if "bullets" in values:
+                assert sorted(values.pop("bullets")) == sorted(original.pop("bullets"))
+            assert values == original
+    assert doc.model_dump_json() == before
+
+
+def test_chronology_preserves_unknown_date_slots_and_equal_dates():
+    entries = [
+        ExperienceItem(id="old", endDate="2020"),
+        ExperienceItem(id="unknown", startDate="Spring 2024", endDate="last summer"),
+        ExperienceItem(id="new-a", startDate="2021", endDate="2025-02"),
+        ExperienceItem(id="new-b", startDate="2021", endDate="2025-02"),
+        ExperienceItem(id="undated"),
+        ExperienceItem(id="ongoing", startDate="2019", endDate="Devam ediyor"),
+    ]
+    assert [item.id for item in reverse_chronological(entries)] == [
+        "ongoing",
+        "unknown",
+        "new-a",
+        "new-b",
+        "undated",
+        "old",
+    ]
+    assert entries[1].startDate == "Spring 2024"
+    assert entries[4].endDate == ""
 
 
 def test_tailoring_api_copy_and_stale_plan(client):

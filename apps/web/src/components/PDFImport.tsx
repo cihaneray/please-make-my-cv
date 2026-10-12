@@ -117,7 +117,7 @@ export function PDFImport() {
       </section>
       {error && (
         <p className="pdf-import-error" role="alert">
-          {error}
+          {copy(error)}
         </p>
       )}
       {report && (

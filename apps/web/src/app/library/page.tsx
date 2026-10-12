@@ -2,15 +2,17 @@
 import { useCopy } from "@/lib/copy";
 import { notify } from "@/components/Notifications";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Icons } from "@/components/Icons";
 import { api, errorMessage } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { LibraryItemType, LibrarySnippet } from "@/lib/types";
 import LibraryResumeBuilder from "@/components/LibraryResumeBuilder";
+import { useAnchoredPopover } from "@/components/useAnchoredPopover";
+import popoverStyles from "@/components/ActionPopover.module.css";
 
 export default function LibraryPage() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const copy = useCopy();
   const [metrics, setMetrics] = useState<{
     atsAverage: number | null;
@@ -22,13 +24,58 @@ export default function LibraryPage() {
   const [concise, setConcise] = useState("");
   const [snippets, setSnippets] = useState<LibrarySnippet[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const loadError =
+    language === "tr"
+      ? "Kütüphane yüklenemedi. API bağlantısını kontrol edip tekrar deneyin."
+      : "Could not load the library. Check the API connection and try again.";
+  const loadErrorRef = useRef(loadError);
+  const loadGeneration = useRef(0);
+  useEffect(() => {
+    loadErrorRef.current = loadError;
+  }, [loadError]);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const [activeTag, setActiveTag] = useState<string>("all");
+  const {
+    open: tagFilterOpen,
+    setOpen: setTagFilterOpen,
+    triggerRef: tagFilterTriggerRef,
+    popupRef: tagFilterPopupRef,
+  } = useAnchoredPopover({ width: 320, maxHeight: 420 });
+  const [tagSearch, setTagSearch] = useState("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showAddBox, setShowAddBox] = useState<boolean>(false);
 
   const snippetDialog = useRef<HTMLDialogElement>(null);
+  const atsInfoRef = useRef<HTMLDetailsElement>(null);
+  const tagSearchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const closeInfo = (event: PointerEvent | KeyboardEvent) => {
+      const info = atsInfoRef.current;
+      if (!info?.open) return;
+      if (event instanceof KeyboardEvent) {
+        if (event.key !== "Escape") return;
+        info.open = false;
+        info.querySelector("summary")?.focus();
+      } else if (!info.contains(event.target as Node)) {
+        info.open = false;
+      }
+    };
+    document.addEventListener("pointerdown", closeInfo);
+    document.addEventListener("keydown", closeInfo);
+    return () => {
+      document.removeEventListener("pointerdown", closeInfo);
+      document.removeEventListener("keydown", closeInfo);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!tagFilterOpen) return;
+    tagSearchRef.current?.focus();
+  }, [tagFilterOpen]);
 
   useEffect(() => {
     if (!showAddBox) return;
@@ -51,21 +98,31 @@ export default function LibraryPage() {
   const [newCategory, setNewCategory] = useState("General");
   const [newTags, setNewTags] = useState("");
 
-  useEffect(() => {
-    async function load() {
-      try {
-        setLoading(true);
-        const data = await api.listSnippets();
-        setSnippets(data);
-      } catch (err: unknown) {
-        notify(
-          "Could not load data. Check the API connection and reload to retry.",
-        );
-      } finally {
-        setLoading(false);
-      }
+  const loadSnippets = useCallback(async () => {
+    const request = ++loadGeneration.current;
+    try {
+      setLoading(true);
+      setLoadFailed(false);
+      const data = await api.listSnippets();
+      if (request !== loadGeneration.current) return;
+      setSnippets(data);
+      setLoaded(true);
+    } catch {
+      if (request !== loadGeneration.current) return;
+      setLoadFailed(true);
+      notify(loadErrorRef.current);
+    } finally {
+      if (request === loadGeneration.current) setLoading(false);
     }
-    load();
+  }, []);
+  useEffect(() => {
+    const generation = loadGeneration;
+    void loadSnippets();
+    return () => {
+      generation.current++;
+    };
+  }, [loadSnippets]);
+  useEffect(() => {
     api
       .workspaceMetrics()
       .then(setMetrics)
@@ -169,16 +226,27 @@ export default function LibraryPage() {
       .toLocaleLowerCase()
       .includes(searchQuery.trim().toLocaleLowerCase());
   });
+  const tags = Array.from(new Set(snippets.flatMap((item) => item.tags))).sort(
+    (a, b) => a.localeCompare(b),
+  );
+  const visibleTags = tags.filter((tag) =>
+    tag.toLocaleLowerCase().includes(tagSearch.trim().toLocaleLowerCase()),
+  );
+  const activeTagCount =
+    activeTag === "all"
+      ? snippets.length
+      : snippets.filter((item) => item.tags.includes(activeTag)).length;
+
   return (
     <div className="career-library flex flex-col w-full">
-      {/* Editorial Vault Header */}
-      <div className="library-header relative w-full bg-surface-container-lowest px-margin-desktop py-space-xl overflow-hidden shadow-sm border-b border-surface-container-high">
+      {/* Library header */}
+      <div className="library-header relative z-10 w-full bg-surface-container-lowest px-margin-desktop py-space-xl shadow-sm border-b border-surface-container-high">
         <div className="relative max-w-7xl mx-auto flex flex-col gap-space-lg">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-md">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-space-md">
             <div className="flex flex-col gap-space-xs max-w-2xl">
               <div className="flex items-center gap-space-sm">
                 <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary px-space-xs py-0.5 rounded bg-surface-container">
-                  {copy("Your career archive")}
+                  {copy("Career library")}
                 </span>
                 <span className="h-1.5 w-1.5 rounded-full bg-tertiary-fixed-dim" />
                 <span className="font-label-sm text-label-sm text-secondary">
@@ -194,35 +262,54 @@ export default function LibraryPage() {
             </div>
 
             {/* Metric Pulse */}
-            <div className="flex items-center gap-space-md bg-surface-container-low px-space-md py-space-sm rounded border border-surface-container-highest">
-              <div className="flex flex-col">
-                <span className="font-label-sm text-label-sm text-secondary uppercase">
-                  {t("snippetsStored")}
-                </span>
-                <span className="font-headline-lg text-headline-lg text-on-surface">
-                  {snippets.length}
-                </span>
-              </div>
-              <div className="w-px h-6 bg-surface-container-highest" />
-              <div className="flex flex-col">
-                <span className="font-label-sm text-label-sm text-secondary uppercase">
-                  {copy("ATS heuristic average")}
-                </span>
-                <span className="font-headline-lg text-headline-lg text-on-tertiary-container">
-                  {metricsError
-                    ? copy("Analysis unavailable")
-                    : metrics?.atsAverage == null
-                      ? copy("Not assessed")
-                      : `${metrics.atsAverage}%`}
-                </span>
+            <div className="flex flex-col gap-space-sm w-full md:max-w-md">
+              <div className="library-metric-card flex items-center gap-space-md bg-surface-container-low px-space-md py-space-sm rounded border border-surface-container-highest">
+                <div className="flex flex-col">
+                  <span className="library-metric-label font-label-sm text-label-sm text-secondary uppercase">
+                    {t("snippetsStored")}
+                  </span>
+                  <span className="font-headline-lg text-headline-lg text-on-surface">
+                    {loaded ? snippets.length : "-"}
+                  </span>
+                </div>
+                <div className="w-px h-6 bg-surface-container-highest" />
+                <div className="flex flex-col">
+                  <div className="library-ats-heading">
+                    <span className="font-label-sm text-label-sm text-secondary uppercase">
+                      {copy("Saved CV ATS average")}
+                    </span>
+                    <details ref={atsInfoRef} className="library-ats-info">
+                      <summary aria-label={copy("About this score")}>
+                        <span
+                          className="library-ats-info-icon"
+                          aria-hidden="true"
+                        >
+                          ?
+                        </span>
+                      </summary>
+                      <p>
+                        {metrics
+                          ? `${metrics.resumeCount} ${copy("active resumes")}. `
+                          : ""}
+                        {copy(
+                          "Internal ATS heuristic; not an external ATS endorsement.",
+                        )}{" "}
+                        {copy(
+                          "Calculated from saved CVs, independently of your snippets. A full score does not guarantee job suitability.",
+                        )}
+                      </p>
+                    </details>
+                  </div>
+                  <span className="font-headline-lg text-headline-lg text-on-tertiary-container">
+                    {metricsError
+                      ? copy("Analysis unavailable")
+                      : metrics?.atsAverage == null
+                        ? copy("Not assessed")
+                        : `${metrics.atsAverage}%`}
+                  </span>
+                </div>
               </div>
             </div>
-            <p className="text-xs">
-              {metrics
-                ? `${metrics.resumeCount} ${copy("active resumes")}. `
-                : ""}
-              {copy("Internal ATS heuristic; not an external ATS endorsement.")}
-            </p>
           </div>
         </div>
       </div>
@@ -230,7 +317,9 @@ export default function LibraryPage() {
       {/* Main Body */}
       <div className="library-body w-full max-w-7xl mx-auto px-margin-desktop py-space-xl">
         <div className="flex flex-col gap-space-md">
-          {!loading && <LibraryResumeBuilder snippets={snippets} />}
+          {!loading && !loadFailed && (
+            <LibraryResumeBuilder snippets={snippets} />
+          )}
           <section
             className="library-toolbar"
             aria-label={copy("Search and filter snippets")}
@@ -268,22 +357,141 @@ export default function LibraryPage() {
                 <span>{t("addSnippet")}</span>
               </button>
             </div>
-            <div className="library-tags">
-              {[
-                "all",
-                ...Array.from(
-                  new Set(snippets.flatMap((item) => item.tags)),
-                ).sort(),
-              ].map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  aria-pressed={activeTag === tag}
-                  onClick={() => setActiveTag(tag)}
-                >
-                  {tag === "all" ? t("allTags") : tag}
-                </button>
-              ))}
+            <div className="library-tag-filter">
+              <button
+                ref={tagFilterTriggerRef}
+                type="button"
+                className={`library-tag-filter-trigger ${popoverStyles.tagTrigger}`}
+                aria-expanded={tagFilterOpen}
+                aria-haspopup="dialog"
+                aria-controls="library-tag-filter-popover"
+                popoverTarget="library-tag-filter-popover"
+                onClick={(event) => {
+                  event.preventDefault();
+                  setTagFilterOpen((open) => !open);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                    event.preventDefault();
+                    setTagFilterOpen(true);
+                  }
+                }}
+              >
+                <span>
+                  {copy("Tag")}:{" "}
+                  {activeTag === "all" ? t("allTags") : activeTag}
+                </span>
+                <span className="library-tag-filter-count">
+                  {loaded ? activeTagCount : "-"}
+                </span>
+                <Icons.Unfold size={16} aria-hidden="true" />
+              </button>
+              <div
+                ref={tagFilterPopupRef}
+                popover="auto"
+                id="library-tag-filter-popover"
+                className={`${popoverStyles.popup} ${popoverStyles.tagPopup}`}
+                role="dialog"
+                aria-label={copy("Filter by tag")}
+                onKeyDown={(event) => {
+                  const inSearch = event.target === tagSearchRef.current;
+                  if (
+                    !["ArrowDown", "ArrowUp", "Home", "End"].includes(
+                      event.key,
+                    ) ||
+                    (inSearch && (event.key === "Home" || event.key === "End"))
+                  )
+                    return;
+                  event.preventDefault();
+                  const items = Array.from(
+                    event.currentTarget.querySelectorAll<HTMLButtonElement>(
+                      "button:not(:disabled)",
+                    ),
+                  );
+                  const current = items.indexOf(
+                    document.activeElement as HTMLButtonElement,
+                  );
+                  const next =
+                    event.key === "Home"
+                      ? 0
+                      : event.key === "End"
+                        ? items.length - 1
+                        : current < 0
+                          ? event.key === "ArrowUp"
+                            ? items.length - 1
+                            : 0
+                          : (current +
+                              (event.key === "ArrowDown" ? 1 : -1) +
+                              items.length) %
+                            items.length;
+                  items[next]?.focus();
+                }}
+              >
+                <label className="library-tag-filter-search-label">
+                  <span>{copy("Search tags")}</span>
+                  <input
+                    ref={tagSearchRef}
+                    className="library-tag-filter-search"
+                    type="search"
+                    value={tagSearch}
+                    onChange={(event) => setTagSearch(event.target.value)}
+                  />
+                </label>
+                <div className="library-tag-filter-options">
+                  <button
+                    type="button"
+                    className="library-tag-filter-option"
+                    aria-pressed={activeTag === "all"}
+                    onClick={() => {
+                      setActiveTag("all");
+                      setTagFilterOpen(false);
+                      tagFilterTriggerRef.current?.focus();
+                    }}
+                  >
+                    <span>{t("allTags")}</span>
+                    <span>{loaded ? snippets.length : "-"}</span>
+                  </button>
+                  {visibleTags.map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      className="library-tag-filter-option"
+                      aria-pressed={activeTag === tag}
+                      onClick={() => {
+                        setActiveTag(tag);
+                        setTagFilterOpen(false);
+                        tagFilterTriggerRef.current?.focus();
+                      }}
+                    >
+                      <span>{tag}</span>
+                      <span>
+                        {
+                          snippets.filter((item) => item.tags.includes(tag))
+                            .length
+                        }
+                      </span>
+                    </button>
+                  ))}
+                  {visibleTags.length === 0 && (
+                    <p className="library-tag-filter-empty">
+                      {copy("No tags match your search.")}
+                    </p>
+                  )}
+                </div>
+                {activeTag !== "all" && (
+                  <button
+                    type="button"
+                    className="library-tag-filter-reset"
+                    onClick={() => {
+                      setActiveTag("all");
+                      setTagFilterOpen(false);
+                      tagFilterTriggerRef.current?.focus();
+                    }}
+                  >
+                    {copy("Reset to all tags")}
+                  </button>
+                )}
+              </div>
             </div>
           </section>
           {showAddBox && (
@@ -445,9 +653,27 @@ export default function LibraryPage() {
             <div className="p-space-xl text-center text-secondary">
               {copy("Loading snippets…")}
             </div>
+          ) : loadFailed ? (
+            <div
+              role="alert"
+              className="p-space-xl text-center text-secondary bg-surface-container-lowest rounded border border-surface-container-highest"
+            >
+              <p>{loadError}</p>
+              <button
+                type="button"
+                className="library-secondary"
+                onClick={() => void loadSnippets()}
+              >
+                {copy("Try again")}
+              </button>
+            </div>
           ) : filtered.length === 0 ? (
             <div className="p-space-xl text-center text-secondary bg-surface-container-lowest rounded border border-surface-container-highest">
-              {t("noSnippetsFound")}
+              {snippets.length === 0
+                ? copy(
+                    "Your library is empty. Add achievements, projects or skills from your CV to reuse them.",
+                  )
+                : t("noSnippetsFound")}
             </div>
           ) : (
             <div className="flex flex-col gap-space-sm">

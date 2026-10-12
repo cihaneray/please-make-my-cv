@@ -1,0 +1,39 @@
+.editorLabel {
+  display: grid;
+  gap: 6px;
+  color: rgb(var(--color-secondary));
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.editor {
+  display: block;
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 6px;
+  background: rgb(var(--color-surface-container-lowest));
+  color: rgb(var(--color-on-surface));
+  font: inherit;
+  font-weight: 400;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.editor:focus-visible {
+  outline: 2px solid rgb(var(--color-primary));
+  outline-offset: 2px;
+}
+
+.editor:disabled {
+  opacity: 0.8;
+}
+
+@media (max-width: 640px) {
+  .editor {
+    min-height: 140px;
+    font-size: 16px;
+  }
+}

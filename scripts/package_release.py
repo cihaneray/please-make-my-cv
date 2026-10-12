@@ -28,7 +28,7 @@ def package_release(
     }
     env = ROOT.joinpath(".env.example").read_text().rstrip() + "\n"
     env += f"CV_API_IMAGE={images['api']}\nCV_WEB_IMAGE={images['web']}\n"
-    instructions = f"""# CV Workspace {tag} — Docker installation
+    instructions = f"""# CV Workspace {tag} - Docker installation
 
 Requires Docker Compose v2 with Linux containers on an x86-64/amd64 computer.
 No local Python, Node.js or source-code build is needed.

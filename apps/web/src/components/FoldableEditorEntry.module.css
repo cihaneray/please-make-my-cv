@@ -58,3 +58,34 @@
     transition: none;
   }
 }
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.heading .toggle {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+.actions {
+  flex: none;
+}
+.actions :global(.reorder-controls) {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+@media (max-width: 420px) {
+  .heading {
+    flex-wrap: wrap;
+  }
+  .heading .toggle {
+    flex-basis: 100%;
+  }
+  .actions {
+    margin-left: auto;
+  }
+}

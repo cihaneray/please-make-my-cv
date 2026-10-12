@@ -226,7 +226,7 @@ def inspect_pdf(data, filename):
             code="length",
             points=10 if count <= 2 else 5 if count == 3 else 0,
             maximum=10,
-            message="Document length: 1–2 pages earns 10; 3 pages earns 5; longer files earn 0. This is a heuristic, not a universal limit.",
+            message="Document length: 1-2 pages earns 10; 3 pages earns 5; longer files earn 0. This is a heuristic, not a universal limit.",
         ),
     ]
     if not sections:

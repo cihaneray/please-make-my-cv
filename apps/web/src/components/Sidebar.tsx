@@ -18,7 +18,11 @@ export function Sidebar() {
   ];
   return (
     <aside className="workspace-rail no-print">
-      <Link href="/" className="rail-brand" aria-label="CV Workspace">
+      <Link
+        href="/"
+        className="rail-brand"
+        aria-label={language === "tr" ? "CV Çalışma Alanı" : "CV Workspace"}
+      >
         cv<span>.</span>
       </Link>
       <nav aria-label={language === "tr" ? "Çalışma alanı" : "Workspace"}>

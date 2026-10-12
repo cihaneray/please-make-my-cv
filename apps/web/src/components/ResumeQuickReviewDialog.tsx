@@ -6,6 +6,8 @@ import { aiApi, api, errorMessage, AIConnection, AIReview } from "@/lib/api";
 import { useCopy } from "@/lib/copy";
 import { JobApplication, ResumeDocument, ResumeSummary } from "@/lib/types";
 import { Icons } from "./Icons";
+import { aiReviewHistoryApi } from "@/lib/ai-review-history";
+import { SelectMenu } from "@/components/SelectMenu";
 
 export function ResumeQuickReviewDialog({
   resume,
@@ -29,6 +31,7 @@ export function ResumeQuickReviewDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [jobError, setJobError] = useState("");
+  const [historyError, setHistoryError] = useState("");
   const [result, setResult] = useState<AIReview | null>(null);
   const [reviewedContext, setReviewedContext] = useState("");
   const reviewContext = JSON.stringify({ jobId, language });
@@ -95,6 +98,14 @@ export function ResumeQuickReviewDialog({
       if (!pending.signal.aborted) {
         setResult(value);
         setReviewedContext(reviewContext);
+        setHistoryError("");
+        void aiReviewHistoryApi
+          .saveReview({ document, jobDescription, language, result: value })
+          .catch(() =>
+            setHistoryError(
+              copy("Review completed, but could not be saved to history."),
+            ),
+          );
       }
     } catch (err: unknown) {
       if (!pending.signal.aborted) setError(errorMessage(err));
@@ -153,10 +164,10 @@ export function ResumeQuickReviewDialog({
           <div className="quick-review-options">
             <label>
               <span>{copy("Review target")}</span>
-              <select
+              <SelectMenu
                 value={jobId}
                 disabled={busy}
-                onChange={(event) => setJobId(event.target.value)}
+                onValueChange={(value) => setJobId(value)}
               >
                 <option value="">{copy("General CV review")}</option>
                 {jobs.map((job) => (
@@ -164,20 +175,18 @@ export function ResumeQuickReviewDialog({
                     {job.position} · {job.company}
                   </option>
                 ))}
-              </select>
+              </SelectMenu>
             </label>
             <label>
               <span>{copy("Feedback language")}</span>
-              <select
+              <SelectMenu
                 value={language}
                 disabled={busy}
-                onChange={(event) =>
-                  setLanguage(event.target.value as "en" | "tr")
-                }
+                onValueChange={(value) => setLanguage(value as "en" | "tr")}
               >
                 <option value="en">English</option>
                 <option value="tr">Türkçe</option>
-              </select>
+              </SelectMenu>
             </label>
           </div>
           {jobError && (
@@ -224,6 +233,7 @@ export function ResumeQuickReviewDialog({
           <p>{error}</p>
         </div>
       )}
+      {historyError && <p role="status">{historyError}</p>}
       {result && (
         <section
           className="quick-review-result"
@@ -242,11 +252,11 @@ export function ResumeQuickReviewDialog({
               <small>/100</small>
             </strong>
             <div>
-              <h3>{copy("AI editorial score")}</h3>
+              <h3>{copy("AI review score")}</h3>
               <p>{result.summary}</p>
             </div>
           </div>
-          <p>{result.notice}</p>
+          <p>{copy(result.notice)}</p>
           <div className="quick-review-dimensions">
             {(
               ["clarity", "evidence", "completeness", "relevance"] as const

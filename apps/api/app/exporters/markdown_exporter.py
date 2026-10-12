@@ -41,7 +41,7 @@ class MarkdownExporter:
         if doc.experience and doc.visibility.showExperience:
             lines.append("## Experience\n")
             for exp in doc.experience:
-                company_str = f" — {exp.company}" if exp.company else ""
+                company_str = f" - {exp.company}" if exp.company else ""
                 lines.append(f"### {exp.position}{company_str}")
 
                 date_parts: list[str] = []
@@ -52,7 +52,7 @@ class MarkdownExporter:
                 elif exp.endDate:
                     date_parts.append(exp.endDate)
 
-                meta_line = " — ".join(filter(None, [" - ".join(date_parts), exp.location]))
+                meta_line = " - ".join(filter(None, [" - ".join(date_parts), exp.location]))
                 if meta_line:
                     lines.append(f"*{meta_line}*\n")
 
@@ -72,7 +72,7 @@ class MarkdownExporter:
             for proj in doc.projects:
                 lines.append(f"### {proj.name}")
                 if proj.role or proj.url:
-                    meta = " — ".join(filter(None, [proj.role, proj.url]))
+                    meta = " - ".join(filter(None, [proj.role, proj.url]))
                     lines.append(f"*{meta}*\n")
                 for bullet in proj.bullets:
                     lines.append(f"- {bullet}")
@@ -84,10 +84,10 @@ class MarkdownExporter:
         if doc.education and doc.visibility.showEducation:
             lines.append("## Education\n")
             for edu in doc.education:
-                lines.append(f"### {edu.degree or 'Degree'} — {edu.institution}")
-                date_str = f"{edu.startDate} — {edu.endDate or 'Present'}" if edu.startDate else ""
+                lines.append(f"### {edu.degree or 'Degree'} - {edu.institution}")
+                date_str = f"{edu.startDate} - {edu.endDate or 'Present'}" if edu.startDate else ""
                 if date_str or edu.location:
-                    lines.append(f"*{' — '.join(filter(None, [date_str, edu.location]))}*\n")
+                    lines.append(f"*{' - '.join(filter(None, [date_str, edu.location]))}*\n")
                 for h in edu.highlights:
                     lines.append(f"- {h}")
                 lines.append("")
@@ -104,7 +104,7 @@ class MarkdownExporter:
             lines.append("## Certifications\n")
             for cert in doc.certifications:
                 issuer = f" ({cert.issuer})" if cert.issuer else ""
-                lines.append(f"- **{cert.name}**{issuer} — {cert.issueDate}")
+                lines.append(f"- **{cert.name}**{issuer} - {cert.issueDate}")
             lines.append("")
 
         # Languages
@@ -121,7 +121,7 @@ class MarkdownExporter:
                 if item.title:
                     lines.append(f"### {item.title}")
                 if item.subtitle or item.date:
-                    lines.append(f"*{' — '.join(filter(None, [item.subtitle, item.date]))}*\n")
+                    lines.append(f"*{' - '.join(filter(None, [item.subtitle, item.date]))}*\n")
                 if item.description:
                     lines.append(f"{item.description}\n")
                 for bullet in item.bullets:

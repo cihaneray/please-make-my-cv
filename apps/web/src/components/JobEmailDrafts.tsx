@@ -4,6 +4,7 @@ import { api, EmailDraft, errorMessage } from "@/lib/api";
 import { useCopy } from "@/lib/copy";
 import { useI18n } from "@/lib/i18n";
 import { JobApplication } from "@/lib/types";
+import { SelectMenu } from "@/components/SelectMenu";
 
 type Kind = "follow-up" | "thank-you" | "negotiation";
 export function JobEmailDrafts({
@@ -69,15 +70,15 @@ export function JobEmailDrafts({
       <div className="career-tool-fields">
         <label>
           <span>{copy("Email type")}</span>
-          <select
+          <SelectMenu
             value={kind}
             disabled={busy}
-            onChange={(e) => setKind(e.target.value as Kind)}
+            onValueChange={(value) => setKind(value as Kind)}
           >
             <option value="follow-up">{copy("Application follow-up")}</option>
             <option value="thank-you">{copy("Interview thank-you")}</option>
             <option value="negotiation">{copy("Offer discussion")}</option>
-          </select>
+          </SelectMenu>
         </label>
         <label>
           <span>{copy("Recipient name (optional)")}</span>

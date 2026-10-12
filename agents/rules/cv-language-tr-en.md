@@ -210,12 +210,12 @@ Do not require full home street address or apartment numbers.
 
 ## 23. Date Formatting
 Maintain consistent date styles across the resume:
-- Turkish option 1: `Eyl 2024 – Haz 2026`
-- Turkish option 2: `09/2024 – 06/2026`
-- English option: `Sep 2024 – Jun 2026`
+- Turkish option 1: `Eyl 2024 - Haz 2026`
+- Turkish option 2: `09/2024 - 06/2026`
+- English option: `Sep 2024 - Jun 2026`
 - Current role:
-  - Turkish: `Eyl 2025 – Devam Ediyor`
-  - English: `Sep 2025 – Present`
+  - Turkish: `Eyl 2025 - Devam Ediyor`
+  - English: `Sep 2025 - Present`
 
 Do not translate "Devam Ediyor" to literal English words like "Continuing".
 

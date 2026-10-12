@@ -6,7 +6,7 @@ import { notify } from "@/components/Notifications";
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Icons } from "@/components/Icons";
 import { api, errorMessage } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
@@ -21,27 +21,46 @@ export default function ResumesPage() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ResumeSummary | null>(null);
   const [reviewTarget, setReviewTarget] = useState<ResumeSummary | null>(null);
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [resumes, setResumes] = useState<ResumeSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const loadError =
+    language === "tr"
+      ? "Özgeçmişler yüklenemedi. API bağlantısını kontrol edip tekrar deneyin."
+      : "Could not load resumes. Check the API connection and try again.";
+  const loadErrorRef = useRef(loadError);
+  const loadGeneration = useRef(0);
+  useEffect(() => {
+    loadErrorRef.current = loadError;
+  }, [loadError]);
   const [filterQuery, setFilterQuery] = useState<string>("");
 
-  useEffect(() => {
-    async function load() {
-      try {
-        setLoading(true);
-        const list = await api.listResumes(true);
-        setResumes(list);
-      } catch (err: unknown) {
-        notify(
-          "Could not load data. Check the API connection and reload to retry.",
-        );
-      } finally {
-        setLoading(false);
-      }
+  const loadResumes = useCallback(async () => {
+    const request = ++loadGeneration.current;
+    try {
+      setLoading(true);
+      setLoadFailed(false);
+      const list = await api.listResumes(true);
+      if (request !== loadGeneration.current) return;
+      setResumes(list);
+      setLoaded(true);
+    } catch {
+      if (request !== loadGeneration.current) return;
+      setLoadFailed(true);
+      notify(loadErrorRef.current);
+    } finally {
+      if (request === loadGeneration.current) setLoading(false);
     }
-    load();
   }, []);
+  useEffect(() => {
+    const generation = loadGeneration;
+    void loadResumes();
+    return () => {
+      generation.current++;
+    };
+  }, [loadResumes]);
 
   useEffect(() => {
     setFilterQuery(query);
@@ -147,20 +166,35 @@ export default function ResumesPage() {
             onClick={() => setShowDeleted(false)}
           >
             {copy("Active CVs")}{" "}
-            <span>{resumes.filter((r) => !r.isArchived).length}</span>
+            <span>
+              {loaded ? resumes.filter((r) => !r.isArchived).length : "-"}
+            </span>
           </button>
           <button
             type="button"
-            data-empty={!resumes.some((r) => r.isArchived)}
+            data-empty={loaded && !resumes.some((r) => r.isArchived)}
             aria-pressed={showDeleted}
             onClick={() => setShowDeleted(true)}
           >
             {copy("Deleted documents")}{" "}
-            <span>{resumes.filter((r) => r.isArchived).length}</span>
+            <span>
+              {loaded ? resumes.filter((r) => r.isArchived).length : "-"}
+            </span>
           </button>
         </div>
         {loading ? (
           <div className={styles.emptyState}>{t("loadingResumes")}</div>
+        ) : loadFailed ? (
+          <div role="alert" className={styles.emptyState}>
+            <p>{loadError}</p>
+            <button
+              type="button"
+              className={styles.createButton}
+              onClick={() => void loadResumes()}
+            >
+              {copy("Try again")}
+            </button>
+          </div>
         ) : filtered.length === 0 ? (
           <div className={styles.emptyState}>
             <p className="text-secondary font-body-md">{t("noResumesFound")}</p>

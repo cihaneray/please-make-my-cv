@@ -28,7 +28,7 @@ def seed_database(db: Session) -> None:
     master_resume = ResumeDocument(
         metadata=ResumeMetadata(
             id="resume-alex-vance",
-            title="Senior Product Designer — 2025",
+            title="Senior Product Designer - 2025",
             targetRole="Staff Product Designer",
             templateId="minimal",
             revision=1,

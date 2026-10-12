@@ -116,7 +116,7 @@ export function MinimalTemplate({
                       {exp.company && (
                         <span className="font-normal text-neutral-500">
                           {" "}
-                          — {exp.company}
+                          - {exp.company}
                         </span>
                       )}
                     </div>
@@ -180,7 +180,7 @@ export function MinimalTemplate({
                       {edu.institution && (
                         <span className="font-normal text-neutral-500">
                           {" "}
-                          — {edu.institution}
+                          - {edu.institution}
                         </span>
                       )}
                     </div>
@@ -300,7 +300,7 @@ export function MinimalTemplate({
                       {c.name}
                     </span>
                     {c.issuer && (
-                      <span className="text-neutral-500"> — {c.issuer}</span>
+                      <span className="text-neutral-500"> - {c.issuer}</span>
                     )}
                   </div>
                   <div className="text-[10.5px] text-neutral-400">

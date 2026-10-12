@@ -11,6 +11,7 @@ export function FoldableEditorEntry({
   collapsed,
   onToggle,
   children,
+  actions,
 }: {
   id: string;
   title: string;
@@ -18,6 +19,7 @@ export function FoldableEditorEntry({
   collapsed: boolean;
   onToggle: () => void;
   children: ReactNode;
+  actions?: ReactNode;
 }) {
   const copy = useCopy();
   return (
@@ -26,24 +28,27 @@ export function FoldableEditorEntry({
       data-motion-id={id}
       className={`editor-entry ${styles.entry}`}
     >
-      <button
-        type="button"
-        className={styles.toggle}
-        aria-expanded={!collapsed}
-        aria-controls={`entry-fields-${id}`}
-        aria-label={`${copy(collapsed ? "Expand entry" : "Collapse entry")}: ${title}`}
-        onClick={onToggle}
-      >
-        <span className={styles.summary}>
-          <strong>{title}</strong>
-          {subtitle && <span>{subtitle}</span>}
-        </span>
-        <ChevronDown
-          size={17}
-          aria-hidden="true"
-          className={collapsed ? styles.closedChevron : styles.openChevron}
-        />
-      </button>
+      <div className={styles.heading}>
+        <button
+          type="button"
+          className={styles.toggle}
+          aria-expanded={!collapsed}
+          aria-controls={`entry-fields-${id}`}
+          aria-label={`${copy(collapsed ? "Expand entry" : "Collapse entry")}: ${title}`}
+          onClick={onToggle}
+        >
+          <span className={styles.summary}>
+            <strong>{title}</strong>
+            {subtitle && <span>{subtitle}</span>}
+          </span>
+          <ChevronDown
+            size={17}
+            aria-hidden="true"
+            className={collapsed ? styles.closedChevron : styles.openChevron}
+          />
+        </button>
+        {actions && <div className={styles.actions}>{actions}</div>}
+      </div>
       <div
         id={`entry-fields-${id}`}
         hidden={collapsed}

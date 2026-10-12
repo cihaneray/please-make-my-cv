@@ -1,3 +1,4 @@
+import { selectMenu } from "./helpers/select-menu";
 import { test, expect, APIRequestContext } from "@playwright/test";
 
 async function fixture(request: APIRequestContext) {
@@ -87,7 +88,7 @@ test("reading map uses live DOM geometry and keeps CV and export content unchang
       .locator('iframe[title="Resume document preview"]')
       .getAttribute("srcdoc"),
   ).toBe(srcdoc);
-  await page.getByLabel("Preview zoom").selectOption("0.75");
+  await selectMenu(page.getByLabel("Preview zoom"), "0.75");
   await expect
     .poll(async () =>
       page

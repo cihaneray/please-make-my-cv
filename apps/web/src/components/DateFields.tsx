@@ -16,28 +16,28 @@ export function DateFields({
 }) {
   const copy = useCopy();
   return (
-    <fieldset className="grid grid-cols-2 gap-2 text-sm">
-      <label>
-        {copy("Start date")}
+    <fieldset className="editor-date-fields">
+      <label className="editor-field">
+        <span className="editor-field-label">{copy("Start date")}</span>
         <input
-          className="w-full p-2 rounded bg-surface-container-lowest"
+          className="editor-date-input"
           value={value.startDate}
-          placeholder="YYYY-MM"
+          placeholder={copy("YYYY-MM")}
           onChange={(e) => onChange({ ...value, startDate: e.target.value })}
         />
       </label>
-      <label>
-        {copy("End date")}
+      <label className="editor-field">
+        <span className="editor-field-label">{copy("End date")}</span>
         <input
-          className="w-full p-2 rounded bg-surface-container-lowest"
+          className="editor-date-input"
           value={value.endDate}
-          placeholder="YYYY-MM"
+          placeholder={copy("YYYY-MM")}
           disabled={value.current}
           onChange={(e) => onChange({ ...value, endDate: e.target.value })}
         />
       </label>
       {allowPresent && (
-        <label className="col-span-2 flex gap-2">
+        <label className="editor-date-present">
           <input
             type="checkbox"
             checked={value.current}

@@ -35,7 +35,7 @@ test("Turkish AI review form keeps fields spaced and explains provider quota err
   await page.goto(`/resumes/${doc.metadata.id}`);
   await page.getByRole("button", { name: "Türkçeye geç", exact: true }).click();
   await page.getByRole("button", { name: "İnceleme", exact: true }).click();
-  const panel = page.getByRole("region", { name: "AI resume review" });
+  const panel = page.getByRole("region", { name: "Yapay zekâ özgeçmiş incelemesi" });
   await panel.getByText("İlana özel CV kopyası", { exact: true }).click();
   for (const width of [1280, 390]) {
     await page.setViewportSize({ width, height: 900 });

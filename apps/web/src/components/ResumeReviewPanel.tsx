@@ -1,10 +1,11 @@
 "use client";
 import { useI18n } from "@/lib/i18n";
 import { useCopy } from "@/lib/copy";
+import { localizeRuleIssue } from "@/lib/report-copy";
 import { Icons } from "@/components/Icons";
 import { AIResumeReview } from "@/components/AIResumeReview";
 import ResumeTranslation from "@/components/ResumeTranslation";
-import { api } from "@/lib/api";
+import { api, AIEdit } from "@/lib/api";
 import { applyAIEdit } from "@/lib/ai-edits";
 import {
   AnalysisIssue,
@@ -18,12 +19,14 @@ export function ResumeReviewPanel({
   disabled,
   analyzing,
   analysisReport,
+  onNavigateAI,
 }: {
   doc: ResumeDocument;
   setDoc: Dispatch<SetStateAction<ResumeDocument | null>>;
   disabled: boolean;
   analyzing: boolean;
   analysisReport: ResumeAnalysisReport | null;
+  onNavigateAI?: (edit: AIEdit) => void;
 }) {
   const { t, language } = useI18n();
   const copy = useCopy();
@@ -37,6 +40,7 @@ export function ResumeReviewPanel({
           key={doc.metadata.id}
           document={doc}
           disabled={disabled}
+          onNavigate={onNavigateAI}
           onApply={(edit) =>
             setDoc((current) =>
               current ? applyAIEdit(current, edit) : current,
@@ -181,7 +185,7 @@ export function ResumeReviewPanel({
                       size={15}
                       className="text-on-tertiary-container"
                     />
-                    <span>{str}</span>
+                    <span>{copy(str)}</span>
                   </div>
                 ))}
               </div>
@@ -211,14 +215,15 @@ export function ResumeReviewPanel({
                     }`}
                   >
                     <div className="font-semibold flex items-center justify-between">
-                      <span>{issue.message}</span>
+                      <span>{localizeRuleIssue(issue, language).message}</span>
                       <span className="text-[10px] uppercase font-bold">
-                        {issue.severity}
+                        {copy(issue.severity)}
                       </span>
                     </div>
                     {issue.suggestion && (
                       <div className="text-[11px] opacity-80 pt-0.5">
-                        {copy("Tip")}: {issue.suggestion}
+                        {copy("Tip")}:{" "}
+                        {localizeRuleIssue(issue, language).suggestion}
                       </div>
                     )}
                   </div>

@@ -7,6 +7,7 @@ import { BulletListEditor } from "./BulletListEditor";
 import { ReorderControls } from "./ReorderControls";
 import { moveItem } from "@/lib/section-order";
 import { Icons } from "./Icons";
+import { FoldableEditorEntry } from "./FoldableEditorEntry";
 
 type Section = "certifications" | "languages" | "customSections";
 function Entry({
@@ -17,6 +18,7 @@ function Entry({
   onMove,
   onRemove,
   children,
+  fold,
 }: {
   label: string;
   index: number;
@@ -25,8 +27,41 @@ function Entry({
   onMove: (from: number, to: number) => void;
   onRemove: () => void;
   children: ReactNode;
+  fold?: {
+    id: string;
+    title: string;
+    subtitle: string;
+    collapsed: boolean;
+    onToggle: () => void;
+  };
 }) {
   const copy = useCopy();
+  const reorder = (
+    <ReorderControls
+      label={fold?.title ?? label}
+      index={index}
+      count={count}
+      group={group}
+      onMove={onMove}
+    />
+  );
+  if (fold)
+    return (
+      <FoldableEditorEntry {...fold} actions={reorder}>
+        <div className="structured-entry-fields">{children}</div>
+        <div className="structured-entry-actions">
+          <button
+            type="button"
+            className="editor-action danger"
+            aria-label={`${copy("Remove")} ${label} ${index + 1}`}
+            onClick={onRemove}
+          >
+            <Icons.Delete size={14} />
+            {copy("Remove")}
+          </button>
+        </div>
+      </FoldableEditorEntry>
+    );
   return (
     <div className="editor-entry">
       <div className="structured-entry-fields">{children}</div>
@@ -55,10 +90,14 @@ export function StructuredSectionEditor({
   section,
   document,
   onChange,
+  collapsedEntries,
+  onToggleEntry,
 }: {
   section: Section;
   document: ResumeDocument;
   onChange: (doc: ResumeDocument) => void;
+  collapsedEntries?: ReadonlySet<string>;
+  onToggleEntry?: (id: string) => void;
 }) {
   const copy = useCopy();
   const names = {
@@ -108,6 +147,19 @@ export function StructuredSectionEditor({
       {document[section].map((row, index) => (
         <Entry
           key={row.id}
+          fold={
+            section === "certifications" && onToggleEntry
+              ? {
+                  id: row.id,
+                  title:
+                    document.certifications[index].name ||
+                    `${copy("Certifications")} ${index + 1}`,
+                  subtitle: document.certifications[index].issuer,
+                  collapsed: collapsedEntries?.has(row.id) ?? false,
+                  onToggle: () => onToggleEntry(row.id),
+                }
+              : undefined
+          }
           label={copy(name)}
           index={index}
           count={document[section].length}

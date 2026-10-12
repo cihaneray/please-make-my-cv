@@ -117,7 +117,7 @@ export function ProfessionalTemplate({
                       {exp.location && (
                         <span className="font-normal text-neutral-600 text-[11.5px]">
                           {" "}
-                          — {exp.location}
+                          - {exp.location}
                         </span>
                       )}
                     </div>
@@ -184,7 +184,7 @@ export function ProfessionalTemplate({
                       {edu.location && (
                         <span className="font-normal text-neutral-600 text-[11.5px]">
                           {" "}
-                          — {edu.location}
+                          - {edu.location}
                         </span>
                       )}
                     </div>
@@ -317,7 +317,7 @@ export function ProfessionalTemplate({
                       {c.name}
                     </strong>
                     {c.issuer && (
-                      <span className="text-neutral-600"> — {c.issuer}</span>
+                      <span className="text-neutral-600"> - {c.issuer}</span>
                     )}
                   </div>
                   <div className="text-[10.5px] text-neutral-500">

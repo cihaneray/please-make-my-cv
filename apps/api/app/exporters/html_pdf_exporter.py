@@ -32,7 +32,7 @@ def _format_date_range(start: str | None, end: str | None, current: bool, is_tr:
     start_fmt = _format_date(start, is_tr)
     end_fmt = ("Devam Ediyor" if is_tr else "Present") if current else _format_date(end, is_tr)
     if start_fmt and end_fmt:
-        return f"{start_fmt} — {end_fmt}"
+        return f"{start_fmt} - {end_fmt}"
     return start_fmt or end_fmt or ""
 
 
@@ -225,7 +225,7 @@ class HtmlPdfExporter:
                 if template_id == "professional":
                     header_line = f"""
                     <div class="entry-header">
-                        <span class="entry-title">{comp}{f" — {loc}" if loc else ""}</span>
+                        <span class="entry-title">{comp}{f" - {loc}" if loc else ""}</span>
                         <span class="entry-dates">{dates}</span>
                     </div>
                     <div class="entry-subtitle italic">{pos}</div>
@@ -235,7 +235,7 @@ class HtmlPdfExporter:
                 else:
                     header_line = f"""
                     <div class="entry-header">
-                        <span class="entry-title">{pos}{f" — {comp}" if comp else ""}</span>
+                        <span class="entry-title">{pos}{f" - {comp}" if comp else ""}</span>
                         <span class="entry-dates">{dates}{f" · {loc}" if loc else ""}</span>
                     </div>
                     """
@@ -261,7 +261,7 @@ class HtmlPdfExporter:
             edu_items = []
             for edu in doc.education:
                 deg = html.escape(
-                    f"{edu.degree}{(' — ' if is_tr else ' in ') + edu.fieldOfStudy if edu.fieldOfStudy else ''}"
+                    f"{edu.degree}{(' - ' if is_tr else ' in ') + edu.fieldOfStudy if edu.fieldOfStudy else ''}"
                 )
                 inst = html.escape(edu.institution)
                 dates = html.escape(format_dates(edu.startDate, edu.endDate, edu.current, is_tr))
@@ -274,7 +274,7 @@ class HtmlPdfExporter:
                     edu_items.append(f"""
                     <div class="entry">
                         <div class="entry-header">
-                            <span class="entry-title">{inst}{f" — {loc}" if loc else ""}</span>
+                            <span class="entry-title">{inst}{f" - {loc}" if loc else ""}</span>
                             <span class="entry-dates">{dates}</span>
                         </div>
                         <div class="entry-subtitle italic">{deg}</div>
@@ -289,7 +289,7 @@ class HtmlPdfExporter:
                     edu_items.append(f"""
                     <div class="entry">
                         <div class="entry-header">
-                            <span class="entry-title">{deg}{f" — {inst}" if inst else ""}</span>
+                            <span class="entry-title">{deg}{f" - {inst}" if inst else ""}</span>
                             <span class="entry-dates">{dates}{f" · {loc}" if loc else ""}</span>
                         </div>
                         {f'<ul class="bullets">{highlights}</ul>' if highlights else ""}
@@ -365,7 +365,7 @@ class HtmlPdfExporter:
                 date_fmt = html.escape(_format_date(c.issueDate, is_tr))
                 c_items.append(f"""
                 <div class="entry-header cert-row">
-                    <span><strong>{html.escape(c.name)}</strong>{f" — {html.escape(c.issuer)}" if c.issuer else ""}</span>
+                    <span><strong>{html.escape(c.name)}</strong>{f" - {html.escape(c.issuer)}" if c.issuer else ""}</span>
                     <span class="entry-dates">{date_fmt}{(" - " + html.escape(_format_date(c.expiryDate, is_tr))) if c.expiryDate else ""}</span>
                     <span>{html.escape(c.credentialId)}</span>
                     {f'<a href="{html.escape(_normalize_url(c.credentialUrl))}">{html.escape(_display_url(c.credentialUrl))}</a>' if c.credentialUrl else ""}
@@ -518,7 +518,7 @@ ul.bullets li {{ font-size: {7 * unit}pt; line-height: {line_height}; margin-bot
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
-<title>{full_name} — CV</title>
+<title>{full_name} - CV</title>
 <style>
   @page {{
     size: A4;

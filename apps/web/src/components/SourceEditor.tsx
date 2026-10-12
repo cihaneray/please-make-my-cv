@@ -5,6 +5,7 @@ import yaml from "js-yaml";
 import { currentDraftTabId } from "@/lib/resume-recovery";
 import { api, errorMessage } from "@/lib/api";
 import { ResumeDocument } from "@/lib/types";
+import { SelectMenu } from "@/components/SelectMenu";
 export function SourceEditor({
   document,
   onDocumentUpdated,
@@ -138,7 +139,7 @@ export function SourceEditor({
   return (
     <section
       className="flex-1 flex flex-col min-w-0 p-4"
-      aria-label="Source editor"
+      aria-label={copy("Source editor")}
     >
       {recovered && (
         <p>
@@ -173,15 +174,15 @@ export function SourceEditor({
         </p>
       )}
       <div className="flex gap-3 mb-3">
-        <select
-          aria-label="Source format"
+        <SelectMenu
+          aria-label={copy("Source format")}
           disabled={pending || busy}
           value={format}
-          onChange={(e) => {
-            const value = e.target.value as "yaml" | "json";
-            setFormat(value);
+          onValueChange={(value) => {
+            const selectedFormat = value as "yaml" | "json";
+            setFormat(selectedFormat);
             setCode(
-              value === "json"
+              selectedFormat === "json"
                 ? JSON.stringify(document, null, 2)
                 : yaml.dump(document),
             );
@@ -189,7 +190,7 @@ export function SourceEditor({
         >
           <option value="yaml">YAML</option>
           <option value="json">JSON</option>
-        </select>
+        </SelectMenu>
         <button disabled={busy} onClick={() => validate(false)}>
           {" "}
           {copy("Validate")}{" "}
@@ -207,7 +208,7 @@ export function SourceEditor({
       </p>
       <textarea
         disabled={busy}
-        aria-label="Resume source"
+        aria-label={copy("Resume source")}
         spellCheck={false}
         value={code}
         onChange={(e) => {
@@ -219,8 +220,10 @@ export function SourceEditor({
         className="flex-1 min-h-[400px] font-mono text-sm p-3"
       />
       <p role="status" className="whitespace-pre-wrap">
-        {error ||
-          (pending ? "Unapplied source changes" : "Source matches draft")}
+        {copy(
+          error ||
+            (pending ? "Unapplied source changes" : "Source matches draft"),
+        )}
       </p>
     </section>
   );

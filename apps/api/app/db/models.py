@@ -13,6 +13,9 @@ def now_utc() -> datetime:
 class ResumeModel(Base):
     __tablename__ = "resumes"
 
+    parent_base_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    family_bases_json: Mapped[str] = mapped_column(Text, default="{}", nullable=False)
+
     id: Mapped[str] = mapped_column(String(36), primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     target_role: Mapped[str] = mapped_column(String(255), default="")
@@ -104,3 +107,31 @@ class ApplicationSnapshotModel(Base):
     job_id: Mapped[str] = mapped_column(String(36), index=True)
     document_json: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_utc)
+
+
+class AIReviewHistoryModel(Base):
+    """Independent snapshots survive edits and archival of the source CV."""
+
+    __tablename__ = "ai_review_history"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    resume_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey(
+            "resumes.id",
+            name="fk_ai_review_resume",
+            ondelete="CASCADE",
+            deferrable=True,
+            initially="DEFERRED",
+        ),
+        nullable=False,
+    )
+    revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    scope_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    language: Mapped[str] = mapped_column(String(2), nullable=False)
+    model: Mapped[str] = mapped_column(String(255), nullable=False)
+    provider: Mapped[str] = mapped_column(String(64), nullable=False)
+    job_description: Mapped[str] = mapped_column(Text, nullable=False)
+    document_json: Mapped[str] = mapped_column(Text, nullable=False)
+    result_json: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now_utc, nullable=False)
+    __table_args__ = (Index("ix_ai_review_scope_created", "scope_hash", "created_at"),)

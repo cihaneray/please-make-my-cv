@@ -6,6 +6,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { api } from "@/lib/api";
 import { PdfCheckReport, ResumeDocument } from "@/lib/types";
 import { useI18n } from "@/lib/i18n";
+import { SelectMenu } from "@/components/SelectMenu";
 import {
   measureReadingRegions,
   ReadingHeatmapLegend,
@@ -155,6 +156,8 @@ export function A4ResumePreview({
     [pdf],
   );
   const [error, setError] = useState("");
+  const [pdfError, setPdfError] = useState("");
+  const [checkError, setCheckError] = useState("");
   const [retry, setRetry] = useState(0);
   const [busy, setBusy] = useState(false);
   const [check, setCheck] = useState<PdfCheckReport | null>(null);
@@ -200,7 +203,34 @@ export function A4ResumePreview({
   }, [mapVisible, frameVersion, scale]);
   useEffect(() => {
     setCheck(null);
+    setPdfError("");
+    setCheckError("");
   }, [document]);
+  async function generatePdf() {
+    setBusy(true);
+    setPdfError("");
+    try {
+      const blob = await api.pdfBlob(document);
+      if (latest.current === document) setPdf(URL.createObjectURL(blob));
+    } catch (e) {
+      if (latest.current === document) setPdfError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function checkPdf() {
+    setChecking(true);
+    setCheckError("");
+    setCheck(null);
+    try {
+      const result = await api.checkPdf(document);
+      if (latest.current === document) setCheck(result);
+    } catch (e) {
+      if (latest.current === document) setCheckError((e as Error).message);
+    } finally {
+      setChecking(false);
+    }
+  }
   useEffect(() => {
     const controller = new AbortController();
     const timer = setTimeout(() => {
@@ -224,7 +254,7 @@ export function A4ResumePreview({
   }, [document, retry]);
   return (
     <section
-      aria-label="Resume preview"
+      aria-label={copy("Resume preview")}
       className="document-canvas flex-1 min-w-0 flex flex-col overflow-auto"
     >
       <div className="canvas-toolbar no-print">
@@ -232,19 +262,7 @@ export function A4ResumePreview({
           <button
             disabled={busy || disabled}
             aria-pressed={!!pdf}
-            onClick={async () => {
-              setBusy(true);
-              try {
-                const blob = await api.pdfBlob(document);
-                setError("");
-                if (latest.current === document)
-                  setPdf(URL.createObjectURL(blob));
-              } catch (e) {
-                setError((e as Error).message);
-              } finally {
-                setBusy(false);
-              }
-            }}
+            onClick={generatePdf}
           >
             {busy ? copy("Generating…") : copy("Exact PDF pages")}
           </button>
@@ -277,10 +295,10 @@ export function A4ResumePreview({
         {!pdf && (
           <label>
             {copy("Zoom")}{" "}
-            <select
-              aria-label="Preview zoom"
+            <SelectMenu
+              aria-label={copy("Preview zoom")}
               value={zoom}
-              onChange={(e) => setZoom(e.target.value)}
+              onValueChange={setZoom}
             >
               <option value="fit">
                 {copy("Fit")} (
@@ -289,26 +307,12 @@ export function A4ResumePreview({
               <option value="0.75">75%</option>
               <option value="1">100%</option>
               <option value="1.25">125%</option>
-            </select>
+            </SelectMenu>
           </label>
         )}
       </div>
       <div className="canvas-check no-print">
-        <button
-          disabled={checking || disabled}
-          onClick={async () => {
-            setChecking(true);
-            try {
-              const result = await api.checkPdf(document);
-              if (latest.current === document) setCheck(result);
-              setError("");
-            } catch (e) {
-              setError((e as Error).message);
-            } finally {
-              setChecking(false);
-            }
-          }}
-        >
+        <button disabled={checking || disabled} onClick={checkPdf}>
           <Icons.CheckCircle size={14} />
           {copy(checking ? "Checking PDF…" : "Check PDF output")}
         </button>
@@ -338,6 +342,22 @@ export function A4ResumePreview({
           <button onClick={() => setRetry((n) => n + 1)}>
             {" "}
             {copy("Retry")}{" "}
+          </button>
+        </div>
+      )}
+      {pdfError && (
+        <div role="alert">
+          {pdfError}{" "}
+          <button disabled={busy || disabled} onClick={generatePdf}>
+            {copy("Retry")}
+          </button>
+        </div>
+      )}
+      {checkError && (
+        <div role="alert">
+          {checkError}{" "}
+          <button disabled={checking || disabled} onClick={checkPdf}>
+            {copy("Retry")}
           </button>
         </div>
       )}

@@ -250,7 +250,6 @@
   opacity: 0.5;
   cursor: wait;
 }
-.library-tags,
 .library-card-tags,
 .library-card-title,
 .library-card-actions {
@@ -259,18 +258,184 @@
   flex-wrap: wrap;
   align-items: center;
 }
-.library-tags button {
-  padding: 8px 12px;
-  min-height: 36px;
-  border: 1px solid rgb(var(--color-outline-variant));
-  border-radius: 7px;
-  font-size: 12px;
-  color: rgb(var(--color-on-surface));
+.library-tag-filter {
+  position: relative;
+  justify-self: start;
+  z-index: 5;
 }
-.library-tags button[aria-pressed="true"] {
+.library-tag-filter-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  max-width: min(100%, 320px);
+  padding: 8px 12px;
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 8px;
+  background: rgb(var(--color-surface-container-low));
+  color: rgb(var(--color-on-surface));
+  font-size: 13px;
+}
+.library-tag-filter-trigger > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.library-tag-filter-count {
+  display: inline-grid;
+  min-width: 24px;
+  height: 24px;
+  place-items: center;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgb(var(--color-surface-container-high));
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.library-tag-filter-trigger[aria-expanded="true"] {
   background: rgb(var(--color-primary) / 0.12);
   border-color: rgb(var(--color-primary));
   color: rgb(var(--color-primary));
+}
+.library-tag-filter-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  display: grid;
+  gap: 10px;
+  width: min(320px, calc(100vw - 40px));
+  max-height: min(420px, calc(100dvh - 140px));
+  padding: 12px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 10px;
+  background: rgb(var(--color-surface-container-lowest));
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
+}
+.library-tag-filter-search-label {
+  display: grid;
+  gap: 6px;
+  color: rgb(var(--color-secondary));
+  font-size: 12px;
+}
+.career-library .library-tag-filter-search {
+  min-height: 42px;
+  padding: 8px 10px;
+}
+.library-tag-filter-options {
+  display: grid;
+  gap: 4px;
+  max-height: 240px;
+  overflow: auto;
+}
+.career-library .library-tag-filter-option,
+.career-library .library-tag-filter-reset {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: rgb(var(--color-on-surface));
+  font-size: 13px;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.career-library .library-tag-filter-option:hover,
+.career-library .library-tag-filter-reset:hover {
+  background: rgb(var(--color-surface-container-low));
+}
+.career-library .library-tag-filter-option[aria-pressed="true"] {
+  background: rgb(var(--color-primary) / 0.12);
+  border-color: rgb(var(--color-primary));
+  color: rgb(var(--color-primary));
+}
+.career-library .library-tag-filter-option > span:last-child {
+  flex: 0 0 auto;
+  color: rgb(var(--color-secondary));
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.career-library .library-tag-filter-reset {
+  justify-content: center;
+  border-top: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 0;
+  padding-top: 12px;
+  color: rgb(var(--color-primary));
+  font-weight: 600;
+}
+.library-tag-filter-empty {
+  padding: 8px 10px;
+  color: rgb(var(--color-secondary));
+  font-size: 12px;
+}
+.library-metric-card {
+  position: relative;
+}
+.library-metric-label {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+.library-ats-heading {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.library-ats-info {
+  position: static;
+  flex: 0 0 auto;
+  color: rgb(var(--color-secondary));
+  font-size: 12px;
+  line-height: 1.6;
+}
+.library-ats-info summary {
+  width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  list-style: none;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.library-ats-info summary::-webkit-details-marker {
+  display: none;
+}
+.library-ats-info summary:focus-visible {
+  outline: 2px solid rgb(var(--color-primary));
+  outline-offset: 2px;
+}
+.library-ats-info-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-weight: 600;
+}
+.library-ats-info p {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(360px, calc(100vw - 48px));
+  margin: 0;
+  padding: 16px;
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 10px;
+  background: rgb(var(--color-surface-container-lowest));
+  color: rgb(var(--color-on-surface));
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
+  overflow-wrap: anywhere;
 }
 .library-form-heading h2 {
   font-size: 21px;
@@ -1141,5 +1306,52 @@
   }
   .import-mode-tabs {
     padding: 12px 16px;
+  }
+}
+
+/* Keep paired editor fields readable within the panel, independent of viewport width. */
+.editor-entry {
+  container-type: inline-size;
+  container-name: editor-card;
+}
+.editor-date-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.editor-date-fields .editor-date-input {
+  min-height: 44px;
+  width: 100%;
+  min-width: 0;
+  border-radius: 6px;
+}
+.editor-date-present {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 36px;
+  font-size: 12px;
+  color: rgb(var(--color-on-surface));
+  cursor: pointer;
+}
+.editor-date-present input {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  margin: 0;
+}
+.studio-form .editor-entry :is(input:not([type="checkbox"]), textarea):focus-visible {
+  outline: 2px solid rgb(var(--color-primary));
+  outline-offset: -2px;
+}
+@container editor-card (max-width: 300px) {
+  .editor-field-grid,
+  .editor-date-fields {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

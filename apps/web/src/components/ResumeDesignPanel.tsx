@@ -1,9 +1,12 @@
 "use client";
 import { ResumeDocument } from "@/lib/types";
+import { useCopy } from "@/lib/copy";
 import { useI18n } from "@/lib/i18n";
 import { Icons } from "@/components/Icons";
 import { SectionOrderEditor } from "@/components/SectionOrderEditor";
 import { PageFitAssistant } from "@/components/PageFitAssistant";
+import { TargetMarketSelector } from "@/components/TargetMarketSelector";
+import { SelectMenu } from "@/components/SelectMenu";
 export function ResumeDesignPanel({
   doc,
   setDoc,
@@ -14,6 +17,7 @@ export function ResumeDesignPanel({
   onSave: () => void;
 }) {
   const { t } = useI18n();
+  const copy = useCopy();
   const updateField = (_: "design", design: ResumeDocument["design"]) =>
     setDoc({ ...doc, design });
   return (
@@ -71,28 +75,27 @@ export function ResumeDesignPanel({
             <label className="font-label-sm text-secondary">
               {t("targetMarketLabel")}
             </label>
-            <select
-              aria-label={t("targetMarketLabel")}
+            <TargetMarketSelector
+              label={t("targetMarketLabel")}
               value={doc.metadata.targetMarket || "TR"}
-              onChange={(e) => {
+              options={{
+                TR: t("marketTR"),
+                US: t("marketUS"),
+                UK: t("marketUK"),
+                EU: t("marketEU"),
+                GLOBAL: t("marketGlobal"),
+                OTHER: t("marketOther"),
+              }}
+              onChange={(targetMarket) => {
                 setDoc({
                   ...doc,
                   metadata: {
                     ...doc.metadata,
-                    targetMarket: e.target
-                      .value as ResumeDocument["metadata"]["targetMarket"],
+                    targetMarket,
                   },
                 });
               }}
-              className="h-9 px-3 rounded-lg bg-surface-container-lowest text-body-md border border-surface-container-highest outline-none focus:border-primary"
-            >
-              <option value="TR">{t("marketTR")}</option>
-              <option value="US">{t("marketUS")}</option>
-              <option value="UK">{t("marketUK")}</option>
-              <option value="EU">{t("marketEU")}</option>
-              <option value="GLOBAL">{t("marketGlobal")}</option>
-              <option value="OTHER">{t("marketOther")}</option>
-            </select>
+            />
           </div>
         </div>
         {/* Template */}
@@ -164,28 +167,31 @@ export function ResumeDesignPanel({
           <label className="font-label-sm text-secondary">
             {t("fontFamily")}
           </label>
-          <select
+          <SelectMenu
             aria-label={t("fontFamily")}
             value={doc.design.fontFamily}
-            onChange={(e) =>
+            onValueChange={(value) =>
               updateField("design", {
                 ...doc.design,
-                fontFamily: e.target.value,
+                fontFamily: value,
               })
             }
             className="h-9 px-3 rounded-lg bg-surface-container-low text-body-md border border-surface-container-highest"
           >
-            <option value="Inter">Inter (Swiss Clean)</option>
-            <option value="Helvetica Neue">Helvetica Neue (Modernist)</option>
-            <option value="Georgia">Georgia (Editorial Serif)</option>
-            <option value="Menlo">Menlo (Monospace / Tech)</option>
-          </select>
+            <option value="Inter">{copy("Inter (Swiss Clean)")}</option>
+            <option value="Helvetica Neue">
+              {copy("Helvetica Neue (Modernist)")}
+            </option>
+            <option value="Georgia">{copy("Georgia (Editorial Serif)")}</option>
+            <option value="Menlo">{copy("Menlo (Monospace / Tech)")}</option>
+          </SelectMenu>
         </div>
         <button
           type="button"
           onClick={() => onSave()}
-          className="mt-4 h-9 rounded bg-primary text-on-primary font-label-md hover:bg-inverse-surface transition-colors"
+          className="editorial-button primary design-save-button"
         >
+          <Icons.Save size={17} />
           {t("saveDesign")}
         </button>
       </div>

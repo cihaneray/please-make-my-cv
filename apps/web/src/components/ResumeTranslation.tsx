@@ -2,6 +2,8 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ResumeDocument } from "@/lib/types";
+import { TranslationDraftDialog } from "./TranslationDraftDialog";
+import { SelectMenu } from "@/components/SelectMenu";
 
 export interface TranslationPreview {
   document: ResumeDocument;
@@ -34,21 +36,41 @@ export default function ResumeTranslation({
     document.metadata.language === "tr" ? "en" : "tr",
   );
   const [preview, setPreview] = useState<TranslationPreview | null>(null);
+  const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [created, setCreated] = useState<string | null>(null);
-  const fingerprint = JSON.stringify(document);
+  // Saving advances metadata; only source content affects the translation.
+  const fingerprint = JSON.stringify({
+    id: document.metadata.id,
+    language: document.metadata.language,
+    profile: document.profile,
+    summary: document.summary,
+    experience: document.experience,
+    education: document.education,
+    projects: document.projects,
+    skills: document.skills,
+    certifications: document.certifications,
+    languages: document.languages,
+    customSections: document.customSections,
+  });
   const latest = useRef(fingerprint);
   const pending = useRef(sourcePending);
+  const [previewSource, setPreviewSource] = useState<string | null>(null);
+  const sourceVersion = useRef(0);
   useLayoutEffect(() => {
+    sourceVersion.current += 1;
     latest.current = fingerprint;
     pending.current = sourcePending;
   }, [fingerprint, sourcePending]);
+  const stale = !!preview && previewSource !== fingerprint;
   useEffect(() => {
     setPreview(null);
+    setOpen(false);
+    setPreviewSource(null);
     setError("");
-  }, [fingerprint, sourcePending]);
+  }, [document.metadata.id]);
 
   async function translate() {
     setBusy(true);
@@ -56,40 +78,44 @@ export default function ResumeTranslation({
     setPreview(null);
     setCreated(null);
     const source = fingerprint;
+    const version = sourceVersion.current;
     try {
       const result = await onTranslate(structuredClone(document), target);
-      if (latest.current !== source || pending.current) return;
-      setPreview(result);
+      if (
+        latest.current !== source ||
+        pending.current ||
+        sourceVersion.current !== version
+      )
+        return;
+      setPreviewSource(source);
+      setPreview(structuredClone(result));
+      setOpen(true);
       setTitle(
-        `${document.metadata.title.slice(0, 250)} — ${target.toUpperCase()}`,
+        `${document.metadata.title.slice(0, 250)} - ${target.toUpperCase()}`,
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      if (
+        latest.current === source &&
+        !pending.current &&
+        sourceVersion.current === version
+      )
+        setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }
   }
-  function edit(index: number, text: string) {
-    if (!preview) return;
-    const next = structuredClone(preview);
-    next.changes[index].translated = text;
-    const parts = next.changes[index].path.split(".");
-    let node = next.document as unknown as Record<string, unknown>;
-    for (const part of parts.slice(0, -1))
-      node = node[part] as Record<string, unknown>;
-    node[parts[parts.length - 1]] = text;
-    setPreview(next);
-  }
   async function create() {
-    if (!preview || sourcePending) return;
+    if (!preview || pending.current || busy || !title.trim()) return;
     setBusy(true);
     setError("");
     try {
       const copy = structuredClone(preview.document);
       copy.metadata.parentResumeId = document.metadata.id;
+      copy.metadata.language = preview.targetLanguage;
       const result = await onCreate(copy, title.trim(), preview.targetLanguage);
       setCreated(result.metadata.id);
       setPreview(null);
+      setOpen(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -106,17 +132,18 @@ export default function ResumeTranslation({
       </p>
       <label>
         {tr ? "Hedef dil" : "Target language"}
-        <select
+        <SelectMenu
           value={target}
           disabled={busy}
-          onChange={(e) => {
-            setTarget(e.target.value as "en" | "tr");
+          onValueChange={(value) => {
+            setTarget(value as "en" | "tr");
             setPreview(null);
+            setOpen(false);
           }}
         >
           <option value="en">English</option>
           <option value="tr">Türkçe</option>
-        </select>
+        </SelectMenu>
       </label>
       <button
         type="button"
@@ -148,55 +175,49 @@ export default function ResumeTranslation({
       )}
       {preview && (
         <div className="translation-preview">
-          <p>
-            {tr
-              ? "Gerçekleri, anlamı ve teknik terimleri kontrol edin. Yapay zekâ hata yapabilir."
-              : "Check facts, meaning and technical terms. AI can make mistakes."}
-          </p>
-          {preview.changes.map((change, index) => (
-            <label key={change.path}>
-              <span>{change.path}</span>
-              <blockquote>{change.original}</blockquote>
-              <textarea
-                aria-label={`${tr ? "Çeviri" : "Translation"}: ${change.path}`}
-                value={change.translated}
-                disabled={busy}
-                onChange={(e) => edit(index, e.target.value)}
-              />
-            </label>
-          ))}
-          {preview.changes.length === 0 && (
-            <p>
+          {stale && (
+            <p role="status">
               {tr
-                ? "Metin değişikliği bulunamadı."
-                : "No text changes were returned."}
+                ? "Kaynak CV değişti. Düzenlediğiniz çeviri taslağı saklandı; son değişiklikleri içermeyebilir. Taslağı inceleyerek kullanabilir veya yeni çeviri oluşturabilirsiniz."
+                : "The source CV changed. Your edited translation draft is kept and may omit the latest changes. Review and use this draft, or generate a new translation."}
             </p>
           )}
-          <label>
-            {tr ? "Yeni CV adı" : "New CV title"}
-            <input
-              value={title}
-              disabled={busy}
-              maxLength={255}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </label>
           <button
             type="button"
-            disabled={busy || sourcePending || !title.trim()}
-            onClick={create}
+            disabled={busy || sourcePending}
+            onClick={() => setOpen(true)}
           >
-            {tr
-              ? "Onayla ve ayrı CV oluştur"
-              : "Confirm and create separate CV"}
+            {tr ? "Çeviri taslağını aç" : "Open translation draft"}
           </button>
           <button
             type="button"
             disabled={busy}
-            onClick={() => setPreview(null)}
+            onClick={() => {
+              setPreview(null);
+              setOpen(false);
+            }}
           >
-            {tr ? "Vazgeç" : "Discard preview"}
+            {tr ? "Çeviri taslağını sil" : "Discard translation draft"}
           </button>
+          {open && (
+            <TranslationDraftDialog
+              document={preview.document}
+              title={title}
+              language={language}
+              busy={busy}
+              createDisabled={sourcePending}
+              stale={stale}
+              error={error}
+              onEdit={(edited) =>
+                setPreview((current) =>
+                  current ? { ...current, document: edited } : null,
+                )
+              }
+              onTitle={setTitle}
+              onClose={() => setOpen(false)}
+              onCreate={create}
+            />
+          )}
         </div>
       )}
     </details>

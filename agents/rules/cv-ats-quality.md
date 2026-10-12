@@ -80,7 +80,7 @@ Exported PDF resumes must:
 
 ## 6. Typography & Font Size Heuristics
 - Body font size < 9.5 pt: `IMPORTANT` (readability issue)
-- Body font size 9.5 – 10 pt: `SUGGESTION`
+- Body font size 9.5 - 10 pt: `SUGGESTION`
 - Body font size >= 10 pt: `Acceptable`
 
 Do not aggressively shrink font sizes merely to compress text into a single page.
@@ -88,8 +88,8 @@ Do not aggressively shrink font sizes merely to compress text into a single page
 ## 7. Contextual Page Count Guidelines
 Page counts depend on seniority, market, and role:
 - US Entry / Student: Preferred 1 page
-- Experienced Software Engineer: 1 – 2 pages
-- Türkiye Market: Typical 1 – 2 pages
+- Experienced Software Engineer: 1 - 2 pages
+- Türkiye Market: Typical 1 - 2 pages
 - Academic / Research CV: No arbitrary page limit
 
 Never sacrifice critical technical accomplishments or readability to satisfy a rigid one-page myth.

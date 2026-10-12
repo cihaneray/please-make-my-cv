@@ -196,3 +196,72 @@ test("entry folds preserve edits, section switching and reordering; search expan
     }),
   ).toHaveAttribute("aria-expanded", "true");
 });
+
+
+test("paired editor dates stay readable and focused fields never cover adjacent controls", async ({ page, request }, testInfo) => {
+  const doc = await createResume(request);
+  await page.goto(`/resumes/${doc.metadata.id}?section=education`);
+  for (const section of ["education", "experience", "projects"]) {
+    await page.locator(".studio-outline button").filter({ hasText: new RegExp(section, "i") }).click();
+    const card = page.locator(".editor-entry").first();
+    const start = card.getByLabel("Start date", { exact: true });
+    const end = card.getByLabel("End date", { exact: true });
+    const present = card.getByLabel("Present", { exact: true });
+    if (section !== "projects") await present.uncheck();
+    for (const theme of ["light", "dark"] as const) {
+      await page.emulateMedia({ colorScheme: theme });
+      for (const width of [390, 1280]) {
+        await page.setViewportSize({ width, height: 844 });
+        await end.fill("2028-07");
+        await expect(end).toBeFocused();
+        await expect(end).toHaveCSS("outline-offset", "-2px");
+        const [a, b] = await card.locator(".editor-date-fields").evaluate(fieldset =>
+          Array.from(fieldset.querySelectorAll<HTMLInputElement>('input:not([type="checkbox"])')).map(input => {
+            const box = input.getBoundingClientRect();
+            return { x: box.x, y: box.y, width: box.width, height: box.height };
+          }),
+        );
+        expect(a.height).toBeGreaterThanOrEqual(44);
+        expect(b.height).toBeGreaterThanOrEqual(44);
+        if (Math.abs(a.y - b.y) < 1) {
+          expect(b.x - a.x - a.width).toBeGreaterThanOrEqual(12);
+        } else {
+          expect(b.y).toBeGreaterThanOrEqual(a.y + a.height + 12);
+        }
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+        if (section === "education" && theme === "dark") {
+          await page.screenshot({ path: testInfo.outputPath(`education-fields-${width}.png`) });
+        }
+      }
+    }
+    if (section !== "projects") {
+      await present.check();
+      await expect(end).toBeDisabled();
+    }
+  }
+});
+
+
+test("certificates fold without losing edits and remain reorderable while closed", async ({ page, request }) => {
+  const doc = await createResume(request);
+  await page.goto(`/resumes/${doc.metadata.id}`);
+  await page.locator(".studio-outline button").filter({ hasText: "Certifications" }).click();
+  for (const name of ["Cloud One", "Cloud Two"]) {
+    await page.getByRole("button", { name: "Add Certifications", exact: true }).click();
+    const card = page.locator(".editor-entry").last();
+    await card.getByLabel("Name", { exact: true }).fill(name);
+    await card.getByLabel("Issuer", { exact: true }).fill("Example Academy");
+    await card.getByRole("button", { name: `Collapse entry: ${name}`, exact: true }).click();
+    await expect(card.getByLabel("Name", { exact: true })).toBeHidden();
+    await expect(card).toContainText("Example Academy");
+  }
+  await page.getByRole("button", { name: "Move down: Cloud One", exact: true }).click();
+  const first = page.locator(".editor-entry").first();
+  await expect(first.getByRole("button", { name: "Expand entry: Cloud Two", exact: true })).toBeVisible();
+  await page.locator(".studio-outline button").filter({ hasText: "Education" }).click();
+  await page.locator(".studio-outline button").filter({ hasText: "Certifications" }).click();
+  await first.getByRole("button", { name: "Expand entry: Cloud Two", exact: true }).click();
+  await expect(first.getByLabel("Issuer", { exact: true })).toHaveValue("Example Academy");
+  await page.getByRole("button", { name: "Save Draft", exact: true }).click();
+  await expect.poll(async () => (await (await request.get(`http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`)).json()).certifications.map((item: { name: string }) => item.name)).toEqual(["Cloud Two", "Cloud One"]);
+});

@@ -74,14 +74,14 @@ export default function HomePage() {
     <div className="editorial-home">
       <header className="desk-heading">
         <div>
-          <p className="editorial-eyebrow">{copy("YOUR PERSONAL STUDIO")}</p>
+          <p className="editorial-eyebrow">{copy("CV WORKSPACE")}</p>
           <h1>
-            {copy("A little space.")}
+            {copy("Create and edit your CV.")}
             <br />
-            <em>{copy("A clearer story.")}</em>
+            <em>{copy("Keep your career details organized.")}</em>
           </h1>
           <p className="desk-intro">
-            {copy("Shape your experience into a document that feels like you.")}
+            {copy("Create, edit, and manage your CVs and job applications.")}
           </p>
         </div>
         <Link href="/import" className="editorial-link">
@@ -108,14 +108,14 @@ export default function HomePage() {
           <div className="feature-story">
             <p className="editorial-eyebrow">
               <span className="accent-dot" />
-              {copy("ON YOUR DESK")}
+              {copy("LATEST CV")}
             </p>
             <h2>{latest.title}</h2>
             <p className="feature-role">
               {latest.targetRole || t("statusGeneralProfile")}
             </p>
             <p className="feature-description">
-              {copy("Your latest document, ready for its next chapter.")}
+              {copy("Your most recently updated CV.")}
             </p>
             <div className="document-facts">
               <span>
@@ -150,8 +150,8 @@ export default function HomePage() {
         </section>
       ) : (
         <section className="desk-empty">
-          <p className="editorial-eyebrow">{copy("A FRESH PAGE")}</p>
-          <h2>{copy("Every story starts somewhere.")}</h2>
+          <p className="editorial-eyebrow">{copy("GET STARTED")}</p>
+          <h2>{copy("Create your first CV")}</h2>
           <p>
             {copy(
               "Start a CV or bring an existing document into your workspace.",
@@ -176,7 +176,7 @@ export default function HomePage() {
             <div className="editorial-section-heading">
               <div>
                 <span className="editorial-eyebrow">
-                  02 / {copy("THE COLLECTION")}
+                  02 / {copy("YOUR DOCUMENTS")}
                 </span>
                 <h2>
                   {copy("Your documents")} <span>{resumes.length}</span>
@@ -197,8 +197,10 @@ export default function HomePage() {
                   <div className="shelf-paper">
                     <DocumentCover id={resume.id} />
                   </div>
-                  <h3>{resume.title}</h3>
-                  <p>{resume.targetRole || t("statusGeneralProfile")}</p>
+                  <h3 title={resume.title}>{resume.title}</h3>
+                  <p title={resume.targetRole || t("statusGeneralProfile")}>
+                    {resume.targetRole || t("statusGeneralProfile")}
+                  </p>
                   <span>
                     {resume.language.toUpperCase()} · {date(resume.updatedAt)}
                   </span>
@@ -211,7 +213,7 @@ export default function HomePage() {
               >
                 <span className="shelf-new-paper">
                   <Icons.Add size={30} />
-                  <span>{copy("Room for a new story")}</span>
+                  <span>{copy("Create another CV")}</span>
                 </span>
                 <strong>{t("newResume")}</strong>
                 <span>{copy("Begin with a blank page")}</span>
@@ -222,9 +224,9 @@ export default function HomePage() {
             <div className="editorial-section-heading">
               <div>
                 <span className="editorial-eyebrow">
-                  03 / {copy("WHAT’S NEXT")}
+                  03 / {copy("JOB APPLICATIONS")}
                 </span>
-                <h2>{copy("Stories in motion")}</h2>
+                <h2>{copy("Track your applications")}</h2>
               </div>
               <Link className="editorial-link" href="/jobs">
                 {t("manageTracker")}
@@ -260,8 +262,8 @@ export default function HomePage() {
             )}
           </section>
           <footer className="desk-footer">
-            <span>CV WORKSPACE</span>
-            <span>{copy("Thoughtfully written. Entirely yours.")}</span>
+            <span>{copy("CV WORKSPACE")}</span>
+            <span>{copy("Your CVs and saved career details.")}</span>
           </footer>
         </>
       )}

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Job Capture</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <div class="brand-row">
+        <span class="brand-cv" aria-hidden="true">CV.</span>
+        <h1 id="ui-title">Job Capture</h1>
+      </div>
+      <p id="ui-subtitle">Capture and review job details safely.</p>
+    </header>
+
+    <div class="flow-steps" aria-label="Capture review and transfer workflow">
+      <div class="flow-step">
+        <span class="step-num">1</span>
+        <span class="step-label" id="step-1-label">Capture</span>
+      </div>
+      <span class="step-arrow" aria-hidden="true">&rarr;</span>
+      <div class="flow-step">
+        <span class="step-num">2</span>
+        <span class="step-label" id="step-2-label">Review</span>
+      </div>
+      <span class="step-arrow" aria-hidden="true">&rarr;</span>
+      <div class="flow-step">
+        <span class="step-num">3</span>
+        <span class="step-label" id="step-3-label">Transfer</span>
+      </div>
+    </div>
+
+    <main>
+      <div id="status" class="status hidden" role="alert"></div>
+
+      <div class="actions-row">
+        <button id="btn-capture" type="button">Capture Page</button>
+        <button id="btn-send" type="button" disabled>Send to App</button>
+      </div>
+
+      <form id="job-form">
+        <div class="field">
+          <label for="field-company" id="lbl-company">Company *</label>
+          <input
+            id="field-company"
+            type="text"
+            maxlength="255"
+            required
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="field">
+          <label for="field-position" id="lbl-position">Position *</label>
+          <input
+            id="field-position"
+            type="text"
+            maxlength="255"
+            required
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="field">
+          <label for="field-location" id="lbl-location">Location (optional)</label>
+          <input id="field-location" type="text" maxlength="255" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="field-source" id="lbl-source">Source URL</label>
+          <input
+            id="field-source"
+            type="url"
+            maxlength="2048"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="field">
+          <label for="field-description" id="lbl-description"
+            >Job Description</label
+          >
+          <textarea
+            id="field-description"
+            rows="8"
+            maxlength="20000"
+          ></textarea>
+          <div class="char-counter"><span id="desc-count">0</span> / 20000</div>
+        </div>
+      </form>
+
+      <aside class="privacy-notice">
+        <strong id="privacy-title">Privacy Notice</strong>
+        <p id="privacy-desc">
+          Only extracted job text or user selection is read. Private IPs and
+          localhost pages are blocked. Tokens, cookies, and form inputs are
+          never captured. Review all fields before transferring.
+        </p>
+      </aside>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

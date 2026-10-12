@@ -1,16 +1,26 @@
 # Changelog
 
+## Unreleased: workspace and usability
+
+- Add saved AI review history, explicit missing-detail proposals, protected CV-family synchronization and a local sharing check.
+- Improve translation review with an editable full-document dialog; retain edited translation drafts through saves and warn when source content changes.
+- Support automatic LinkedIn job capture, including location, through the optional Chrome/Edge extension.
+- Keep job links synchronized with client navigation and browser history; make the new-job dialog keyboard accessible with associated field labels.
+- Distinguish unavailable lists from empty workspaces with localized errors and in-page retry; keep mobile source import readable.
+- Retry the failed PDF operation, allow dismissal of read-only CV-family loading, and preserve translation-filter keyboard focus.
+- Refine folding, reordering, date-field layout, document-card alignment, reusable dropdowns and Turkish interface copy.
+
 ## 0.2.0
 
 - Publish production API/web Docker images to GHCR for explicit releases on linux/amd64.
 - Attach a build-free Compose installation ZIP, digest manifest, checksum and installation/update instructions to releases.
 - Publish releases only after images and assets are ready; support retrying interrupted draft publication.
 
-## Unreleased — release automation
+## Unreleased: release automation
 
 - Publish GitHub Releases from explicit `[RELEASE:vMAJOR.MINOR.PATCH]` commit markers on main or pushed version tags, with generated notes, prerelease support and idempotent retries.
 
-## Unreleased — local security and job tailoring
+## Unreleased: local security and job tailoring
 
 - Added evidence-based job tailoring that reorders selected existing bullets in a new CV copy, with revision and job-change checks.
 - Added encrypted AI credential storage with legacy migration and optional password-protected workspace backups.

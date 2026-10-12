@@ -48,7 +48,7 @@ The generated OpenAPI specification at `/openapi.json` and interactive `/docs` a
 - `/library` supports list/create; `/library/{id}` supports read/update/delete.
 - `GET /workspace/backup` exports all workspace collections, saved history and application snapshots.
 - `POST /workspace/restore` accepts backup versions 1 and 2 and restores additively in one transaction, with fresh identifiers. Exports use v2 with timestamps and timeline fields.
-- `POST /workspace/backup/encrypted` accepts `{password}` (12–1024 characters) and returns an authenticated encrypted backup envelope. An envelope too large to restore under the configured request limit returns 413.
+- `POST /workspace/backup/encrypted` accepts `{password}` (12-1024 characters) and returns an authenticated encrypted backup envelope. An envelope too large to restore under the configured request limit returns 413.
 - `POST /workspace/restore/encrypted` accepts `{password, envelope}` and restores decrypted backup data through the same additive restore. Wrong passwords or damaged ciphertext return 422. Passwords are not persisted; AI settings/keys are excluded from both backup forms.
 
 These routes are for a trusted local single-user installation. There is no multi-user ownership/authentication layer.
@@ -60,7 +60,11 @@ These routes are for a trusted local single-user installation. There is no multi
 - `GET /api/ai/settings`: public connection details and `hasApiKey`; never returns the secret.
 - `PUT /api/ai/settings`: `enabled`, `provider` (`openai-compatible`, `ollama`, or `gemini`), `baseUrl`, `model`, optional `apiKey`, optional `clearApiKey`. A missing key preserves the current one only when endpoint and provider are unchanged.
 - `POST /api/ai/test`: test saved connection using a small JSON generation, no resume payload.
-- `POST /api/ai/review`: `{document, jobDescription?, language: "en" | "tr"}`. Returns explained 0–25 dimensions, normalized score, strengths, recommendations, questions, provider/model, and limitations. No persistence or document mutation.
+- `POST /api/ai/review`: `{document, jobDescription?, language: "en" | "tr"}`. Returns explained 0-25 dimensions, normalized score, strengths, recommendations, questions, provider/model, and limitations. No persistence or document mutation.
+
+- `POST /api/ai/missing-facts`: `{document, answers: [{question, answer}], jobDescription?, language}`. Explicitly generates suggestions from user-supplied answers, with allowlisted field targets and no automatic mutation.
+- `POST /api/ai/reviews`: `{document, jobDescription?, language, result}`. Records a bounded snapshot of an existing CV and its review; the web records successful editor and quick reviews separately from the AI request.
+- `GET /api/ai/reviews?resumeId=...&jobDescription=...&language=en` lists up to 30 reviews by default, newest first, scoped to the exact target text and feedback language. `GET /api/ai/reviews/{id}` reads a saved review. History is included in additive workspace backup/restore; permanent CV deletion removes associated history.
 
 Saved AI credentials use authenticated encryption with a separate local key.
 Docker keeps that key in `ai_secrets`, separate from the `ai_settings` volume.
@@ -77,3 +81,12 @@ Disabled or unconfigured AI returns 409. Provider/network/format errors return 5
 `POST /api/resumes/{id}/variants` accepts `{document, targetJob: {company?, position, description}}` and returns a new `ResumeDocument` (201). The document ID/revision must match the source (422/409 on mismatch). It copies the supplied draft, sets `metadata.parentResumeId`, `metadata.targetRole`, and `metadata.targetJob`, and leaves the source and job links unchanged. Target metadata is stored within document JSON, so existing databases need no additional table migration.
 
 AI review recommendations can contain `edit: {documentId, target: {section, field, entryId, index}, before, after}` or null. Targets are resolved from a backend allowlist, never arbitrary model-provided object paths. Fields containing redacted personal-data patterns are excluded from actionable replacements. The UI compares current field text and stable entry IDs before applying. Non-actionable recommendations remain advice. Review job text accepts up to 21,000 characters, allowing a 20,000-character description plus role/company labels.
+
+
+## CV family and variant propagation
+
+- `GET /api/resumes/{id}/family` reads saved source/related CVs, returning explicit source changes and factual differences across shared entry IDs. Different-language titles are excluded from consistency findings.
+- `POST /api/resumes/{id}/family/apply` accepts `{sourceRevision, choices: [{targetId, targetRevision, changeId}], overwriteCustomized?}`. Change IDs are recomputed server-side. Applying is atomic, preserves source/variant job settings and prior revisions, and returns 409 for changed revisions. Customized fields require explicit overwrite permission.
+- Source snapshots from copy creation plus per-ancestor partial-sync baselines protect tailored wording across descendant CVs. Old copies use available historical source snapshots conservatively. Unknown provenance disables automatic propagation.
+- Workspace backups include optional `parentBases` and `ancestorBases`. Restore remaps source IDs; old backups remain valid. Deleting a source detaches its children and clears its saved propagation baselines.
+- Application-authored analysis findings and suggestions follow the web interface language; CV content and AI feedback retain their explicitly selected languages.

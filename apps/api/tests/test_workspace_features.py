@@ -201,5 +201,5 @@ def test_turkish_education_and_role_requirements(client):
             }
         ],
     )
-    assert "Lisans — Bilgisayar" in HtmlPdfExporter.render_html(doc)
+    assert "Lisans - Bilgisayar" in HtmlPdfExporter.render_html(doc)
     assert not any(i.ruleId.startswith("job") for i in AnalysisService.analyze(doc).issues)

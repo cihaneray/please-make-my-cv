@@ -52,7 +52,7 @@ def apply_tailoring(
     return ResumeService.create_resume(
         db,
         CreateResumeRequest(
-            title=f"{document.metadata.title} — {job.company} / {job.position}",
+            title=f"{document.metadata.title} - {job.company} / {job.position}",
             initialData=tailored,
             targetRole=job.position,
         ),

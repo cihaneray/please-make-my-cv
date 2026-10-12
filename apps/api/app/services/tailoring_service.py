@@ -1,11 +1,39 @@
-"""Reorder verified existing bullets in an explicitly requested CV copy."""
+"""Create a chronological CV copy from verified existing evidence."""
 
 import hashlib
+import re
 
 from app.core.exceptions import AppException
 from app.matching.matcher import MatchingService
 from app.schemas.job import JobApplication, TailoringCandidate, TailoringPlan
 from app.schemas.resume import ResumeDocument
+
+_DATE = re.compile(r"^(\d{4})(?:[-/](0?[1-9]|1[0-2]))?$")
+_ONGOING = {"present", "current", "ongoing", "now", "devam", "devam ediyor", "günümüz"}
+
+
+def _date_key(value: str) -> tuple[int, int] | None:
+    """Compare explicit years/months without changing or inventing stored dates."""
+    match = _DATE.fullmatch(value.strip())
+    return (int(match[1]), int(match[2] or 0)) if match else None
+
+
+def reverse_chronological(entries: list) -> list:
+    """Keep unparseable/undated entries in source slots; sort known dates stably."""
+
+    def key(entry):
+        ongoing = getattr(entry, "current", False) or entry.endDate.strip().casefold() in _ONGOING
+        start = _date_key(entry.startDate)
+        end = _date_key(entry.endDate)
+        if not ongoing and not (end or start):
+            return None
+        return (bool(ongoing), end or start or (0, 0), start or (0, 0))
+
+    # Unknown text is not evidence of an earlier/later role. Preserve its placement.
+    dated = iter(
+        sorted((entry for entry in entries if key(entry) is not None), key=key, reverse=True)
+    )
+    return [next(dated) if key(entry) is not None else entry for entry in entries]
 
 
 def tailoring_plan(document: ResumeDocument, job: JobApplication) -> TailoringPlan:
@@ -68,20 +96,16 @@ def tailored_document(
         )
     result = document.model_copy(deep=True)
     priorities = {}
-    for key in selected:
-        item = known[key]
-        priorities.setdefault((item.section, item.entryId), {})[item.bulletIndex] = len(
-            item.requirements
-        )
+    for candidate_id in selected:
+        item = known[candidate_id]
+        priorities.setdefault((item.section, item.entryId), set()).add(item.bulletIndex)
     for section in ("experience", "projects"):
         entries = getattr(result, section)
         for entry in entries:
-            ranks = priorities.get((section, entry.id), {})
+            chosen = priorities.get((section, entry.id), set())
             entry.bullets = [
-                text
-                for _, text in sorted(
-                    enumerate(entry.bullets), key=lambda pair: (-ranks.get(pair[0], 0), pair[0])
-                )
-            ]
-        entries.sort(key=lambda entry: -sum(priorities.get((section, entry.id), {}).values()))
+                text for index, text in enumerate(entry.bullets) if index in chosen
+            ] + [text for index, text in enumerate(entry.bullets) if index not in chosen]
+        setattr(result, section, reverse_chronological(entries))
+    result.education = reverse_chronological(result.education)
     return result

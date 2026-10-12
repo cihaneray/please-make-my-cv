@@ -1,29 +1,60 @@
 "use client";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { AIEdit, AIReview } from "@/lib/api";
 import { ResumeDocument } from "@/lib/types";
 import { readAIField } from "@/lib/ai-edits";
 import { useCopy } from "@/lib/copy";
+import { useI18n } from "@/lib/i18n";
 import { Icons } from "./Icons";
+import styles from "./AISuggestion.module.css";
+
+export type AISuggestionStatus = "pending" | "applied" | "skipped";
+
 export function AISuggestion({
   item,
   document,
   disabled,
   onApply,
+  onStatusChange,
+  onNavigate,
 }: {
   item: AIReview["recommendations"][number];
   document: ResumeDocument;
   disabled: boolean;
   onApply: (edit: AIEdit) => void;
+  onStatusChange?: (status: AISuggestionStatus) => void;
+  onNavigate?: (edit: AIEdit) => void;
 }) {
   const copy = useCopy();
+  const { language } = useI18n();
   const headingId = useId();
   const [skipped, setSkipped] = useState(false);
-  const [accepted, setAccepted] = useState(false);
+  const [appliedEdit, setAppliedEdit] = useState<AIEdit | null>(null);
+  const [suggestedText, setSuggestedText] = useState(item.edit?.after ?? "");
+  const onStatusChangeRef = useRef(onStatusChange);
   const edit = item.edit;
   const current = edit ? readAIField(document, edit) : undefined;
-  const applied = !!(accepted && edit && current === edit.after);
+  const applied = !!(
+    appliedEdit &&
+    edit &&
+    current === appliedEdit.after &&
+    appliedEdit.before === edit.before
+  );
   const changed = !!edit && current !== edit.before && !applied;
+  const status: AISuggestionStatus = skipped
+    ? "skipped"
+    : applied
+      ? "applied"
+      : "pending";
+
+  useEffect(() => {
+    onStatusChangeRef.current = onStatusChange;
+  }, [onStatusChange]);
+  useEffect(() => onStatusChangeRef.current?.(status), [status]);
+
+  const localized = (english: string, turkish: string) =>
+    language === "tr" ? turkish : english;
+
   return (
     <article
       className={`ai-suggestion ${applied ? "is-applied" : ""} ${skipped ? "is-skipped" : ""}`}
@@ -61,7 +92,16 @@ export function AISuggestion({
                 </div>
                 <div>
                   <h5>{copy("After")}</h5>
-                  <p>{edit.after}</p>
+                  <label className={styles.editorLabel}>
+                    <span>{localized("Suggested text", "Önerilen metin")}</span>
+                    <textarea
+                      className={styles.editor}
+                      aria-label={localized("Suggested text", "Önerilen metin")}
+                      value={applied ? appliedEdit!.after : suggestedText}
+                      disabled={disabled || applied}
+                      onChange={(event) => setSuggestedText(event.target.value)}
+                    />
+                  </label>
                 </div>
               </div>
               <p className="ai-suggestion-hint">
@@ -88,7 +128,7 @@ export function AISuggestion({
             </>
           ) : null}
           <footer className="ai-suggestion-actions">
-            {applied && edit ? (
+            {applied && appliedEdit ? (
               <>
                 <span className="ai-suggestion-applied" role="status">
                   <span aria-hidden="true">
@@ -100,11 +140,12 @@ export function AISuggestion({
                   disabled={disabled}
                   onClick={() => {
                     onApply({
-                      ...edit,
-                      before: edit.after,
-                      after: edit.before,
+                      ...appliedEdit,
+                      before: appliedEdit.after,
+                      after: appliedEdit.before,
                     });
-                    setAccepted(false);
+                    setAppliedEdit(null);
+                    setSuggestedText(appliedEdit.after);
                   }}
                 >
                   {copy("Undo this suggestion")}
@@ -115,16 +156,22 @@ export function AISuggestion({
                 {edit && (
                   <button
                     className="ai-suggestion-apply"
-                    disabled={disabled || changed}
+                    disabled={disabled || changed || !suggestedText.trim()}
                     onClick={() => {
-                      onApply(edit);
-                      setAccepted(true);
+                      const customizedEdit = { ...edit, after: suggestedText };
+                      onApply(customizedEdit);
+                      setAppliedEdit(customizedEdit);
                     }}
                   >
                     <span aria-hidden="true">
                       <Icons.Check size={16} />
                     </span>
                     {copy("Apply suggestion")}
+                  </button>
+                )}
+                {edit && onNavigate && (
+                  <button disabled={disabled} onClick={() => onNavigate(edit)}>
+                    {localized("Go to field", "Alana git")}
                   </button>
                 )}
                 <button disabled={disabled} onClick={() => setSkipped(true)}>

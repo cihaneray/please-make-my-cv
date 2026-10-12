@@ -1,10 +1,12 @@
 "use client";
 import { useCopy } from "@/lib/copy";
+import { formatFieldLabel } from "@/lib/field-label";
 import React, { useId, useState } from "react";
 import { ReorderControls } from "./ReorderControls";
 import { moveItem } from "@/lib/section-order";
 import { api } from "@/lib/api";
 import { ResumeDocument, LibrarySnippet } from "@/lib/types";
+import { SelectMenu } from "@/components/SelectMenu";
 
 const defaults: Record<string, object> = {
   experience: {
@@ -67,11 +69,12 @@ export function Fields({
 }) {
   const copy = useCopy();
   const reorderGroup = useId();
+  const fieldLabel = (key: string) => formatFieldLabel(key, copy);
 
   if (Array.isArray(value))
     return (
       <fieldset className="array-field-editor border p-3 my-2">
-        <legend>{copy(label(name))}</legend>
+        <legend>{fieldLabel(name)}</legend>
         {value.map((item, i) => (
           <div
             key={typeof item === "object" && item?.id ? item.id : i}
@@ -90,7 +93,7 @@ export function Fields({
                 group={reorderGroup}
                 index={i}
                 count={value.length}
-                label={`${copy(label(name))} ${i + 1}`}
+                label={`${fieldLabel(name)} ${i + 1}`}
                 onMove={(from, to) => change(moveItem(value, from, to))}
               />
               <button
@@ -98,7 +101,7 @@ export function Fields({
                 onClick={() => change(value.filter((_, index) => index !== i))}
               >
                 {" "}
-                {copy("Remove")} {copy(label(name))} {i + 1}
+                {copy("Remove")} {fieldLabel(name)} {i + 1}
               </button>
             </div>
           </div>
@@ -115,7 +118,7 @@ export function Fields({
           }
         >
           {" "}
-          {copy("Add")} {copy(label(name))}
+          {copy("Add")} {fieldLabel(name)}
         </button>
       </fieldset>
     );
@@ -143,12 +146,12 @@ export function Fields({
           checked={value}
           onChange={(e) => change(e.target.checked)}
         />
-        {copy(label(name))}
+        {fieldLabel(name)}
       </label>
     );
   return (
     <label className="grid gap-1 text-sm">
-      {copy(label(name))}
+      {fieldLabel(name)}
       <input
         className="border rounded p-2"
         value={String(value ?? "")}
@@ -279,22 +282,20 @@ export function DocumentTools({
               <label>
                 {" "}
                 {copy("Insert into")}{" "}
-                <select
-                  value={target}
-                  onChange={(e) => setTarget(e.target.value)}
-                >
+                <SelectMenu value={target} onValueChange={setTarget}>
                   <option value="summary"> {copy("Summary")} </option>
                   {document.experience.map((item, i) => (
                     <option key={item.id} value={`experience:${i}`}>
-                      {item.company || "Experience"} {copy("achievements")}{" "}
+                      {item.company || copy("Experience")}{" "}
+                      {copy("achievements")}{" "}
                     </option>
                   ))}
                   {document.projects.map((item, i) => (
                     <option key={item.id} value={`projects:${i}`}>
-                      {item.name || "Project"} {copy("achievements")}{" "}
+                      {item.name || copy("Project")} {copy("achievements")}{" "}
                     </option>
                   ))}
-                </select>
+                </SelectMenu>
               </label>
               {snippets.map((item) => (
                 <button
@@ -323,7 +324,7 @@ export function DocumentTools({
               ))}
             </div>
           )}
-          <p role="status">{message}</p>
+          <p role="status">{copy(message)}</p>
           {Object.entries(document)
             .filter(([key]) => key !== "metadata")
             .map(([key, value]) => (

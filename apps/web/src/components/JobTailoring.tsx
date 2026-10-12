@@ -109,7 +109,7 @@ export function JobTailoring({
             <>
               <p>
                 {copy(
-                  "Selected bullets and their entries move to the top. All existing content is preserved.",
+                  "Selected bullets are prioritized within each entry in their original order. Dated entries stay newest first; all content is preserved.",
                 )}
               </p>
               <button

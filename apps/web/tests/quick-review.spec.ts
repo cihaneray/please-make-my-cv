@@ -1,3 +1,4 @@
+import { selectMenu } from "./helpers/select-menu";
 import { test, expect } from "@playwright/test";
 
 const settings = {
@@ -87,13 +88,13 @@ test("saved CV reviews run only on request and never modify the source", async (
   await expect(
     dialog.getByText("Builds reliable APIs with Python."),
   ).toBeVisible();
-  await dialog.getByLabel("Review target").selectOption(job.id);
+  await selectMenu(dialog.getByLabel("Review target"), job.id);
   await expect(
     dialog.getByRole("region", { name: "AI review results" }),
   ).toContainText(
     "Draft or review options changed. Run a new review for an updated score.",
   );
-  await dialog.getByLabel("Feedback language").selectOption("tr");
+  await selectMenu(dialog.getByLabel("Feedback language"), "tr");
   await start.click();
   await expect.poll(() => reviews).toBe(2);
   await expect(

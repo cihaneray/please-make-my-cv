@@ -46,7 +46,7 @@ export class ApiError extends Error {
 }
 export const errorMessage = (error: unknown) =>
   error instanceof Error ? error.message : "An unexpected error occurred.";
-async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   const timeout = AbortSignal.timeout(
     url.includes("/ai/") ||
       url.includes("/pdf-check") ||

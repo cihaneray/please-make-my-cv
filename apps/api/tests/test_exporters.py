@@ -49,7 +49,7 @@ def test_markdown_exporter():
     res = MarkdownExporter.export(doc)
     assert "# Marcus Aurelius" in res
     assert "## Experience" in res
-    assert "### Emperor & Tech Lead — Roman Empire" in res
+    assert "### Emperor & Tech Lead - Roman Empire" in res
 
 
 def test_html_pdf_exporter():

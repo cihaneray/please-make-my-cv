@@ -1,7 +1,36 @@
 "use client";
 import { useCallback } from "react";
 import { useI18n } from "./i18n";
+import { localizeReportText } from "./report-copy";
 export const copyTranslations: Record<string, string> = {
+  "Review completed, but could not be saved to history.":
+    "İnceleme tamamlandı ancak geçmişe kaydedilemedi.",
+  "AI review history": "AI inceleme geçmişi",
+  "Only reviews of this CV with the same target job and feedback language are compared. Scores are subjective AI estimates and can vary by model or run.":
+    "Bu CV’nin aynı hedef ilan ve geri bildirim diliyle yapılan incelemeleri karşılaştırılır. AI puanları model ve incelemeye göre değişebilir.",
+  "Review history could not be loaded. Your current review is still available.":
+    "İnceleme geçmişi yüklenemedi. Mevcut incelemeniz kullanılabilir.",
+  "Loading review history…": "İnceleme geçmişi yükleniyor…",
+  "No saved reviews for these options yet.":
+    "Bu seçeneklerle kaydedilmiş inceleme bulunmuyor.",
+  "Saved AI reviews and changes from the previous review":
+    "Kaydedilen AI incelemeleri ve önceki incelemeye göre değişimler",
+  "Dimension changes": "Puan değişimleri",
+  "No previous review": "Önceki inceleme yok",
+  "Model or provider changed; score differences may reflect the reviewer.":
+    "Model veya sağlayıcı değişti; puan farkları bundan kaynaklanabilir.",
+  "View saved review": "Kaydedilen incelemeyi görüntüle",
+  "Saved review": "Kaydedilen inceleme",
+  "Reviewed draft snapshot": "İncelenen taslak",
+  "Full reviewed snapshot": "İncelenen CV’nin tamamı",
+  "Reviewed target job": "İncelenen hedef ilan",
+  "No target job": "Hedef ilan yok",
+  Options: "Seçenekler",
+  "Saved CV ATS average": "Kayıtlı CV’lerin ATS ortalaması",
+  "Calculated from saved CVs, independently of your snippets. A full score does not guarantee job suitability.":
+    "Parçacıklardan bağımsız olarak kayıtlı CV’lerden hesaplanır. Tam puan, ilana uygunluğu garanti etmez.",
+  "Your library is empty. Add achievements, projects or skills from your CV to reuse them.":
+    "Kütüphaneniz henüz boş. Yeniden kullanmak için CV’nizdeki başarıları, projeleri veya yetenekleri ekleyin.",
   "Untitled skill group": "Adsız yetenek grubu",
   "Saved versions": "Kaydedilen sürümler",
   "Other CVs": "Diğer özgeçmişler",
@@ -67,8 +96,8 @@ export const copyTranslations: Record<string, string> = {
   "Job listing URL (optional)": "İlan bağlantısı (isteğe bağlı)",
 
   "Create a CV from the library": "Kütüphaneden CV oluştur",
-  "A focused CV from your career archive":
-    "Kariyer arşivinizden hedefe uygun CV",
+  "Build a CV from saved career details":
+    "Kayıtlı kariyer bilgilerinizden CV oluşturun",
   "Choose a saved job, review matching snippets and create a separate draft.":
     "Kayıtlı bir ilan seçin, eşleşen parçacıkları inceleyin ve ayrı bir taslak oluşturun.",
   "Close builder": "Oluşturucuyu kapat",
@@ -292,7 +321,7 @@ export const copyTranslations: Record<string, string> = {
   "Internal document heuristic. Job relevance is not assessed here; use Jobs to compare a specific description. Not an external ATS endorsement.":
     "Uygulamanın yerel belge kontrolüdür. İlanla uyum için Hedef İlanlar'da eşleştirme yapın. Harici bir ATS onayı değildir.",
   Cancel: "İptal",
-  "AI editorial score": "Yapay zeka değerlendirme puanı",
+  "AI review score": "Yapay zeka inceleme puanı",
   clarity: "Anlaşılırlık",
   evidence: "Kanıtlar",
   completeness: "Bütünlük",
@@ -351,8 +380,8 @@ export const copyTranslations: Record<string, string> = {
   "Requirements without CV evidence": "CV’de kanıtı bulunmayan gereksinimler",
   "These are wording gaps, not proof that you lack the skill. Add details only if you can verify them.":
     "Bunlar metindeki eksiklerdir; yetkinliğinizin olmadığı anlamına gelmez. Yalnızca doğrulayabildiğiniz bilgileri ekleyin.",
-  "Selected bullets and their entries move to the top. All existing content is preserved.":
-    "Seçilen maddeler ve bağlı kayıtları öne taşınır. Mevcut içeriğin tamamı korunur.",
+  "Selected bullets are prioritized within each entry in their original order. Dated entries stay newest first; all content is preserved.":
+    "Seçilen maddeler, kendi sıraları korunarak ilgili kaydın içinde öne alınır. Tarihli kayıtlar en yeniden eskiye sıralanır; içeriğin tamamı korunur.",
   "Create tailored CV copy": "İlana özel CV kopyası oluştur",
   "Open tailored CV": "İlana özel CV’yi aç",
   "The linked CV or job changed. Generate new suggestions.":
@@ -408,8 +437,8 @@ export const copyTranslations: Record<string, string> = {
   "Application dossier": "Başvuru dosyası",
   "Application files": "Başvuru dosyaları",
   "Your career workspace": "Kariyer çalışma alanınız",
-  "A clear view of every opportunity, and the story you send with it.":
-    "Her fırsatın ayrıntıları, başvuru belgeleriniz ve sıradaki adım bir arada.",
+  "View your applications and the CV used for each one.":
+    "Başvurularınızı ve her başvuruda kullandığınız CV'yi görüntüleyin.",
   "Application list": "Başvuru listesi",
   "Application sections": "Başvuru bölümleri",
   Overview: "Genel bakış",
@@ -437,7 +466,7 @@ export const copyTranslations: Record<string, string> = {
     "Henüz eşleşen kanıt yok. Gereksinimleri ve bağlı CV'yi gözden geçirin.",
   "Saved listing": "Kayıtlı ilan",
   "Application CV": "Başvuru CV'si",
-  "Open in studio": "Stüdyoda aç",
+  "Open editor": "Editörde aç",
   "Choose the CV you want to use for this application.":
     "Bu başvuruda kullanmak istediğiniz CV'yi seçin.",
   "Submitted copies": "Gönderilen kopyalar",
@@ -555,37 +584,36 @@ export const copyTranslations: Record<string, string> = {
     "Sekme değiştirmeden veya kaydetmeden önce kaynak değişikliklerini uygulayın.",
   "Search resumes": "Özgeçmiş ara",
   "Find a document…": "Belge ara…",
-  "Document studio": "Belge stüdyosu",
+  "Resume editor": "Özgeçmiş editörü",
   "All documents": "Tüm belgeler",
-  "YOUR PERSONAL STUDIO": "KİŞİSEL STÜDYONUZ",
-  "A little space.": "Biraz alan.",
-  "A clearer story.": "Daha net bir hikâye.",
-  "Shape your experience into a document that feels like you.":
-    "Deneyiminizi sizi yansıtan bir belgeye dönüştürün.",
-  "ON YOUR DESK": "MASANIZDA",
-  "Your latest document, ready for its next chapter.":
-    "Son belgeniz, bir sonraki adımınız için hazır.",
+  "CV WORKSPACE": "CV ÇALIŞMA ALANI",
+  "Create and edit your CV.": "CV'nizi oluşturun ve düzenleyin.",
+  "Keep your career details organized.": "Kariyer bilgilerinizi düzenli tutun.",
+  "Create, edit, and manage your CVs and job applications.":
+    "CV'lerinizi ve iş başvurularınızı oluşturun, düzenleyin ve yönetin.",
+  "LATEST CV": "SON CV",
+  "Your most recently updated CV.": "En son güncellediğiniz CV.",
   Revision: "Sürüm",
   "Continue editing": "Düzenlemeye devam et",
   "Continue working": "Çalışmaya devam et",
   "LATEST DOCUMENT": "SON BELGE",
-  "A FRESH PAGE": "YENİ BİR SAYFA",
-  "Every story starts somewhere.": "Her hikâyenin bir başlangıcı var.",
+  "GET STARTED": "BAŞLAYIN",
+  "Create your first CV": "İlk CV'nizi oluşturun",
   "Start a CV or bring an existing document into your workspace.":
     "Yeni bir özgeçmiş oluşturun ya da mevcut belgenizi içe aktarın.",
   "Your documents": "Belgeleriniz",
-  "THE COLLECTION": "KOLEKSİYON",
-  "Room for a new story": "Yeni bir hikâyeye yer açın",
+  "YOUR DOCUMENTS": "BELGELERİNİZ",
+  "Create another CV": "Yeni bir CV oluşturun",
   "Begin with a blank page": "Boş bir sayfayla başlayın",
-  "WHAT’S NEXT": "SIRADAKİ ADIM",
-  "Stories in motion": "Yolculuğunuz sürüyor",
+  "JOB APPLICATIONS": "İŞ BAŞVURULARI",
+  "Track your applications": "Başvurularınızı takip edin",
   "Add a target job to start shaping your next application.":
     "Bir hedef ilan ekleyerek sonraki başvurunuzu hazırlamaya başlayın.",
-  "Thoughtfully written. Entirely yours.": "Özenle yazılmış. Tamamen size ait.",
-  "DOCUMENT STUDIO": "BELGE STÜDYOSU",
+  "Your CVs and saved career details.":
+    "CV'leriniz ve kayıtlı kariyer bilgileriniz.",
+  "RESUME EDITOR": "ÖZGEÇMİŞ EDİTÖRÜ",
   "Focus on document": "Belgeye odaklan",
   "Show tools": "Araçları göster",
-  "MAKE IT YOURS": "SİZİ YANSITSIN",
   "Document tools": "Belge araçları",
   "Close tools": "Araçları kapat",
   "Editing tools": "Düzenleme araçları",
@@ -787,6 +815,8 @@ Object.assign(copyTranslations, {
   "LLM connection": "LLM bağlantısı",
   "Enable AI reviews": "Yapay zeka incelemelerini etkinleştir",
   Provider: "Sağlayıcı",
+  "Subjective AI review of this draft, not an ATS or hiring prediction. Verify every suggested fact. Contact fields are omitted; free text may still contain personal information.":
+    "Bu taslağın öznel yapay zekâ değerlendirmesidir; ATS sonucu veya işe alım tahmini değildir. Önerilen her bilgiyi doğrulayın. İletişim alanları gönderilmez; serbest metin yine de kişisel bilgi içerebilir.",
   "API base URL": "API adresi",
   "Model ID": "Model kimliği",
   "API key (optional for local servers)":
@@ -808,12 +838,124 @@ export function useCopy() {
   const { language } = useI18n();
   return useCallback(
     (text: string) =>
-      language === "tr" ? copyTranslations[text] || text : text,
+      language === "tr"
+        ? copyTranslations[text] || localizeReportText(text)
+        : text,
     [language],
   );
 }
 Object.assign(copyTranslations, {
-  "Your career archive": "Kariyer arşiviniz",
+  critical: "Kritik",
+  important: "Önemli",
+  warning: "Uyarı",
+  info: "Bilgi",
+  "AI resume review": "Yapay zekâ özgeçmiş incelemesi",
+  "Resume preview": "Özgeçmiş önizlemesi",
+  "Preview zoom": "Önizleme yakınlaştırması",
+  "Navigate workspace": "Çalışma alanında gezin",
+  "Use a saved job": "Kayıtlı ilan kullan",
+  "Source editor": "Kaynak editörü",
+  "Source format": "Kaynak biçimi",
+  "Resume source": "Özgeçmiş kaynağı",
+  Provider: "Sağlayıcı",
+  Close: "Kapat",
+  "Insufficient recognized requirements. This matcher currently covers technology vocabulary; no compatibility score was calculated.":
+    "Yeterli sayıda gereksinim tanınamadı. Bu eşleştirici şu anda teknoloji terimlerini kapsıyor; uyumluluk puanı hesaplanmadı.",
+  "OpenAI-compatible": "OpenAI uyumlu",
+  Project: "Proje",
+  "Section Order": "Bölüm sırası",
+  "Show Photo": "Fotoğrafı göster",
+  "Show Summary": "Özeti göster",
+  "Show Experience": "Deneyimi göster",
+  "Show Education": "Eğitimi göster",
+  "Show Projects": "Projeleri göster",
+  "Show Skills": "Becerileri göster",
+  "Show Certifications": "Sertifikaları göster",
+  "Show Languages": "Dilleri göster",
+  Linkedin: "LinkedIn",
+  Github: "GitHub",
+  "Select a revision to load it into the draft. Save creates a new revision.":
+    "Taslağa yüklemek için bir sürüm seçin. Kaydettiğinizde yeni bir sürüm oluşturulur.",
+  "Restored as new records; existing data was preserved.":
+    "Yeni kayıtlar olarak geri yüklendi; mevcut veriler korundu.",
+  "e.g. Senior Software Architect": "Örn. Kıdemli Yazılım Mimarı",
+  "CV WORKSPACE": "CV ÇALIŞMA ALANI",
+  Restore: "Geri yükle",
+  Optional: "İsteğe bağlı",
+  "Loading…": "Yükleniyor…",
+  Settings: "Ayarlar",
+  "Add Items": "Öğe ekle",
+  "Draft storage unavailable; keep a copy before leaving.":
+    "Taslak depolaması kullanılamıyor; ayrılmadan önce bir kopya saklayın.",
+  "Could not read the backup size limit. Using the default 5 MB limit.":
+    "Yedek boyutu sınırı okunamadı. Varsayılan 5 MB sınırı kullanılıyor.",
+  "Create a copy of this draft for a target job. Review the suggestions and accept the ones you want. Your original and job links will stay unchanged.":
+    "Bu taslağın hedef ilana özel bir kopyasını oluşturun. Önerileri inceleyip istediklerinizi kabul edin. Özgün CV'niz ve ilan bağlantıları korunur.",
+  "Document nesting exceeds the supported depth.":
+    "Belgenin iç içe alanları desteklenen derinliği aşıyor.",
+  "YYYY-MM": "YYYY-AA",
+  "Not yet validated": "Henüz doğrulanmadı",
+  "Unapplied source changes": "Uygulanmamış kaynak değişiklikleri",
+  "Source matches draft": "Kaynak taslakla eşleşiyor",
+  "Document must be a top-level object.":
+    "Belge en üst düzeyde bir nesne olmalıdır.",
+  "resume must be an object.": "resume bir nesne olmalıdır.",
+  "metadata must be an object.": "metadata bir nesne olmalıdır.",
+  "Only integer schemaVersion 1 is supported. Convert newer documents before importing.":
+    "Yalnızca tam sayı schemaVersion 1 desteklenir. Daha yeni belgeleri içe aktarmadan önce dönüştürün.",
+  "e.g. Stripe, Linear, Vercel": "Örn. Stripe, Linear, Vercel",
+  "e.g. Staff Software Engineer": "Örn. Kıdemli Yazılım Mühendisi",
+  "San Francisco, CA or Remote": "İstanbul veya Uzaktan",
+  "Inter (Swiss Clean)": "Inter (Sade İsviçre stili)",
+  "Helvetica Neue (Modernist)": "Helvetica Neue (Modern)",
+  "Georgia (Editorial Serif)": "Georgia (Serif yayın stili)",
+  "Menlo (Monospace / Tech)": "Menlo (Eş aralıklı / Teknik)",
+  "If you have verifiable experience with these technologies, consider incorporating them into relevant role bullets.":
+    "Bu teknolojilerle doğrulanabilir deneyiminiz varsa ilgili deneyim maddelerine eklemeyi düşünün.",
+  "Highlight quantified outcomes where you applied these competencies.":
+    "Bu yetkinlikleri kullandığınız ölçülebilir sonuçları öne çıkarın.",
+  "Selectable text: pages with at least 80 extracted characters / total pages × 40.":
+    "Seçilebilir metin: en az 80 karakter çıkarılan sayfalar / toplam sayfa × 40.",
+  "Recognized summary, experience, education and skills headings: 5 each; projects, certifications or languages: 5 more.":
+    "Tanınan özet, deneyim, eğitim ve beceri başlıkları: her biri 5 puan; proje, sertifika veya dil başlıkları: 5 ek puan.",
+  "Readable email: 10 points; readable phone number: 5 points.":
+    "Okunabilir e-posta: 10 puan; okunabilir telefon numarası: 5 puan.",
+  "Extracted text integrity: 10 points minus unreadable replacement or control characters.":
+    "Çıkarılan metnin bütünlüğü: 10 puandan okunamayan veya kontrol karakterleri çıkarılır.",
+  "Document length: 1-2 pages earns 10; 3 pages earns 5; longer files earn 0. This is a heuristic, not a universal limit.":
+    "Belge uzunluğu: 1–2 sayfa 10 puan, 3 sayfa 5 puan, daha uzun belgeler 0 puan alır. Bu bir sezgisel değerlendirmedir; evrensel sınır değildir.",
+  "PDF import is approximate. Check reading order, name, company, dates and all sections before saving. Photos and the original layout are not imported.":
+    "PDF içe aktarımı yaklaşık sonuç verir. Kaydetmeden önce okuma sırasını, adı, şirketi, tarihleri ve tüm bölümleri kontrol edin. Fotoğraflar ve özgün düzen aktarılmaz.",
+  "No usable text could be extracted. This may be a scanned PDF. OCR is not included; use a text-based PDF or import JSON, YAML or Markdown.":
+    "Kullanılabilir metin çıkarılamadı. PDF taranmış olabilir. OCR desteği yoktur; metin tabanlı PDF kullanın veya JSON, YAML ya da Markdown içe aktarın.",
+  "Some pages contain little selectable text. Image-only content may be missing from the import.":
+    "Bazı sayfalarda az miktarda seçilebilir metin var. Yalnızca görsel içeren içerik aktarılmamış olabilir.",
+  "No standard section headings were recognized. The text is preserved under custom sections for manual organization.":
+    "Standart bölüm başlıkları tanınamadı. Metin, elle düzenlemeniz için özel bölümlerde korunuyor.",
+  "Choose a valid PDF file.": "Geçerli bir PDF dosyası seçin.",
+  "Password-protected PDFs are not supported. Upload an unlocked copy.":
+    "Parola korumalı PDF desteklenmiyor. Kilidi açılmış bir kopya yükleyin.",
+  "Upload a CV with 1 to 10 pages.": "1–10 sayfalık bir özgeçmiş yükleyin.",
+  "The PDF contains too much text for a CV. Use a shorter file.":
+    "PDF bir özgeçmiş için çok fazla metin içeriyor. Daha kısa bir dosya kullanın.",
+  "The PDF could not be read. Try exporting an unlocked PDF again.":
+    "PDF okunamadı. Kilidi açılmış PDF dosyasını yeniden dışa aktarmayı deneyin.",
+  "PDF import is busy. Wait for the current import to finish and try again.":
+    "PDF içe aktarımı meşgul. Mevcut işlem tamamlanınca yeniden deneyin.",
+  "Maximum PDF size is 4 MB.": "PDF en fazla 4 MB olabilir.",
+  "The PDF could not be read within the time limit. Try a simpler PDF.":
+    "PDF zaman sınırı içinde okunamadı. Daha basit bir PDF deneyin.",
+  "The PDF could not be read within resource limits. Try a simpler PDF.":
+    "PDF kaynak sınırları içinde okunamadı. Daha basit bir PDF deneyin.",
+});
+Object.assign(copyTranslations, {
+  "Career library": "Kariyer kütüphanesi",
+  Tag: "Etiket",
+  "Filter by tag": "Etikete göre filtrele",
+  "Search tags": "Etiketlerde ara",
+  "No tags match your search.": "Aramanızla eşleşen etiket yok.",
+  "Reset to all tags": "Tüm etiketlere dön",
+  "About this score": "Bu puan hakkında",
   "Search and filter snippets": "Maddeleri ara ve filtrele",
   "Keep verified achievements here, then reuse them in your resumes.":
     "Doğrulanmış başarılarınızı burada saklayın, özgeçmişlerinizde yeniden kullanın.",
