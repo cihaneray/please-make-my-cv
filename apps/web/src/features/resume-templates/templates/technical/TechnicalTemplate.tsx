@@ -207,7 +207,7 @@ export function TechnicalTemplate({
             <div className="pt-1.5 space-y-3">
               {projects.map((proj) => (
                 <div data-cv-entry="true" key={proj.id} className="space-y-0.5">
-                  <div className="flex items-baseline justify-between gap-2">
+                  <div className="flex items-baseline flex-wrap gap-x-2 gap-y-0.5">
                     <div className="text-[12px] font-bold text-neutral-900 flex items-center gap-2">
                       <span>{proj.name}</span>
                       {proj.role && (
@@ -221,9 +221,9 @@ export function TechnicalTemplate({
                         href={normalizeUrl(proj.url)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[10px] font-mono text-neutral-500 hover:text-neutral-900 hover:underline transition-colors shrink-0"
+                        className="text-[10px] font-mono text-neutral-500 hover:text-neutral-900 hover:underline transition-colors break-all"
                       >
-                        {proj.url.replace(/^https?:\/\//i, "")}
+                        {proj.urlLabel || proj.url.replace(/^https?:\/\//i, "")}
                       </a>
                     )}
                   </div>
@@ -266,7 +266,7 @@ export function TechnicalTemplate({
             <div className="pt-1.5 space-y-2">
               {education.map((edu) => (
                 <div data-cv-entry="true" key={edu.id} className="space-y-0.5">
-                  <div className="flex items-baseline justify-between gap-2">
+                  <div className="flex items-baseline flex-wrap gap-x-2 gap-y-0.5">
                     <div className="text-[12px] font-semibold text-neutral-900">
                       <span>{edu.degree}</span>
                       {edu.fieldOfStudy && <span> in {edu.fieldOfStudy}</span>}

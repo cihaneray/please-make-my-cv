@@ -46,6 +46,8 @@ The generated OpenAPI specification at `/openapi.json` and interactive `/docs` a
 - `POST /jobs/{id}/cover-letter` accepts `{resumeId, language, useAI}` and generates a local or optional AI letter draft.
 - `POST /jobs/{id}/package` downloads a ZIP with the linked saved CV PDF and saved cover letter. It does not submit the application.
 - `/library` supports list/create; `/library/{id}` supports read/update/delete.
+- Library types include `project` and `certification`. Optional `project`/`certification` objects use the corresponding CV-entry schema and are preserved in backup/restore. Projects support `urlLabel` for display text; `url` stays the actual destination. Legacy text-only records remain valid.
+- Tailoring plans include relevant saved-CV and library projects/certifications. `librarySnippetId` identifies library evidence; changed library selections are rejected on apply. Tailored copies retain their target job and omit unselected projects/certifications. A job title and description or requirements are required.
 - `GET /workspace/backup` exports all workspace collections, saved history and application snapshots.
 - `POST /workspace/restore` accepts backup versions 1 and 2 and restores additively in one transaction, with fresh identifiers. Exports use v2 with timestamps and timeline fields.
 - `POST /workspace/backup/encrypted` accepts `{password}` (12-1024 characters) and returns an authenticated encrypted backup envelope. An envelope too large to restore under the configured request limit returns 413.

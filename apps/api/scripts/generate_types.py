@@ -67,7 +67,12 @@ for name, cls in sorted(models.items()):
         hints = get_type_hints(cls)
         lines.append(f"export interface {name} {{")
         for field in cls.model_fields:
-            lines.append(f"  {field}: {ts_type(hints[field])};")
+            optional = (
+                "?"
+                if (cls.model_fields[field].json_schema_extra or {}).get("typescriptOptional")
+                else ""
+            )
+            lines.append(f"  {field}{optional}: {ts_type(hints[field])};")
         lines.append("}")
 lines += [
     "export type ResumeSummary = ResumeSummaryResponse;",

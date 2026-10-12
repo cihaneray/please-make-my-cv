@@ -16,6 +16,7 @@ from app.schemas.job import (
 )
 from app.services.job_service import JobService
 from app.services.job_url_service import JobUrlRequest, import_job_url
+from app.services.library_service import LibraryService
 from app.services.resume_service import ResumeService
 
 router = APIRouter(prefix="/jobs", tags=["Job Applications"])
@@ -30,7 +31,11 @@ def preview_job_url(request: JobUrlRequest):
 def plan_tailoring(job_id: str, resume_id: str, db: Session = Depends(get_db)):
     from app.services.tailoring_service import tailoring_plan
 
-    return tailoring_plan(ResumeService.get_resume(db, resume_id), JobService.get_job(db, job_id))
+    return tailoring_plan(
+        ResumeService.get_resume(db, resume_id),
+        JobService.get_job(db, job_id),
+        LibraryService.list_snippets(db),
+    )
 
 
 @router.post("/{job_id}/tailoring/{resume_id}/apply")
@@ -47,7 +52,7 @@ def apply_tailoring(
         raise AppException(
             "STALE_TAILORING_PLAN", "The CV or job changed. Generate a new plan.", 409
         )
-    tailored = tailored_document(document, job, request.selected)
+    tailored = tailored_document(document, job, request.selected, LibraryService.list_snippets(db))
     tailored.metadata.parentResumeId = document.metadata.id
     return ResumeService.create_resume(
         db,

@@ -76,6 +76,7 @@ class JobModel(Base):
 
 
 class LibraryItemModel(Base):
+    details_json: Mapped[str] = mapped_column(Text, default="{}", nullable=False)
     __tablename__ = "library_items"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, index=True)

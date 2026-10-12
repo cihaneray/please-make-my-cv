@@ -237,7 +237,7 @@ export function ProfessionalTemplate({
             <div className="pt-2 space-y-3">
               {projects.map((proj) => (
                 <div data-cv-entry="true" key={proj.id} className="space-y-0.5">
-                  <div className="flex items-baseline justify-between gap-4">
+                  <div className="flex items-baseline flex-wrap gap-x-2 gap-y-0.5">
                     <div className="font-bold text-[12.5px] text-neutral-900 flex items-center gap-2">
                       <span>{proj.name}</span>
                       {proj.role && (
@@ -251,9 +251,9 @@ export function ProfessionalTemplate({
                         href={normalizeUrl(proj.url)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[11px] text-neutral-600 hover:text-neutral-900 underline font-sans"
+                        className="text-[11px] text-neutral-600 hover:text-neutral-900 underline font-sans break-all"
                       >
-                        {proj.url.replace(/^https?:\/\//i, "")}
+                        {proj.urlLabel || proj.url.replace(/^https?:\/\//i, "")}
                       </a>
                     )}
                   </div>

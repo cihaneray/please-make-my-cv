@@ -55,7 +55,7 @@ export function JobTailoring({
         disabled={busy || dirty || !job.linkedResumeId}
         onClick={generate}
       >
-        {copy(busy ? "Preparing suggestions…" : "Suggest relevant bullets")}
+        {copy(busy ? "Preparing suggestions…" : "Suggest relevant evidence")}
       </button>
       {plan && !stale && (
         <>
@@ -83,7 +83,19 @@ export function JobTailoring({
                 />
                 <span>
                   <small>
-                    {item.entryTitle} · {item.requirements.join(", ")}
+                    {item.entryTitle} ·{" "}
+                    {copy(
+                      item.section === "certifications"
+                        ? "Certification"
+                        : item.section === "projects"
+                          ? "Project"
+                          : "Experience",
+                    )}{" "}
+                    ·{" "}
+                    {copy(
+                      item.librarySnippetId ? "Career library" : "Saved CV",
+                    )}{" "}
+                    · {item.requirements.join(", ")}
                   </small>
                   <span>{item.text}</span>
                 </span>
@@ -109,7 +121,7 @@ export function JobTailoring({
             <>
               <p>
                 {copy(
-                  "Selected bullets are prioritized within each entry in their original order. Dated entries stay newest first; all content is preserved.",
+                  "Selected evidence is prioritized chronologically. Only selected projects and certifications are included in this job-specific copy.",
                 )}
               </p>
               <button

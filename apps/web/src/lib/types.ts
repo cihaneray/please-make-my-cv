@@ -60,6 +60,8 @@ export interface CreateLibrarySnippetRequest {
   variants: Array<BulletVariant>;
   targetRoles: Array<string>;
   metrics: string;
+  project?: ProjectItem | null;
+  certification?: CertificationItem | null;
 }
 export interface CreateResumeRequest {
   title: string;
@@ -167,7 +169,7 @@ export interface LanguageItem {
   language: string;
   proficiency: string;
 }
-export const LibraryItemType = {BULLET: "bullet", EXPERIENCE: "experience", PROJECT: "project", SKILL: "skill"} as const;
+export const LibraryItemType = {BULLET: "bullet", EXPERIENCE: "experience", PROJECT: "project", CERTIFICATION: "certification", SKILL: "skill"} as const;
 export type LibraryItemType = typeof LibraryItemType[keyof typeof LibraryItemType];
 export interface LibrarySnippet {
   id: string;
@@ -179,6 +181,8 @@ export interface LibrarySnippet {
   variants: Array<BulletVariant>;
   targetRoles: Array<string>;
   metrics: string;
+  project?: ProjectItem | null;
+  certification?: CertificationItem | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -259,6 +263,7 @@ export interface ProjectItem {
   name: string;
   role: string;
   url: string;
+  urlLabel?: string;
   startDate: string;
   endDate: string;
   bullets: Array<string>;
@@ -346,8 +351,9 @@ export interface TailoringApplyRequest {
   selected: Array<string>;
 }
 export interface TailoringCandidate {
+  librarySnippetId?: string | null;
   id: string;
-  section: "experience" | "projects";
+  section: "experience" | "projects" | "certifications";
   entryId: string;
   entryTitle: string;
   bulletIndex: number;
@@ -382,6 +388,9 @@ export interface UpdateJobRequest {
   linkedResumeId: string | null;
 }
 export interface UpdateLibrarySnippetRequest {
+  type?: LibraryItemType | null;
+  project?: ProjectItem | null;
+  certification?: CertificationItem | null;
   title: string | null;
   content: string | null;
   category: string | null;

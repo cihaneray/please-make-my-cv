@@ -68,7 +68,7 @@ docker compose -f docker-compose.yml -f docker-compose.tools.yml up -d
 - **Review versions:** compare the current draft with a saved revision or another CV. The comparison groups available documents and shows field-level additions, removals and changes. A save conflict offers comparison and preservation of the local draft as another CV.
 - **Check layout:** live preview uses the same HTML renderer as PDF export, with page boundaries and a page count. Exact PDF pages shows the rendered PDF. PDF output checks and the page-length assistant measure actual rendered pages; applying a layout proposal preserves text.
 - **Inspect a reading map:** the optional **Reading map · ESTIMATE** overlay shows section positions and relative text density. It is a layout heuristic, not eye tracking, an ATS score or a hiring prediction, and is excluded from exports.
-- **Use the Career Library:** save reusable achievements with categories, tags and tone variants, then build a CV from selected content.
+- **Use the Career Library:** save reusable achievements, structured projects and certifications with categories and tags. Keep project links, dates and technologies, and certificate issuers and verification details. Job-specific suggestions include these records; selected projects and certifications enter their own CV sections.
 - **Track target jobs:** save roles, requirements, notes, interview/follow-up dates and linked CVs. Matching evidence links to relevant CV entries. Moving a linked job to Applied preserves a submitted copy independently of later CV edits.
 - **Tailor applications:** select existing evidence to prioritize bullets in a new job-specific CV. Missing skills are reported rather than invented. Prepare editable cover letters and application emails; download a ZIP containing the saved CV PDF and cover letter. These tools do not send or submit applications.
 - **Review with AI:** inspect priority suggestions, filter pending/applied/skipped items, edit suggested wording before applying, and jump to the related CV field. Answer missing-detail questions to explicitly generate additional proposals. Applying changes only the draft; Save Draft persists them. Changed fields disable stale suggestions. Local analysis remains available without AI.
@@ -78,6 +78,8 @@ docker compose -f docker-compose.yml -f docker-compose.tools.yml up -d
 - **Translate and share:** preview AI-assisted English/Turkish translations before applying or creating a copy. Anonymous PDF export removes direct profile identifiers; inspect remaining narrative content before sharing.
 
 Language and target market are separate settings: a Turkish-market CV can be written in English. Local ATS/content scores are transparent internal heuristics, not external ATS certification. Job relevance is assessed against explicit requirements; descriptions without recognized requirements are not assessed.
+
+Project links support an optional display label such as “View on Steam”; the full URL remains clickable in the preview, PDF and Word export. Job-specific copies require a role and job description or requirements, retain their target context, and include only selected projects and certifications. Employment chronology and the source CV are preserved.
 
 ## Import and export
 

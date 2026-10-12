@@ -4,7 +4,9 @@ import uuid
 from datetime import UTC, datetime
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+from app.schemas.resume import CertificationItem, ProjectItem
 
 
 def default_uuid() -> str:
@@ -19,6 +21,7 @@ class LibraryItemType(str, Enum):
     BULLET = "bullet"
     EXPERIENCE = "experience"
     PROJECT = "project"
+    CERTIFICATION = "certification"
     SKILL = "skill"
 
 
@@ -38,6 +41,12 @@ class LibrarySnippet(BaseModel):
     variants: list[BulletVariant] = Field(default_factory=list)
     targetRoles: list[str] = Field(default_factory=list)
     metrics: str = ""
+    project: ProjectItem | None = Field(
+        default=None, json_schema_extra={"typescriptOptional": True}
+    )
+    certification: CertificationItem | None = Field(
+        default=None, json_schema_extra={"typescriptOptional": True}
+    )
     createdAt: str = Field(default_factory=now_iso)
     updatedAt: str = Field(default_factory=now_iso)
 
@@ -51,9 +60,34 @@ class CreateLibrarySnippetRequest(BaseModel):
     variants: list[BulletVariant] = Field(default_factory=list)
     targetRoles: list[str] = Field(default_factory=list)
     metrics: str = ""
+    project: ProjectItem | None = Field(
+        default=None, json_schema_extra={"typescriptOptional": True}
+    )
+    certification: CertificationItem | None = Field(
+        default=None, json_schema_extra={"typescriptOptional": True}
+    )
+
+    @model_validator(mode="after")
+    def valid_details(self):
+        if self.project and (self.type != LibraryItemType.PROJECT or not self.project.name.strip()):
+            raise ValueError("Project details require the project type and a project name.")
+        if self.certification and (
+            self.type != LibraryItemType.CERTIFICATION or not self.certification.name.strip()
+        ):
+            raise ValueError("Certification details require the certification type and a name.")
+        return self
 
 
 class UpdateLibrarySnippetRequest(BaseModel):
+    type: LibraryItemType | None = Field(
+        default=None, json_schema_extra={"typescriptOptional": True}
+    )
+    project: ProjectItem | None = Field(
+        default=None, json_schema_extra={"typescriptOptional": True}
+    )
+    certification: CertificationItem | None = Field(
+        default=None, json_schema_extra={"typescriptOptional": True}
+    )
     title: str | None = None
     content: str | None = None
     category: str | None = None

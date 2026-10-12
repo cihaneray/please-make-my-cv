@@ -22,7 +22,7 @@ def narrative_slots(data):
     fields = {
         "experience": ("position", "summary", "bullets"),
         "education": ("degree", "fieldOfStudy", "highlights"),
-        "projects": ("name", "role", "bullets"),
+        "projects": ("name", "role", "urlLabel", "bullets"),
         "skills": ("category",),
         "languages": ("language", "proficiency"),
     }

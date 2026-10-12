@@ -58,6 +58,7 @@ class LibraryService:
                     variants=variants,
                     targetRoles=roles,
                     metrics=m.metrics,
+                    **json.loads(m.details_json or "{}"),
                     createdAt=m.created_at.isoformat(),
                     updatedAt=m.updated_at.isoformat(),
                 )
@@ -83,6 +84,7 @@ class LibraryService:
             variants=variants,
             targetRoles=roles,
             metrics=m.metrics,
+            **json.loads(m.details_json or "{}"),
             createdAt=m.created_at.isoformat(),
             updatedAt=m.updated_at.isoformat(),
         )
@@ -93,6 +95,14 @@ class LibraryService:
         model = LibraryItemModel(
             id=new_id,
             type=request.type.value,
+            details_json=json.dumps(
+                {
+                    "project": request.project.model_dump() if request.project else None,
+                    "certification": request.certification.model_dump()
+                    if request.certification
+                    else None,
+                }
+            ),
             title=request.title,
             content=request.content,
             category=request.category,
@@ -114,6 +124,24 @@ class LibraryService:
         if not m:
             raise EntityNotFoundException("LibrarySnippet", snippet_id)
 
+        details = json.loads(m.details_json or "{}")
+        for field in ("project", "certification"):
+            if field in request.model_fields_set:
+                value = getattr(request, field)
+                details[field] = value.model_dump() if value else None
+        if request.type is not None:
+            m.type = request.type.value
+        if m.type != "project":
+            details["project"] = None
+        if m.type != "certification":
+            details["certification"] = None
+        m.details_json = json.dumps(details)
+        CreateLibrarySnippetRequest(
+            type=LibraryItemType(m.type),
+            content=request.content if request.content is not None else m.content,
+            project=details.get("project"),
+            certification=details.get("certification"),
+        )
         if request.title is not None:
             m.title = request.title
         if request.content is not None:
