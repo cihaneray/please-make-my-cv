@@ -2,6 +2,9 @@
 
 ## Unreleased: workspace and usability
 
+- Add optional project link display labels across the editor, preview, PDF and Word.
+- Store structured library projects/certifications and include selected records in job-specific CV sections; retain job context and protect against changed library evidence.
+
 - Add saved AI review history, explicit missing-detail proposals, protected CV-family synchronization and a local sharing check.
 - Improve translation review with an editable full-document dialog; retain edited translation drafts through saves and warn when source content changes.
 - Support automatic LinkedIn job capture, including location, through the optional Chrome/Edge extension.
