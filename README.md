@@ -71,7 +71,10 @@ docker compose -f docker-compose.yml -f docker-compose.tools.yml up -d
 - **Use the Career Library:** save reusable achievements with categories, tags and tone variants, then build a CV from selected content.
 - **Track target jobs:** save roles, requirements, notes, interview/follow-up dates and linked CVs. Matching evidence links to relevant CV entries. Moving a linked job to Applied preserves a submitted copy independently of later CV edits.
 - **Tailor applications:** select existing evidence to prioritize bullets in a new job-specific CV. Missing skills are reported rather than invented. Prepare editable cover letters and application emails; download a ZIP containing the saved CV PDF and cover letter. These tools do not send or submit applications.
-- **Review with AI:** optionally connect a model, inspect its recommendations and apply individual supported text replacements. Applying changes only the draft; Save Draft persists them. Changed fields disable stale suggestions. Local analysis remains available without AI.
+- **Review with AI:** inspect priority suggestions, filter pending/applied/skipped items, edit suggested wording before applying, and jump to the related CV field. Answer missing-detail questions to explicitly generate additional proposals. Applying changes only the draft; Save Draft persists them. Changed fields disable stale suggestions. Local analysis remains available without AI.
+- **Keep CV variants consistent:** open CV Family in the studio toolbar to review date, title and institution differences, then copy selected source changes into related variants. Tailored and translated fields are protected by default. Source baselines survive workspace backup/restore; updates keep prior revisions and stop on conflicting edits.
+- **Track review history:** saved reviews retain the reviewed CV snapshot, revision, model and feedback. Compare dimensions for the same CV, target text and feedback language. Reviews are included in workspace backups; permanent CV deletion removes its history.
+- **Check before sharing:** the editor's sharing check scans the current draft for malformed/unsafe links, likely placeholder text and visible contact/photo information. It runs locally and does not check remote link availability or block exports.
 - **Translate and share:** preview AI-assisted English/Turkish translations before applying or creating a copy. Anonymous PDF export removes direct profile identifiers; inspect remaining narrative content before sharing.
 
 Language and target market are separate settings: a Turkish-market CV can be written in English. Local ATS/content scores are transparent internal heuristics, not external ATS certification. Job relevance is assessed against explicit requirements; descriptions without recognized requirements are not assessed.
@@ -206,3 +209,7 @@ docker compose up -d --wait
 Follow the included `INSTALL.md` for updates: preserve `.env`, the Compose project name and named volumes. Private GHCR packages require `docker login ghcr.io` with `read:packages` access; public packages allow anonymous pulls.
 
 `[SKIP]` skips verification while allowing an explicitly requested release. GitHub's native `[skip ci]` marker also suppresses commit-triggered release workflows. Application versions, document schema versions, saved revisions and backup format versions are independent.
+
+## Optional job capture extension
+
+The [Chrome/Edge job capture extension](extensions/job-capture/README.md) can transfer reviewed public job text into the local job form. On LinkedIn, it automatically reads the active job's title, company and description from their page elements; text selection is ignored. Review the extracted fields before transfer and save explicitly in the app. Load the extension manually or build its ZIP with `python extensions/package_job_capture.py`; see the guide for installation and updates.
