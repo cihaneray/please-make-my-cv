@@ -10,12 +10,49 @@ import { Icons } from "@/components/Icons";
 import { api, errorMessage } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { ResumeDocument } from "@/lib/types";
+import styles from "./import.module.css";
+
+const importCopy = {
+  en: {
+    guide:
+      "Upload or paste content to see normalized A4 canvas preview before importing.",
+    structure: "Detected Resume Structure",
+    name: "Name",
+    experience: "Experience",
+    education: "Education",
+    skills: "Skills",
+    projects: "Projects",
+    custom: "Custom",
+    roles: "roles",
+    entries: "entries",
+    competencies: "competencies",
+    items: "items",
+    sections: "sections",
+  },
+  tr: {
+    guide:
+      "İçe aktarmadan önce düzenlenmiş A4 önizlemesini görmek için içerik yükleyin veya yapıştırın.",
+    structure: "Algılanan Özgeçmiş Yapısı",
+    name: "Ad",
+    experience: "Deneyim",
+    education: "Eğitim",
+    skills: "Yetkinlikler",
+    projects: "Projeler",
+    custom: "Özel",
+    roles: "pozisyon",
+    entries: "kayıt",
+    competencies: "yetkinlik",
+    items: "öğe",
+    sections: "bölüm",
+  },
+};
 
 export default function ImportPage() {
   const router = useRouter();
   const copy = useCopy();
   const [mode, setMode] = useState<"source" | "pdf">("source");
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+  const text = importCopy[language];
   const generation = useRef(0);
   const [validatedContent, setValidatedContent] = useState("");
   const [content, setContent] = useState<string>("");
@@ -103,9 +140,11 @@ export default function ImportPage() {
       {mode === "pdf" ? (
         <PDFImport />
       ) : (
-        <div className="flex flex-col w-full h-[calc(100vh-7rem)] overflow-hidden">
+        <div className={`${styles.source} flex flex-col w-full`}>
           {/* Top Header */}
-          <div className="h-12 w-full bg-surface-container-lowest flex items-center justify-between px-space-lg shrink-0 border-b border-surface-container-high no-print">
+          <div
+            className={`${styles.header} h-12 w-full bg-surface-container-lowest flex items-center justify-between px-space-lg shrink-0 border-b border-surface-container-high no-print`}
+          >
             <div className="flex items-center gap-space-sm">
               <Icons.Upload size={18} />
               <span className="font-headline-md text-headline-md font-semibold">
@@ -131,9 +170,11 @@ export default function ImportPage() {
             )}
           </div>
 
-          <div className="flex flex-1 w-full overflow-hidden">
+          <div className={`${styles.columns} flex flex-1 w-full`}>
             {/* Left Side: Input & Parsing Stage */}
-            <div className="w-[500px] bg-surface-container-lowest flex flex-col p-space-lg gap-space-md border-r border-surface-container-high overflow-y-auto no-print">
+            <div
+              className={`${styles.input} bg-surface-container-lowest flex flex-col p-space-lg gap-space-md border-surface-container-high no-print`}
+            >
               {/* File Upload Box */}
               <div className="flex flex-col gap-2">
                 <label className="font-label-sm text-secondary uppercase font-semibold">
@@ -184,7 +225,7 @@ export default function ImportPage() {
                 <div className="p-3 rounded bg-error-container text-on-error-container text-[12px] flex flex-col gap-1">
                   <span className="font-semibold">{t("parseErrors")}</span>
                   {errors.map((err, idx) => (
-                    <div key={idx}>• {err}</div>
+                    <div key={idx}>• {copy(err)}</div>
                   ))}
                 </div>
               )}
@@ -195,7 +236,7 @@ export default function ImportPage() {
                     {t("warningsMigrations")}
                   </span>
                   {warnings.map((w, idx) => (
-                    <div key={idx}>• {w}</div>
+                    <div key={idx}>• {copy(w)}</div>
                   ))}
                 </div>
               )}
@@ -204,36 +245,44 @@ export default function ImportPage() {
               {previewDoc && (
                 <div className="p-3 rounded-lg bg-surface-container-low flex flex-col gap-2 border border-surface-container-highest">
                   <span className="font-label-sm text-secondary uppercase font-semibold">
-                    Detected Resume Structure
+                    {text.structure}
                   </span>
                   <div className="grid grid-cols-2 gap-2 text-[12px]">
                     <div>
-                      Name:{" "}
+                      {text.name}:{" "}
                       <strong>
                         {previewDoc.profile.firstName}{" "}
                         {previewDoc.profile.lastName}
                       </strong>
                     </div>
                     <div>
-                      Experience:{" "}
-                      <strong>{sectionSummary.experience || 0} roles</strong>
-                    </div>
-                    <div>
-                      Education:{" "}
-                      <strong>{sectionSummary.education || 0} entries</strong>
-                    </div>
-                    <div>
-                      Skills:{" "}
-                      <strong>{sectionSummary.skills || 0} competencies</strong>
-                    </div>
-                    <div>
-                      Projects:{" "}
-                      <strong>{sectionSummary.projects || 0} items</strong>
-                    </div>
-                    <div>
-                      Custom:{" "}
+                      {text.experience}:{" "}
                       <strong>
-                        {sectionSummary.customSections || 0} sections
+                        {sectionSummary.experience || 0} {text.roles}
+                      </strong>
+                    </div>
+                    <div>
+                      {text.education}:{" "}
+                      <strong>
+                        {sectionSummary.education || 0} {text.entries}
+                      </strong>
+                    </div>
+                    <div>
+                      {text.skills}:{" "}
+                      <strong>
+                        {sectionSummary.skills || 0} {text.competencies}
+                      </strong>
+                    </div>
+                    <div>
+                      {text.projects}:{" "}
+                      <strong>
+                        {sectionSummary.projects || 0} {text.items}
+                      </strong>
+                    </div>
+                    <div>
+                      {text.custom}:{" "}
+                      <strong>
+                        {sectionSummary.customSections || 0} {text.sections}
                       </strong>
                     </div>
                   </div>
@@ -242,14 +291,17 @@ export default function ImportPage() {
             </div>
 
             {/* Right Side: Live Normalized Preview */}
-            {previewDoc ? (
-              <A4ResumePreview document={previewDoc} />
-            ) : (
-              <div className="flex-1 bg-surface-container flex items-center justify-center text-secondary text-body-md">
-                Upload or paste content to see normalized A4 canvas preview
-                before importing.
-              </div>
-            )}
+            <div className={styles.preview}>
+              {previewDoc ? (
+                <A4ResumePreview document={previewDoc} />
+              ) : (
+                <div
+                  className={`${styles.guide} bg-surface-container flex items-center justify-center text-secondary text-body-md`}
+                >
+                  {text.guide}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

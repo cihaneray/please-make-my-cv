@@ -1,3 +1,4 @@
+import { selectMenu } from "./helpers/select-menu";
 import { test, expect, APIRequestContext } from "@playwright/test";
 import { ResumeDocument } from "../src/lib/types";
 import { readFile } from "node:fs/promises";
@@ -207,11 +208,11 @@ test("desk distinguishes connection errors from an empty workspace and supports 
       .filter({ hasText: "Workspace temporarily unavailable" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Every story starts somewhere." }),
+    page.getByRole("heading", { name: "Create your first CV" }),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Retry", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Every story starts somewhere." }),
+    page.getByRole("heading", { name: "Create your first CV" }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Create Your First Resume", exact: true }),
@@ -616,7 +617,7 @@ test("live page guides follow document length and zoom, then disappear when cont
   await expect(count).toHaveText(`≈ ${pages} pages`);
   await expect(guides).toHaveCount(pages - 1);
   await expect(guides.first()).toHaveText("Page 2");
-  await page.getByLabel("Preview zoom").selectOption("0.75");
+  await selectMenu(page.getByLabel("Preview zoom"), "0.75");
   const paper = await page.locator(".canvas-paper").boundingBox();
   const boundary = await guides.first().boundingBox();
   expect(boundary!.y - paper!.y).toBeCloseTo(((297 * 96) / 25.4) * 0.75, 0);
@@ -624,7 +625,7 @@ test("live page guides follow document length and zoom, then disappear when cont
   await expect(guides.first()).toHaveCSS("pointer-events", "none");
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("button", { name: "Preview", exact: true }).click();
-  await page.getByLabel("Preview zoom").selectOption("fit");
+  await selectMenu(page.getByLabel("Preview zoom"), "fit");
   await expect(count).toHaveText(`≈ ${pages} pages`);
   const mobilePaper = await page.locator(".canvas-paper").boundingBox();
   const mobileGuide = await guides.first().boundingBox();
@@ -1006,11 +1007,11 @@ test("page fit proposals require approval and stale results cannot change the dr
   await expect(
     page.getByRole("button", { name: "Apply layout", exact: true }),
   ).toBeEnabled();
-  await page.getByLabel("Target page count", { exact: true }).selectOption("1");
+  await selectMenu(page.getByLabel("Target page count", { exact: true }), "1");
   await expect(
     page.getByRole("button", { name: "Apply layout", exact: true }),
   ).toBeDisabled();
-  await page.getByLabel("Target page count", { exact: true }).selectOption("2");
+  await selectMenu(page.getByLabel("Target page count", { exact: true }), "2");
   expect(
     (
       await request.get(`http://127.0.0.1:8101/api/resumes/${doc.metadata.id}`)
@@ -1079,9 +1080,8 @@ test("job planning and editable cover letters persist across status changes and 
   await page
     .getByLabel("Interview date and time", { exact: true })
     .fill("2026-10-20T14:30");
-  await page
-    .getByRole("combobox", { name: "Application status" })
-    .selectOption("interview");
+  await selectMenu(page
+    .getByRole("combobox", { name: "Application status" }), "interview");
   await page.getByRole("button", { name: "Save job", exact: true }).click();
   await expect
     .poll(async () =>
@@ -1164,9 +1164,8 @@ test("application dossier preserves drafts between tabs and files, and presents 
       notes: "A preserved note",
       coverLetter: "A letter draft",
     });
-  await page
-    .getByRole("combobox", { name: "Application status", exact: true })
-    .selectOption("applied");
+  await selectMenu(page
+    .getByRole("combobox", { name: "Application status", exact: true }), "applied");
   await expect
     .poll(async () =>
       (await request.get(`http://127.0.0.1:8101/api/jobs/${job.id}`)).json(),

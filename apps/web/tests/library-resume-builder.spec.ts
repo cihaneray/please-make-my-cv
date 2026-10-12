@@ -1,3 +1,4 @@
+import { selectMenu } from "./helpers/select-menu";
 import { expect, test, APIRequestContext, Page } from "@playwright/test";
 import {
   JobApplication,
@@ -91,7 +92,7 @@ async function prepare(
   await builder
     .getByRole("button", { name: "Create a CV from the library" })
     .click();
-  await builder.getByLabel("Saved target job").selectOption(job.id);
+  await selectMenu(builder.getByLabel("Saved target job"), job.id);
   return { job, snippets, builder };
 }
 
@@ -194,6 +195,26 @@ test("unmatched evidence stays optional and missing profile requires explicit de
     "Documented goofy experiments.",
   );
   expect(draft.skills).toEqual([]);
+});
+
+test("library draft preserves source sequence instead of suggestion scores", async ({ page, request }) => {
+  const { builder, snippets } = await prepare(page, request, ["Docker", "containers"]);
+  // The higher-scoring Docker evidence is shown first and selected first.
+  await builder.getByRole("checkbox", { name: /Docker rollout/ }).check();
+  await builder.getByRole("checkbox", { name: /Python delivery/ }).check();
+  await builder.getByRole("checkbox", {
+    name: "I will complete missing personal details in the editor.",
+  }).check();
+  await builder.getByRole("button", { name: "Create selected CV draft" }).click();
+  const link = builder.getByRole("link", { name: "Open created CV" });
+  await expect(link).toBeVisible();
+  const id = (await link.getAttribute("href"))!.split("/").pop();
+  const draft: ResumeDocument = await (await request.get(`${apiBase}/resumes/${id}`)).json();
+  expect(draft.customSections[0].items.map((item) => item.description)).toEqual([
+    snippets[0].content, snippets[2].content,
+  ]);
+  expect(draft.experience).toEqual([]);
+  expect(draft.customSections[0].items.every((item) => item.date === "")).toBeTruthy();
 });
 
 test("failed job loading can be retried without creating a CV", async ({
