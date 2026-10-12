@@ -26,6 +26,17 @@ def now_iso() -> str:
     return datetime.now(UTC).isoformat()
 
 
+def inherited_family_bases(db: Session, parent_id: str | None) -> str:
+    if not parent_id:
+        return "{}"
+    parent = db.get(ResumeModel, parent_id)
+    bases = json.loads(parent.family_bases_json or "{}")
+    if parent.parent_base_json:
+        original = ResumeDocument.model_validate_json(parent.parent_base_json)
+        bases[original.metadata.id] = original.model_dump(mode="json")
+    return json.dumps(bases, ensure_ascii=False)
+
+
 class ResumeService:
     @staticmethod
     def list_resumes(db: Session, include_archived: bool = False) -> list[ResumeSummaryResponse]:
@@ -97,7 +108,9 @@ class ResumeService:
         return doc
 
     @staticmethod
-    def create_resume(db: Session, request: CreateResumeRequest) -> ResumeDocument:
+    def create_resume(
+        db: Session, request: CreateResumeRequest, *, parent_baseline: ResumeDocument | None = None
+    ) -> ResumeDocument:
         doc = request.initialData.model_copy(deep=True) if request.initialData else ResumeDocument()
         if doc.metadata.parentResumeId and not db.get(ResumeModel, doc.metadata.parentResumeId):
             raise ValidationException("The parent CV does not exist in this workspace.")
@@ -125,6 +138,12 @@ class ResumeService:
             revision=1,
             is_archived=False,
             parent_resume_id=doc.metadata.parentResumeId,
+            family_bases_json=inherited_family_bases(db, doc.metadata.parentResumeId),
+            parent_base_json=(
+                parent_baseline or ResumeService.get_resume(db, doc.metadata.parentResumeId)
+            ).model_dump_json()
+            if doc.metadata.parentResumeId
+            else None,
             document_json=json.dumps(doc.model_dump(), ensure_ascii=False),
         )
         db.add(model)
@@ -209,6 +228,8 @@ class ResumeService:
             revision=1,
             is_archived=False,
             parent_resume_id=existing.metadata.id,
+            family_bases_json=inherited_family_bases(db, existing.metadata.id),
+            parent_base_json=existing.model_dump_json(),
             document_json=json.dumps(new_doc.model_dump(), ensure_ascii=False),
         )
         db.add(model)
@@ -228,6 +249,10 @@ class ResumeService:
                 source.metadata.revision, request.document.metadata.revision
             )
         draft = request.document.model_copy(deep=True)
+        from app.services.tailoring_service import reverse_chronological
+
+        for section in ("experience", "projects", "education"):
+            setattr(draft, section, reverse_chronological(getattr(draft, section)))
         draft.metadata.parentResumeId = resume_id
         draft.metadata.targetJob = request.targetJob.model_copy(deep=True)
         label = request.targetJob.position
@@ -236,10 +261,11 @@ class ResumeService:
         return ResumeService.create_resume(
             db,
             CreateResumeRequest(
-                title=f"{source.metadata.title} — {label}"[:255],
+                title=f"{source.metadata.title} - {label}"[:255],
                 targetRole=request.targetJob.position,
                 initialData=draft,
             ),
+            parent_baseline=request.document,
         )
 
     @staticmethod
@@ -276,9 +302,18 @@ class ResumeService:
                 child_doc = ResumeDocument.model_validate_json(child.document_json)
                 child_doc.metadata.parentResumeId = None
                 child.parent_resume_id = None
+                child.parent_base_json = None
                 child.document_json = child_doc.model_dump_json()
+            for related in db.query(ResumeModel).all():
+                bases = json.loads(related.family_bases_json or "{}")
+                if resume_id in bases:
+                    del bases[resume_id]
+                    related.family_bases_json = json.dumps(bases, ensure_ascii=False)
             # Historical copies stay immutable; only live relationships are detached.
             db.query(ResumeRevisionModel).filter_by(resume_id=resume_id).delete()
+            from app.db.models import AIReviewHistoryModel
+
+            db.query(AIReviewHistoryModel).filter_by(resume_id=resume_id).delete()
             db.delete(model)
         else:
             # Soft delete (Section 63)

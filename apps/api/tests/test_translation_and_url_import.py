@@ -319,3 +319,44 @@ def test_malformed_and_multiple_postings_use_editable_fallback():
     ]
     html = '<script type="application/ld+json">' + json.dumps(two) + "</script><p>Pick a role</p>"
     assert urls.extract_job(html, "https://example.com")["extraction"] == "text"
+
+
+def test_translation_includes_descriptive_project_titles_without_changing_technical_facts(
+    monkeypatch,
+):
+    document = ResumeDocument.model_validate(
+        {
+            "projects": [
+                {
+                    "id": "project-a",
+                    "name": "Python sales anomaly detection system 2",
+                    "role": "Developer",
+                    "url": "https://example.com/project",
+                    "technologies": ["Python"],
+                    "bullets": ["Built Python services."],
+                }
+            ],
+        }
+    )
+    original = document.model_dump()
+
+    def complete(system, payload):
+        assert any("sales anomaly detection system" in text for text in payload["texts"])
+        return {
+            "translations": [
+                text.replace("sales anomaly detection system", "satış anomali tespit sistemi")
+                .replace("Developer", "Geliştirici")
+                .replace("Built", "Geliştirdi")
+                for text in payload["texts"]
+            ]
+        }
+
+    monkeypatch.setattr(translation, "completion", complete)
+    result = translation.translate_document(document, "tr")
+    project = result["document"].projects[0]
+    assert project.name == "Python satış anomali tespit sistemi 2"
+    assert project.url == document.projects[0].url
+    assert project.technologies == ["Python"]
+    assert project.id == "project-a"
+    assert any(change["path"] == "projects.0.name" for change in result["changes"])
+    assert document.model_dump() == original

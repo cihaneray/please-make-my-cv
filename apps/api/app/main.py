@@ -10,11 +10,14 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.api.routes import (
     ai,
+    ai_missing_facts,
+    ai_review_history,
     communications,
     export,
     imports,
     jobs,
     library,
+    resume_family,
     resumes,
     source,
     workspace,
@@ -163,3 +166,8 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)
+
+app.include_router(ai_missing_facts.router, prefix=settings.api_prefix)
+app.include_router(ai_review_history.router, prefix=settings.api_prefix)
+
+app.include_router(resume_family.router, prefix=settings.api_prefix)
