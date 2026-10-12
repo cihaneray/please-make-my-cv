@@ -1,0 +1,82 @@
+.history {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  color: rgb(var(--color-on-surface));
+  font-size: 13px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.list {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 10px;
+  background: rgb(var(--color-surface-container-low));
+}
+.heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.meta {
+  color: rgb(var(--color-on-surface-variant));
+  font-size: 12px;
+}
+.score {
+  white-space: nowrap;
+  color: rgb(var(--color-primary));
+  font-size: 17px;
+}
+.history summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.history button {
+  justify-self: start;
+  padding: 6px 10px;
+  border: 1px solid rgb(var(--color-outline-variant));
+  border-radius: 6px;
+  color: rgb(var(--color-on-surface));
+  background: rgb(var(--color-surface-container));
+}
+.history button:hover {
+  background: rgb(var(--color-surface-container-high));
+}
+.history button:focus-visible,
+.history summary:focus-visible {
+  outline: 2px solid rgb(var(--color-primary));
+  outline-offset: 3px;
+}
+.history pre {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.history button,
+.history summary {
+  min-height: 44px;
+}
+.history summary {
+  padding: 8px 0;
+}
+.snapshot {
+  min-height: 300px;
+  height: 500px;
+  display: flex;
+  overflow: auto;
+}
+.snapshot :global(.canvas-toolbar) {
+  display: none;
+}

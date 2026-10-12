@@ -2,6 +2,7 @@
 import { useCopy } from "@/lib/copy";
 import { useEffect, useState } from "react";
 import { aiApi, AIConnection } from "@/lib/api";
+import { SelectMenu } from "@/components/SelectMenu";
 export function AISettings() {
   const copy = useCopy();
   const [config, setConfig] = useState<AIConnection | null>(null);
@@ -51,12 +52,12 @@ export function AISettings() {
           <div className="ai-settings-fields">
             <label className="ai-settings-field">
               <span>{copy("Provider")}</span>
-              <select
-                aria-label="Provider"
+              <SelectMenu
+                aria-label={copy("Provider")}
                 className="block w-full"
                 value={config.provider}
-                onChange={(e) => {
-                  const provider = e.target.value as AIConnection["provider"];
+                onValueChange={(value) => {
+                  const provider = value as AIConnection["provider"];
                   setConfig({
                     ...config,
                     provider,
@@ -74,10 +75,12 @@ export function AISettings() {
                   setDirty(true);
                 }}
               >
-                <option value="openai-compatible">OpenAI-compatible</option>
+                <option value="openai-compatible">
+                  {copy("OpenAI-compatible")}
+                </option>
                 <option value="ollama">Ollama</option>
                 <option value="gemini">Google Gemini</option>
-              </select>
+              </SelectMenu>
             </label>
             <label className="ai-settings-field">
               <span>{copy("Model ID")}</span>
