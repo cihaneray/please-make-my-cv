@@ -20,7 +20,7 @@
   "devDependencies": {
     "@playwright/test": "^1.51.0",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^22.13.9",
+    "@types/node": "^26.6.5",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "autoprefixer": "^10.6.1",
