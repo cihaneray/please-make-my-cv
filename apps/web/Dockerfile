@@ -1,4 +1,4 @@
-FROM node:24.21.0-alpine3.23@sha256:9ec4a2e289874ed0d722e1772ec2de45d2801541db8612f3638b26f128c69ac2 AS dependencies
+FROM node:26.12.0-alpine3.23@sha256:2ae3a23c9c5d2129398f4844c7c43400c061faf6973852f0fa837323bff9a5a8 AS dependencies
 
 WORKDIR /app
 RUN addgroup -g 10001 app && adduser -D -u 10001 -G app app && chown app:app /app
@@ -21,7 +21,7 @@ ENV API_INTERNAL_URL=$API_INTERNAL_URL
 ENV CV_STANDALONE=1
 RUN npm run build
 
-FROM node:24.21.0-alpine3.23@sha256:9ec4a2e289874ed0d722e1772ec2de45d2801541db8612f3638b26f128c69ac2 AS runner
+FROM node:26.12.0-alpine3.23@sha256:2ae3a23c9c5d2129398f4844c7c43400c061faf6973852f0fa837323bff9a5a8 AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
